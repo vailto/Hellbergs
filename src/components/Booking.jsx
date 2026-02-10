@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTime24, getCurrentTime24, getCustomerShort } from '../utils/formatters';
-import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
+import { isVehicleOccupied, isDriverOccupied, assignVehicleToBooking, assignDriverToBooking } from '../utils/vehicleUtils';
 import { BOOKING_STATUSES } from '../utils/constants';
 import { validateBooking } from '../utils/validation';
 import CostEntryModal from './CostEntryModal';
@@ -457,27 +457,17 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
 
   const handleVehicleAssign = (bookingId, vehicleId) => {
     const booking = data.bookings.find(b => b.id === bookingId);
-    const authorizedDrivers = vehicleId ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
-    const keepDriver = vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
-    const driverId = keepDriver ? booking.driverId : null;
-    const updatedBookings = data.bookings.map(b => {
-      if (b.id !== bookingId) return b;
-      const next = { ...b, vehicleId: vehicleId || null, driverId };
-      if (vehicleId && (b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId))) next.status = 'Planerad';
-      if (!vehicleId && b.status === 'Planerad') next.status = 'Bokad';
-      return next;
-    });
+    if (!booking) return;
+    const updatedBookings = data.bookings.map(b =>
+      b.id === bookingId ? assignVehicleToBooking(b, vehicleId, data.drivers || [], { handlePlaneradWithoutVehicle: true }) : b
+    );
     updateData({ bookings: updatedBookings });
   };
 
   const handleDriverAssign = (bookingId, driverId) => {
-    const updatedBookings = data.bookings.map(b => {
-      if (b.id !== bookingId) return b;
-      const next = { ...b, driverId: driverId || null };
-      // Om fordon redan tilldelat och status Bokad, sätt till Planerad
-      if (b.vehicleId && driverId && b.status === 'Bokad') next.status = 'Planerad';
-      return next;
-    });
+    const updatedBookings = data.bookings.map(b =>
+      b.id === bookingId ? assignDriverToBooking(b, driverId, { updateStatusToPlanerad: true }) : b
+    );
     updateData({ bookings: updatedBookings });
   };
 

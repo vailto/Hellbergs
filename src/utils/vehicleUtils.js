@@ -74,3 +74,57 @@ export function syncVehicleDriverIdsFromDrivers(vehicles = [], drivers = []) {
   }
   return Array.from(vehicleMap.values());
 }
+
+/**
+ * Returnerar förare som har behörighet för ett fordon.
+ */
+export function getAuthorizedDrivers(vehicleId, drivers = []) {
+  if (!vehicleId) return [];
+  return drivers.filter(d => (d.vehicleIds || []).includes(vehicleId));
+}
+
+/**
+ * Uppdaterar en bokning med nytt fordon.
+ * Returnerar ny bokningsobjekt med uppdaterade vehicleId, driverId och status.
+ * options: { clearBlockId: boolean, handlePlaneradWithoutVehicle: boolean }
+ */
+export function assignVehicleToBooking(booking, vehicleId, drivers, options = {}) {
+  const { clearBlockId = false, handlePlaneradWithoutVehicle = false } = options;
+  const authorizedDrivers = getAuthorizedDrivers(vehicleId, drivers);
+  const keepDriver = vehicleId && booking.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
+  const driverId = keepDriver ? booking.driverId : null;
+  
+  const next = { ...booking, vehicleId: vehicleId || null, driverId };
+  
+  // Status transitions
+  if (vehicleId && (booking.status === 'Bokad' || (handlePlaneradWithoutVehicle && booking.status === 'Planerad' && !booking.vehicleId))) {
+    next.status = 'Planerad';
+  }
+  if (!vehicleId && booking.status === 'Planerad') {
+    next.status = 'Bokad';
+  }
+  
+  // Clear blockId if requested (Schema uses this)
+  if (!vehicleId && clearBlockId) {
+    next.blockId = null;
+  }
+  
+  return next;
+}
+
+/**
+ * Uppdaterar en bokning med ny förare.
+ * Returnerar ny bokningsobjekt med uppdaterade driverId och status.
+ * options: { updateStatusToPlanerad: boolean }
+ */
+export function assignDriverToBooking(booking, driverId, options = {}) {
+  const { updateStatusToPlanerad = false } = options;
+  const next = { ...booking, driverId: driverId || null };
+  
+  // Status transition: if vehicle assigned and driver assigned and status is Bokad → Planerad
+  if (updateStatusToPlanerad && booking.vehicleId && driverId && booking.status === 'Bokad') {
+    next.status = 'Planerad';
+  }
+  
+  return next;
+}

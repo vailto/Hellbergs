@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatNumber, formatTime24, generateId, generateBookingNumber } from '../utils/formatters';
+import { assignVehicleToBooking, assignDriverToBooking } from '../utils/vehicleUtils';
 import ConfirmModal from './ConfirmModal';
 import CostEntryModal from './CostEntryModal';
 
@@ -205,23 +206,15 @@ function Planning({ data, updateData, setCurrentSection }) {
   };
 
   const handleVehicleAssign = (bookingId, vehicleId) => {
-    const booking = data.bookings.find(b => b.id === bookingId);
-    const authorizedDrivers = vehicleId ? data.drivers.filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
-    const keepDriver = vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
-    const driverId = keepDriver ? booking.driverId : null;
-    const updatedBookings = data.bookings.map(b => {
-      if (b.id !== bookingId) return b;
-      const next = { ...b, vehicleId: vehicleId || null, driverId };
-      if (vehicleId && b.status === 'Bokad') next.status = 'Planerad';
-      if (!vehicleId && b.status === 'Planerad') next.status = 'Bokad';
-      return next;
-    });
+    const updatedBookings = data.bookings.map(b =>
+      b.id === bookingId ? assignVehicleToBooking(b, vehicleId, data.drivers) : b
+    );
     updateData({ bookings: updatedBookings });
   };
 
   const handleDriverAssign = (bookingId, driverId) => {
     const updatedBookings = data.bookings.map(b =>
-      b.id === bookingId ? { ...b, driverId: driverId || null } : b
+      b.id === bookingId ? assignDriverToBooking(b, driverId) : b
     );
     updateData({ bookings: updatedBookings });
   };

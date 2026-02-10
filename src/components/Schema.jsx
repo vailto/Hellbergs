@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatTime24, getCustomerShort } from '../utils/formatters';
-import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
+import { isVehicleOccupied, isDriverOccupied, assignVehicleToBooking, assignDriverToBooking, getAuthorizedDrivers } from '../utils/vehicleUtils';
 
 function getMondayOfWeek(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
@@ -256,32 +256,25 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
   };
 
   const handleVehicleAssign = (bookingId, vehicleId) => {
-    const booking = (data.bookings || []).find(b => b.id === bookingId);
-    const authorizedDrivers = vehicleId ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
-    const keepDriver = vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
-    const driverId = keepDriver ? booking.driverId : null;
-    const updatedBookings = (data.bookings || []).map(b => {
-      if (b.id !== bookingId) return b;
-      const next = { ...b, vehicleId: vehicleId || null, driverId };
-      if (!vehicleId) next.blockId = null;
-      if (vehicleId && b.status === 'Bokad') next.status = 'Planerad';
-      if (!vehicleId && b.status === 'Planerad') next.status = 'Bokad';
-      return next;
-    });
+    const updatedBooking = (data.bookings || []).find(b => b.id === bookingId);
+    if (!updatedBooking) return;
+    const newBooking = assignVehicleToBooking(updatedBooking, vehicleId, data.drivers || [], { clearBlockId: true });
+    const updatedBookings = (data.bookings || []).map(b => b.id === bookingId ? newBooking : b);
     updateData({ bookings: updatedBookings });
-    setSelectedBooking(prev => prev?.id === bookingId ? { ...prev, vehicleId: vehicleId || null, driverId } : prev);
+    setSelectedBooking(prev => prev?.id === bookingId ? newBooking : prev);
   };
 
   const handleDriverAssign = (bookingId, driverId) => {
-    const updatedBookings = (data.bookings || []).map(b =>
-      b.id === bookingId ? { ...b, driverId: driverId || null } : b
-    );
+    const updatedBooking = (data.bookings || []).find(b => b.id === bookingId);
+    if (!updatedBooking) return;
+    const newBooking = assignDriverToBooking(updatedBooking, driverId);
+    const updatedBookings = (data.bookings || []).map(b => b.id === bookingId ? newBooking : b);
     updateData({ bookings: updatedBookings });
-    setSelectedBooking(prev => prev?.id === bookingId ? { ...prev, driverId: driverId || null } : prev);
+    setSelectedBooking(prev => prev?.id === bookingId ? newBooking : prev);
   };
 
   const handleDropOnVehicle = (bookingId, vehicleId) => {
-    const authorizedDrivers = (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId));
+    const authorizedDrivers = getAuthorizedDrivers(vehicleId, data.drivers || []);
     const driverId = authorizedDrivers.length === 1 ? authorizedDrivers[0].id : null;
     const updatedBookings = (data.bookings || []).map(b => {
       if (b.id !== bookingId) return b;
