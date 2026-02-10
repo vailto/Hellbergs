@@ -1,0 +1,427 @@
+{
+  "customers": [
+    {
+      "name": "NSC Sweden AB",
+      "address": "Box 2138",
+      "postalCode": "403 13",
+      "city": "Göteborg",
+      "phone": "",
+      "mobile": "+46706260146",
+      "customerNumber": "10264",
+      "contactPerson": "Thomas Blomqvist",
+      "active": true,
+      "pricesByVehicleType": {
+        "Lastbil": {
+          "km": "145,50",
+          "stop": "400",
+          "wait": "475",
+          "hour": "950",
+          "fixed": ""
+        },
+        "Trucktrailer": {
+          "km": "\t151,50",
+          "stop": "400",
+          "wait": "\t475",
+          "hour": "\t950",
+          "fixed": ""
+        }
+      },
+      "id": "cust_1762868351523_f2rg79z6h"
+    },
+    {
+      "name": "Martins AB",
+      "address": "Tallbarrsvägen 2",
+      "postalCode": "42332",
+      "city": "Torslanda",
+      "phone": "",
+      "mobile": "0735060939",
+      "customerNumber": "990599",
+      "contactPerson": "Martin Vailto",
+      "active": true,
+      "pricesByVehicleType": {
+        "Lastbil": {
+          "km": "150",
+          "stop": "300",
+          "wait": "350",
+          "hour": "950",
+          "fixed": ""
+        }
+      },
+      "id": "cust_1762869348950_1c4e985xi"
+    }
+  ],
+  "drivers": [
+    {
+      "id": "drv_001",
+      "name": "Anders Harris",
+      "phone": "",
+      "active": true,
+      "code": "ANHN"
+    },
+    {
+      "id": "drv_002",
+      "name": "Bosse Cronwald",
+      "phone": "",
+      "active": true,
+      "code": "BOCR"
+    },
+    {
+      "id": "drv_003",
+      "name": "Calle Windh",
+      "phone": "",
+      "active": true,
+      "code": "CAWI"
+    },
+    {
+      "id": "drv_004",
+      "name": "Christian Harris",
+      "phone": "",
+      "active": true,
+      "code": "CHHA"
+    },
+    {
+      "id": "drv_005",
+      "name": "Christer Karlsson",
+      "phone": "",
+      "active": true,
+      "code": "CHKA"
+    },
+    {
+      "id": "drv_006",
+      "name": "Daniel Nilsson",
+      "phone": "",
+      "active": true,
+      "code": "DANI"
+    },
+    {
+      "id": "drv_007",
+      "name": "Daniel Norling",
+      "phone": "",
+      "active": true,
+      "code": "DANO"
+    },
+    {
+      "id": "drv_008",
+      "name": "Elias Kart",
+      "phone": "",
+      "active": true,
+      "code": "ELKA"
+    },
+    {
+      "id": "drv_009",
+      "name": "Emil Edgren",
+      "phone": "",
+      "active": true,
+      "code": "EMED"
+    },
+    {
+      "id": "drv_010",
+      "name": "Fredrik Wikström Lagergren",
+      "phone": "",
+      "active": true,
+      "code": "FRWI"
+    },
+    {
+      "id": "drv_011",
+      "name": "Gustaf Sandin",
+      "phone": "",
+      "active": true,
+      "code": "GUSA"
+    },
+    {
+      "id": "drv_012",
+      "name": "Göran Romeborn",
+      "phone": "",
+      "active": true,
+      "code": "GÖRO"
+    },
+    {
+      "id": "drv_013",
+      "name": "Janne Lilleste",
+      "phone": "",
+      "active": true,
+      "code": "JALI"
+    },
+    {
+      "id": "drv_014",
+      "name": "Jesper Carlsson",
+      "phone": "",
+      "active": true,
+      "code": "JECA"
+    },
+    {
+      "id": "drv_015",
+      "name": "Jimmy Torstensson",
+      "phone": "",
+      "active": true,
+      "code": "JITO"
+    },
+    {
+      "id": "drv_016",
+      "name": "Jonas Hellberg",
+      "phone": "",
+      "active": true,
+      "code": "JOHE"
+    },
+    {
+      "id": "drv_017",
+      "name": "Johan Sernemo",
+      "phone": "",
+      "active": true,
+      "code": "JOSE"
+    },
+    {
+      "id": "drv_018",
+      "name": "Lagerpersonal",
+      "phone": "",
+      "active": true,
+      "code": "LAGER"
+    },
+    {
+      "id": "drv_019",
+      "name": "Lars Nilsson",
+      "phone": "",
+      "active": true,
+      "code": "LANI"
+    },
+    {
+      "id": "drv_020",
+      "name": "Lasse Rosell",
+      "phone": "",
+      "active": true,
+      "code": "LARO"
+    },
+    {
+      "id": "drv_021",
+      "name": "Linus Torgersson",
+      "phone": "",
+      "active": true,
+      "code": "LITO"
+    },
+    {
+      "id": "drv_022",
+      "name": "Martin Andersson",
+      "phone": "",
+      "active": true,
+      "code": "MAAN"
+    },
+    {
+      "id": "drv_023",
+      "name": "Peter Fager",
+      "phone": "",
+      "active": true,
+      "code": "PEFA"
+    },
+    {
+      "id": "drv_024",
+      "name": "Peter Lengfelt",
+      "phone": "",
+      "active": true,
+      "code": "PELE"
+    },
+    {
+      "id": "drv_025",
+      "name": "Pontus Andersson",
+      "phone": "",
+      "active": true,
+      "code": "POAN"
+    },
+    {
+      "id": "drv_026",
+      "name": "Stefan Baatz",
+      "phone": "",
+      "active": true,
+      "code": "STBA"
+    },
+    {
+      "id": "drv_027",
+      "name": "Stefan Korneliusson",
+      "phone": "",
+      "active": true,
+      "code": "STKO"
+    },
+    {
+      "id": "drv_028",
+      "name": "Tim Axelsson",
+      "phone": "",
+      "active": true,
+      "code": "TIAX"
+    },
+    {
+      "id": "drv_029",
+      "name": "Ulf Hellberg",
+      "phone": "",
+      "active": true,
+      "code": "ULHE"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "veh_001",
+      "regNo": "EHG708",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_012"
+    },
+    {
+      "id": "veh_002",
+      "regNo": "EHS041",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_024"
+    },
+    {
+      "id": "veh_003",
+      "regNo": "YAM722",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_006"
+    },
+    {
+      "id": "veh_004",
+      "regNo": "OEG319",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_012"
+    },
+    {
+      "id": "veh_005",
+      "regNo": "YTM725",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_020"
+    },
+    {
+      "id": "veh_006",
+      "regNo": "YTM731",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_008"
+    },
+    {
+      "id": "veh_007",
+      "regNo": "CPX23E",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_021"
+    },
+    {
+      "id": "veh_008",
+      "regNo": "ERF67K",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_023"
+    },
+    {
+      "id": "veh_009",
+      "regNo": "SUD96N",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_007"
+    },
+    {
+      "id": "veh_010",
+      "regNo": "JWE88G",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_026"
+    },
+    {
+      "id": "veh_011",
+      "regNo": "ZDT16N",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_027"
+    },
+    {
+      "id": "veh_012",
+      "regNo": "ZJR53A",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_013"
+    },
+    {
+      "id": "veh_013",
+      "regNo": "MKY10F",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_019"
+    },
+    {
+      "id": "veh_014",
+      "regNo": "FTS16B",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_005"
+    },
+    {
+      "id": "veh_015",
+      "regNo": "RYJ547",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_016"
+    },
+    {
+      "id": "veh_016",
+      "regNo": "FCA445",
+      "type": "Lastbil",
+      "active": true,
+      "driverId": "drv_016"
+    },
+    {
+      "id": "veh_017",
+      "regNo": "LAGER",
+      "type": "Hjullastare",
+      "active": true,
+      "driverId": "drv_018"
+    }
+  ],
+  "vehicleTypes": [
+    "Lastbil",
+    "Hjullastare",
+    "Skåpbil",
+    "Släp",
+    "Trucktrailer"
+  ],
+  "bookings": [
+    {
+      "customerId": "cust_1762868351523_f2rg79z6h",
+      "vehicleId": "veh_006",
+      "driverId": "drv_008",
+      "pickupAddress": "Tallbarrsvägen 2",
+      "pickupDate": "2025-11-11",
+      "pickupTime": "14:40",
+      "pickupContactName": "Martin Vailto",
+      "pickupContactPhone": "0735060939",
+      "deliveryAddress": "Röds Saturnusstig 16",
+      "deliveryDate": "2025-11-11",
+      "deliveryTime": "14:40",
+      "deliveryContactName": "Ellinor Holst",
+      "deliveryContactPhone": "0737080006",
+      "km": 20,
+      "amountSek": null,
+      "status": "Planerad",
+      "note": "",
+      "id": "bk_1762868495591_v726kwp9w",
+      "bookingNo": "2025-0001"
+    }
+  ],
+  "pickupLocations": [
+    {
+      "name": "Vailtos lastkaj",
+      "address": "Tallbarrsvägen 2, 42332 Torslanda",
+      "customerId": "cust_1762869348950_1c4e985xi",
+      "id": "loc_1762869316300_v28gf9go3"
+    },
+    {
+      "name": "Hamnen",
+      "address": "Röds Saturnusstig 16, 42332 Torslanda",
+      "customerId": "cust_1762869348950_1c4e985xi",
+      "id": "loc_1762870264950_exkh4n67a"
+    }
+  ],
+  "lastBookingNumber": {
+    "year": 2025,
+    "number": 1
+  }
+}

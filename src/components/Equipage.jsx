@@ -1,0 +1,252 @@
+import React, { useState } from 'react';
+import ConfirmModal from './ConfirmModal';
+
+function Equipage({ data, updateData }) {
+  const [editingVehicleId, setEditingVehicleId] = useState(null);
+  const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [sortField, setSortField] = useState('regNo');
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  // Generate driver code from name (same as in Settings)
+  const generateDriverCode = (name) => {
+    const parts = name.trim().split(' ');
+    if (parts.length < 2) {
+      return name.substring(0, 4).toUpperCase();
+    }
+    const firstName = parts[0];
+    const lastName = parts[parts.length - 1];
+    return (firstName.substring(0, 2) + lastName.substring(0, 2)).toUpperCase();
+  };
+
+  const handleAssignDriver = (vehicleId, driverId) => {
+    const updatedVehicles = data.vehicles.map(v =>
+      v.id === vehicleId ? { ...v, driverId: driverId || null } : v
+    );
+    updateData({ vehicles: updatedVehicles });
+    setEditingVehicleId(null);
+    setSelectedDriverId('');
+  };
+
+  const startEditDriver = (vehicle) => {
+    setEditingVehicleId(vehicle.id);
+    setSelectedDriverId(vehicle.driverId || '');
+  };
+
+  const cancelEdit = () => {
+    setEditingVehicleId(null);
+    setSelectedDriverId('');
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortVehicles = (vehicles) => {
+    return [...vehicles].sort((a, b) => {
+      let aVal, bVal;
+      
+      if (sortField === 'driver') {
+        const driverA = data.drivers.find(d => d.id === a.driverId);
+        const driverB = data.drivers.find(d => d.id === b.driverId);
+        aVal = driverA?.name?.toLowerCase() || 'zzz';
+        bVal = driverB?.name?.toLowerCase() || 'zzz';
+      } else if (sortField === 'code') {
+        const driverA = data.drivers.find(d => d.id === a.driverId);
+        const driverB = data.drivers.find(d => d.id === b.driverId);
+        aVal = driverA ? (driverA.code || generateDriverCode(driverA.name)).toLowerCase() : 'zzz';
+        bVal = driverB ? (driverB.code || generateDriverCode(driverB.name)).toLowerCase() : 'zzz';
+      } else if (sortField === 'phone') {
+        const driverA = data.drivers.find(d => d.id === a.driverId);
+        const driverB = data.drivers.find(d => d.id === b.driverId);
+        aVal = driverA?.phone?.toLowerCase() || 'zzz';
+        bVal = driverB?.phone?.toLowerCase() || 'zzz';
+      } else {
+        aVal = a[sortField];
+        bVal = b[sortField];
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+      }
+      
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const activeVehicles = sortVehicles(data.vehicles.filter(v => v.active));
+  const activeDrivers = data.drivers.filter(d => d.active);
+
+  const SortIcon = ({ field }) => {
+    if (field !== sortField) return <span style={{ color: '#ccc', marginLeft: '0.25rem' }}>↕</span>;
+    return <span style={{ marginLeft: '0.25rem' }}>{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+  };
+
+  return (
+    <div>
+      <h1>Bilar</h1>
+      <p style={{ color: '#7f8c8d', marginBottom: '1.5rem' }}>
+        Översikt över alla fordon och deras tilldelade förare.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+        {/* LEFT COLUMN - TABLE */}
+        <div>
+          {activeVehicles.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon"></div>
+              <p>Inga aktiva fordon ännu</p>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th onClick={() => handleSort('regNo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Reg.nr
+                      <SortIcon field="regNo" />
+                    </th>
+                    <th onClick={() => handleSort('type')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Typ
+                      <SortIcon field="type" />
+                    </th>
+                    <th onClick={() => handleSort('driver')} style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}>
+                      Förare
+                      <SortIcon field="driver" />
+                    </th>
+                    <th onClick={() => handleSort('phone')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Telefon
+                      <SortIcon field="phone" />
+                    </th>
+                    <th>Åtgärder</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeVehicles.map(vehicle => {
+                    const assignedDriver = data.drivers.find(d => d.id === vehicle.driverId);
+                    const isEditing = editingVehicleId === vehicle.id;
+
+                    return (
+                      <tr key={vehicle.id}>
+                        <td><strong>{vehicle.regNo}</strong></td>
+                        <td>{vehicle.type}</td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {isEditing ? (
+                            <select
+                              value={selectedDriverId}
+                              onChange={(e) => setSelectedDriverId(e.target.value)}
+                              className="form-select"
+                              style={{ minWidth: '200px' }}
+                            >
+                              <option value="">Ingen förare</option>
+                              {activeDrivers.map(driver => (
+                                <option key={driver.id} value={driver.id}>
+                                  {driver.code || generateDriverCode(driver.name)} - {driver.name}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <div>
+                              {assignedDriver ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <span style={{ 
+                                    background: '#667eea', 
+                                    color: 'white', 
+                                    padding: '0.2rem 0.4rem', 
+                                    borderRadius: '3px',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.7rem',
+                                    minWidth: '45px',
+                                    textAlign: 'center'
+                                  }}>
+                                    {assignedDriver.code || generateDriverCode(assignedDriver.name)}
+                                  </span>
+                                  <strong style={{ fontSize: '0.85rem' }}>{assignedDriver.name}</strong>
+                                </div>
+                              ) : (
+                                <span style={{ color: '#95a5a6' }}>Ingen</span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          {assignedDriver && !isEditing ? assignedDriver.phone || '-' : '-'}
+                        </td>
+                        <td>
+                          <div className="table-actions">
+                            {isEditing ? (
+                              <>
+                                <button
+                                  onClick={() => handleAssignDriver(vehicle.id, selectedDriverId)}
+                                  className="btn btn-small btn-success"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                                >
+                                  Spara
+                                </button>
+                                <button
+                                  onClick={cancelEdit}
+                                  className="btn btn-small btn-secondary"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                                >
+                                  Avbryt
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => startEditDriver(vehicle)}
+                                className="btn btn-small btn-primary"
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                              >
+                                Ändra förare
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT COLUMN - SUMMARY */}
+        <div>
+          <div className="form">
+            <h2 style={{ marginBottom: '1rem' }}>Sammanfattning</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="stat-card">
+                <div className="stat-label">Aktiva fordon</div>
+                <div className="stat-value">{activeVehicles.length}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Fordon med förare</div>
+                <div className="stat-value">
+                  {activeVehicles.filter(v => v.driverId).length}
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Fordon utan förare</div>
+                <div className="stat-value">
+                  {activeVehicles.filter(v => !v.driverId).length}
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Aktiva förare</div>
+                <div className="stat-value">{activeDrivers.length}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Equipage;
+
