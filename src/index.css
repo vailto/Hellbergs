@@ -791,3 +791,86 @@ h2 {
   padding-bottom: 0.5rem;
 }
 
+/* ==========================================================================
+   CSS Consolidation - Phase 2
+   Common utilities to replace inline styles. Use .u-* prefix for utilities.
+   ========================================================================== */
+
+/* Common layout utilities */
+.nowrap { white-space: nowrap; }
+.flex-row { display: flex; gap: 0.5rem; }
+.flex-center { display: flex; align-items: center; gap: 0.5rem; }
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Badge styles (driver, vehicle, customer) */
+.badge-driver {
+  background: #667eea;
+  color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.7rem;
+  min-width: 45px;
+  text-align: center;
+}
+.badge-driver-inactive {
+  background: #95a5a6;
+  color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.7rem;
+  min-width: 45px;
+  text-align: center;
+}
+.badge-vehicle {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+/* Cursor utilities */
+.u-cursor-pointer { cursor: pointer; }
+
+/* Flex layout utilities with gap variations */
+.u-flex-gap-sm { display: flex; gap: 0.25rem; }
+.u-flex-gap-md { display: flex; gap: 0.35rem; }
+.u-flex-gap-lg { display: flex; gap: 0.75rem; }
+.u-flex-center-sm { display: flex; align-items: center; gap: 0.25rem; }
+.u-flex-center-md { display: flex; align-items: center; gap: 0.35rem; }
+
+/* Spacing utilities - margin bottom */
+.u-mb-xs { margin-bottom: 0.25rem; }
+.u-mb-sm { margin-bottom: 0.5rem; }
+.u-mb-md { margin-bottom: 0.75rem; }
+.u-mb-lg { margin-bottom: 1rem; }
+
+/* Spacing utilities - padding */
+.u-p-xs { padding: 0.25rem; }
+.u-p-sm { padding: 0.35rem; }
+.u-p-md { padding: 0.5rem; }
+
+/* Opacity utilities */
+.u-opacity-50 { opacity: 0.5; }
+.u-opacity-60 { opacity: 0.6; }
+
+/* Grid utilities for common patterns */
+.u-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.u-grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
