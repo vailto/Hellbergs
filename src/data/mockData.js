@@ -89,19 +89,110 @@ const getMockData = () => {
       pricesByVehicleType: {
         Släp: { km: '75', stop: '600', wait: '750', hour: '850', fixed: '' }
       }
+    },
+    {
+      id: 'cust_mock_6',
+      name: 'Nordic Bygg & Transport AB',
+      shortName: 'Nordic',
+      customerNumber: 'ANK-006',
+      contactPerson: 'Erik Nord',
+      address: 'Byggvägen 22',
+      postalCode: '124 10',
+      city: 'Ankeborg',
+      phone: '031-555 44 33',
+      mobile: '070-555 44 33',
+      active: true,
+      pricesByVehicleType: {
+        Skåpbil: { km: '46', stop: '360', wait: '460', hour: '560', fixed: '' },
+        Släp: { km: '66', stop: '510', wait: '660', hour: '760', fixed: '' }
+      }
+    },
+    {
+      id: 'cust_mock_7',
+      name: 'Ankeborgs Restaurang AB',
+      shortName: 'Rest.',
+      customerNumber: 'ANK-007',
+      contactPerson: 'Anna Kök',
+      address: 'Smakgatan 5',
+      postalCode: '123 20',
+      city: 'Ankeborg',
+      phone: '031-111 22 33',
+      mobile: '070-111 22 33',
+      active: true,
+      pricesByVehicleType: {
+        Skåpbil: { km: '44', stop: '340', wait: '440', hour: '540', fixed: '' }
+      }
+    },
+    {
+      id: 'cust_mock_8',
+      name: 'Södergården Lantbruk',
+      shortName: 'Söder',
+      customerNumber: 'ANK-008',
+      contactPerson: 'Per Bonden',
+      address: 'Åkervägen 100',
+      postalCode: '125 50',
+      city: 'Ankeborg',
+      phone: '031-888 77 66',
+      mobile: '070-888 77 66',
+      active: true,
+      pricesByVehicleType: {
+        Skåpbil: { km: '52', stop: '420', wait: '520', hour: '620', fixed: '' },
+        Släp: { km: '72', stop: '560', wait: '720', hour: '820', fixed: '' }
+      }
+    },
+    {
+      id: 'cust_mock_9',
+      name: 'Tech Solutions Nordic',
+      shortName: 'TechSol',
+      customerNumber: 'ANK-009',
+      contactPerson: 'Maria Data',
+      address: 'IT-parken 1',
+      postalCode: '123 60',
+      city: 'Ankeborg',
+      phone: '031-999 00 11',
+      mobile: '070-999 00 11',
+      active: true,
+      pricesByVehicleType: {
+        Skåpbil: { km: '48', stop: '390', wait: '490', hour: '590', fixed: '' }
+      }
+    },
+    {
+      id: 'cust_mock_10',
+      name: 'Ankeborgs Renhållning',
+      shortName: 'Renhåll',
+      customerNumber: 'ANK-010',
+      contactPerson: 'Städar Stig',
+      address: 'Återvinningsvägen 8',
+      postalCode: '123 90',
+      city: 'Ankeborg',
+      phone: '031-666 55 44',
+      mobile: '070-666 55 44',
+      active: true,
+      pricesByVehicleType: {
+        Skåpbil: { km: '45', stop: '350', wait: '450', hour: '550', fixed: '' },
+        Släp: { km: '65', stop: '500', wait: '650', hour: '750', fixed: '' }
+      }
     }
   ];
 
   const drivers = [
     { id: 'drv_mock_1', name: 'Kalle Karlsson', phone: '070-111 11 11', active: true, code: 'KAKA' },
     { id: 'drv_mock_2', name: 'Lisa Lind', phone: '070-222 22 22', active: true, code: 'LILI' },
-    { id: 'drv_mock_3', name: 'Olof Olsson', phone: '070-333 33 33', active: true, code: 'OLOL' }
+    { id: 'drv_mock_3', name: 'Olof Olsson', phone: '070-333 33 33', active: true, code: 'OLOL' },
+    { id: 'drv_mock_4', name: 'Sara Svensson', phone: '070-444 44 44', active: true, code: 'SASV' },
+    { id: 'drv_mock_5', name: 'Peter Pettersson', phone: '070-555 55 55', active: true, code: 'PEPE' },
+    { id: 'drv_mock_6', name: 'Emma Eriksson', phone: '070-666 66 66', active: true, code: 'EMER' },
+    { id: 'drv_mock_7', name: 'Johan Johansson', phone: '070-777 77 77', active: true, code: 'JOJO' }
   ];
 
   const vehicles = [
     { id: 'veh_mock_1', regNo: 'ABC123', type: 'Skåpbil', driverId: 'drv_mock_1', active: true },
     { id: 'veh_mock_2', regNo: 'DEF456', type: 'Skåpbil', driverId: null, active: true },
-    { id: 'veh_mock_3', regNo: 'SLP789', type: 'Släp', driverId: 'drv_mock_2', active: true }
+    { id: 'veh_mock_3', regNo: 'SLP789', type: 'Släp', driverId: 'drv_mock_2', active: true },
+    { id: 'veh_mock_4', regNo: 'GHI012', type: 'Skåpbil', driverId: 'drv_mock_3', active: true },
+    { id: 'veh_mock_5', regNo: 'JKL345', type: 'Skåpbil', driverId: 'drv_mock_4', active: true },
+    { id: 'veh_mock_6', regNo: 'SLP456', type: 'Släp', driverId: 'drv_mock_5', active: true },
+    { id: 'veh_mock_7', regNo: 'MNO678', type: 'Skåpbil', driverId: 'drv_mock_6', active: true }
   ];
 
   const pickupLocations = [

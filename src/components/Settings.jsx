@@ -72,6 +72,7 @@ function Settings({ data, updateData }) {
   const [driverSortDirection, setDriverSortDirection] = useState('asc');
   const [vehicleTypeSortDirection, setVehicleTypeSortDirection] = useState('asc');
   const [testDataLoaded, setTestDataLoaded] = useState(false);
+  const [showLoadTestDataConfirm, setShowLoadTestDataConfirm] = useState(false);
 
   // Vehicle Types Handlers
   const handleAddType = (e) => {
@@ -415,6 +416,7 @@ function Settings({ data, updateData }) {
         lastBookingNumber: mock.lastBookingNumber
       });
       setTestDataLoaded(true);
+      setShowLoadTestDataConfirm(false);
     } catch (err) {
       console.error('Ladda testdata:', err);
       alert('Kunde inte ladda testdata: ' + (err.message || err));
@@ -1860,7 +1862,7 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
           </p>
           <button
             type="button"
-            onClick={handleLoadTestData}
+            onClick={() => setShowLoadTestDataConfirm(true)}
             className="btn btn-primary"
             style={{ marginBottom: '1rem' }}
           >
@@ -1878,6 +1880,15 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
       )}
 
       {/* MODALS */}
+      {showLoadTestDataConfirm && (
+        <ConfirmModal
+          title="Ladda testdata"
+          message="All befintlig data (kunder, förare, fordon, platser, bokningar) kommer att raderas och ersättas med testdata. Vill du fortsätta?"
+          onConfirm={handleLoadTestData}
+          onCancel={() => setShowLoadTestDataConfirm(false)}
+        />
+      )}
+
       {deleteType && (
         <ConfirmModal
           title="Ta bort fordonstyp"

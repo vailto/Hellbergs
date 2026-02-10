@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { loadData, saveData } from './utils/storage';
-import getMockData from './data/mockData';
 import Booking from './components/Booking';
 import Schema from './components/Schema';
 import Customers from './components/Customers';
@@ -46,22 +45,6 @@ function App() {
 
   const updateData = (updates) => {
     setData(prev => ({ ...prev, ...updates }));
-  };
-
-  const handleLoadTestData = () => {
-    const mock = getMockData();
-    const current = loadData();
-    const newData = {
-      ...current,
-      customers: mock.customers,
-      drivers: mock.drivers,
-      vehicles: mock.vehicles,
-      pickupLocations: mock.pickupLocations,
-      bookings: mock.bookings,
-      lastBookingNumber: mock.lastBookingNumber
-    };
-    saveData(newData);
-    window.location.reload();
   };
 
   const sections = [
@@ -128,16 +111,6 @@ function App() {
               </button>
             </div>
           ))}
-          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #2a3647' }}>
-            <button
-              type="button"
-              className="sidebar-button"
-              onClick={handleLoadTestData}
-              style={{ width: '100%', justifyContent: 'center', fontSize: '0.85rem' }}
-            >
-              Ladda testdata
-            </button>
-          </div>
         </nav>
       </aside>
       <main className="main-content">
