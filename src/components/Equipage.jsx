@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 import SortIcon from './SortIcon';
+import { syncVehicleDriverRelation } from '../utils/vehicleUtils';
 
 function Equipage({ data, updateData }) {
   const [editingVehicleId, setEditingVehicleId] = useState(null);
-  const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [selectedDriverIds, setSelectedDriverIds] = useState([]);
   const [sortField, setSortField] = useState('regNo');
   const [sortDirection, setSortDirection] = useState('asc');
 
@@ -19,23 +20,31 @@ function Equipage({ data, updateData }) {
     return (firstName.substring(0, 2) + lastName.substring(0, 2)).toUpperCase();
   };
 
-  const handleAssignDriver = (vehicleId, driverId) => {
+  const handleAssignDrivers = (vehicleId, driverIds) => {
     const updatedVehicles = data.vehicles.map(v =>
-      v.id === vehicleId ? { ...v, driverId: driverId || null } : v
+      v.id === vehicleId ? { ...v, driverIds: driverIds || [] } : v
     );
-    updateData({ vehicles: updatedVehicles });
+    const { vehicles: syncedVehicles, drivers: syncedDrivers } = syncVehicleDriverRelation(updatedVehicles, data.drivers);
+    updateData({ vehicles: syncedVehicles, drivers: syncedDrivers });
     setEditingVehicleId(null);
-    setSelectedDriverId('');
+    setSelectedDriverIds([]);
   };
 
   const startEditDriver = (vehicle) => {
     setEditingVehicleId(vehicle.id);
-    setSelectedDriverId(vehicle.driverId || '');
+    const ids = vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
+    setSelectedDriverIds(ids);
   };
 
   const cancelEdit = () => {
     setEditingVehicleId(null);
-    setSelectedDriverId('');
+    setSelectedDriverIds([]);
+  };
+
+  const toggleDriverSelection = (driverId) => {
+    setSelectedDriverIds(prev =>
+      prev.includes(driverId) ? prev.filter(id => id !== driverId) : [...prev, driverId]
+    );
   };
 
   const handleSort = (field) => {
@@ -51,19 +60,17 @@ function Equipage({ data, updateData }) {
     return [...vehicles].sort((a, b) => {
       let aVal, bVal;
       
+      const aDriverIds = a.driverIds || (a.driverId ? [a.driverId] : []);
+      const bDriverIds = b.driverIds || (b.driverId ? [b.driverId] : []);
+      const driverA = aDriverIds[0] ? data.drivers.find(d => d.id === aDriverIds[0]) : null;
+      const driverB = bDriverIds[0] ? data.drivers.find(d => d.id === bDriverIds[0]) : null;
       if (sortField === 'driver') {
-        const driverA = data.drivers.find(d => d.id === a.driverId);
-        const driverB = data.drivers.find(d => d.id === b.driverId);
         aVal = driverA?.name?.toLowerCase() || 'zzz';
         bVal = driverB?.name?.toLowerCase() || 'zzz';
       } else if (sortField === 'code') {
-        const driverA = data.drivers.find(d => d.id === a.driverId);
-        const driverB = data.drivers.find(d => d.id === b.driverId);
         aVal = driverA ? (driverA.code || generateDriverCode(driverA.name)).toLowerCase() : 'zzz';
         bVal = driverB ? (driverB.code || generateDriverCode(driverB.name)).toLowerCase() : 'zzz';
       } else if (sortField === 'phone') {
-        const driverA = data.drivers.find(d => d.id === a.driverId);
-        const driverB = data.drivers.find(d => d.id === b.driverId);
         aVal = driverA?.phone?.toLowerCase() || 'zzz';
         bVal = driverB?.phone?.toLowerCase() || 'zzz';
       } else {
@@ -123,7 +130,8 @@ function Equipage({ data, updateData }) {
                 </thead>
                 <tbody>
                   {activeVehicles.map(vehicle => {
-                    const assignedDriver = data.drivers.find(d => d.id === vehicle.driverId);
+                    const driverIds = vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
+                    const assignedDrivers = driverIds.map(id => data.drivers.find(d => d.id === id)).filter(Boolean);
                     const isEditing = editingVehicleId === vehicle.id;
 
                     return (
@@ -132,36 +140,39 @@ function Equipage({ data, updateData }) {
                         <td>{vehicle.type}</td>
                         <td style={{ whiteSpace: 'nowrap' }}>
                           {isEditing ? (
-                            <select
-                              value={selectedDriverId}
-                              onChange={(e) => setSelectedDriverId(e.target.value)}
-                              className="form-select"
-                              style={{ minWidth: '200px' }}
-                            >
-                              <option value="">Ingen förare</option>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '200px' }}>
                               {activeDrivers.map(driver => (
-                                <option key={driver.id} value={driver.id}>
-                                  {driver.code || generateDriverCode(driver.name)} - {driver.name}
-                                </option>
+                                <label key={driver.id} className="checkbox-label" style={{ margin: 0 }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedDriverIds.includes(driver.id)}
+                                    onChange={() => toggleDriverSelection(driver.id)}
+                                  />
+                                  {driver.code || generateDriverCode(driver.name)} – {driver.name}
+                                </label>
                               ))}
-                            </select>
+                            </div>
                           ) : (
                             <div>
-                              {assignedDriver ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  <span style={{ 
-                                    background: '#667eea', 
-                                    color: 'white', 
-                                    padding: '0.2rem 0.4rem', 
-                                    borderRadius: '3px',
-                                    fontWeight: 'bold',
-                                    fontSize: 'var(--font-size-2xs)',
-                                    minWidth: '45px',
-                                    textAlign: 'center'
-                                  }}>
-                                    {assignedDriver.code || generateDriverCode(assignedDriver.name)}
-                                  </span>
-                                  <strong className="text-base">{assignedDriver.name}</strong>
+                              {assignedDrivers.length > 0 ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  {assignedDrivers.map((d, i) => (
+                                    <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                      {i > 0 && <span className="text-muted">,</span>}
+                                      <span style={{ 
+                                        background: '#667eea', 
+                                        color: 'white', 
+                                        padding: '0.2rem 0.4rem', 
+                                        borderRadius: '3px',
+                                        fontWeight: 'bold',
+                                        fontSize: 'var(--font-size-2xs)',
+                                        minWidth: '45px',
+                                        textAlign: 'center'
+                                      }}>
+                                        {d.code || generateDriverCode(d.name)}
+                                      </span>
+                                    </span>
+                                  ))}
                                 </div>
                               ) : (
                                 <span style={{ color: '#95a5a6' }}>Ingen</span>
@@ -170,21 +181,21 @@ function Equipage({ data, updateData }) {
                           )}
                         </td>
                         <td>
-                          {assignedDriver && !isEditing ? assignedDriver.phone || '-' : '-'}
+                          {assignedDrivers[0] && !isEditing ? assignedDrivers[0].phone || '-' : '-'}
                         </td>
                         <td>
                           <div className="table-actions">
                             {isEditing ? (
                               <>
                                 <button
-                                  onClick={() => handleAssignDriver(vehicle.id, selectedDriverId)}
-className="btn btn-small btn-success text-sm" style={{ padding: '0.25rem 0.5rem' }}
+                                  onClick={() => handleAssignDrivers(vehicle.id, selectedDriverIds)}
+                                  className="btn btn-small btn-success text-sm" style={{ padding: '0.25rem 0.5rem' }}
                                 >
                                   Spara
                                 </button>
                                 <button
                                   onClick={cancelEdit}
-className="btn btn-small btn-secondary text-sm" style={{ padding: '0.25rem 0.5rem' }}
+                                  className="btn btn-small btn-secondary text-sm" style={{ padding: '0.25rem 0.5rem' }}
                                 >
                                   Avbryt
                                 </button>
@@ -192,7 +203,7 @@ className="btn btn-small btn-secondary text-sm" style={{ padding: '0.25rem 0.5re
                             ) : (
                               <button
                                 onClick={() => startEditDriver(vehicle)}
-className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.5rem' }}
+                                className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.5rem' }}
                               >
                                 Ändra förare
                               </button>
@@ -220,13 +231,13 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.5rem'
               <div className="stat-card">
                 <div className="stat-label">Fordon med förare</div>
                 <div className="stat-value">
-                  {activeVehicles.filter(v => v.driverId).length}
+                  {activeVehicles.filter(v => (v.driverIds || []).length > 0).length}
                 </div>
               </div>
               <div className="stat-card">
                 <div className="stat-label">Fordon utan förare</div>
                 <div className="stat-value">
-                  {activeVehicles.filter(v => !v.driverId).length}
+                  {activeVehicles.filter(v => !(v.driverIds || []).length).length}
                 </div>
               </div>
               <div className="stat-card">

@@ -2,6 +2,26 @@
 
 const STORAGE_KEY = 'truckPlannerData';
 
+export function migrateVehicleDriverData(data) {
+  if (!data.vehicles && !data.drivers) return;
+  const vehicles = (data.vehicles || []).map(v => ({
+    ...v,
+    driverIds: Array.isArray(v.driverIds) ? v.driverIds : (v.driverId ? [v.driverId] : [])
+  }));
+  const drivers = data.drivers || [];
+  const driverMap = new Map(drivers.map(d => [d.id, { ...d, vehicleIds: d.vehicleIds || [] }]));
+  for (const v of vehicles) {
+    for (const did of v.driverIds) {
+      const d = driverMap.get(did);
+      if (d) {
+        if (!d.vehicleIds.includes(v.id)) d.vehicleIds = [...(d.vehicleIds || []), v.id];
+      }
+    }
+  }
+  data.vehicles = vehicles;
+  data.drivers = Array.from(driverMap.values());
+}
+
 const DEFAULT_DATA = {
   customers: [],
   drivers: [],
@@ -27,14 +47,7 @@ export const loadData = () => {
         bookingBlocks: data.bookingBlocks || []
       };
       
-      // Ensure all vehicles have a driverId field (even if null)
-      if (loadedData.vehicles) {
-        loadedData.vehicles = loadedData.vehicles.map(vehicle => ({
-          ...vehicle,
-          driverId: vehicle.driverId || null
-        }));
-      }
-      
+      migrateVehicleDriverData(loadedData);
       return loadedData;
     }
   } catch (error) {

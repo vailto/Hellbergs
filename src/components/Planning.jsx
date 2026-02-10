@@ -205,8 +205,10 @@ function Planning({ data, updateData, setCurrentSection }) {
   };
 
   const handleVehicleAssign = (bookingId, vehicleId) => {
-    const vehicle = data.vehicles.find(v => v.id === vehicleId);
-    const driverId = vehicle?.driverId || null;
+    const booking = data.bookings.find(b => b.id === bookingId);
+    const authorizedDrivers = vehicleId ? data.drivers.filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
+    const keepDriver = vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
+    const driverId = keepDriver ? booking.driverId : null;
     const updatedBookings = data.bookings.map(b => {
       if (b.id !== bookingId) return b;
       const next = { ...b, vehicleId: vehicleId || null, driverId };
@@ -481,9 +483,14 @@ function Planning({ data, updateData, setCurrentSection }) {
                         style={{ minWidth: '120px' }}
                       >
                         <option value="">Ej tilldelad</option>
-                        {activeDrivers.map(d => (
-                          <option key={d.id} value={d.id}>{d.name}</option>
-                        ))}
+                        {(() => {
+                          const eligible = booking.vehicleId
+                            ? activeDrivers.filter(d => (d.vehicleIds || []).includes(booking.vehicleId) || d.id === booking.driverId)
+                            : activeDrivers;
+                          return eligible.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                          ));
+                        })()}
                       </select>
                     </td>
                     <td>

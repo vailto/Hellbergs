@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 import SortIcon from './SortIcon';
 import { generateId } from '../utils/formatters';
-import { exportToJSON, importFromJSON, saveData } from '../utils/storage';
+import { exportToJSON, importFromJSON, saveData, migrateVehicleDriverData } from '../utils/storage';
 import getMockData from '../data/mockData';
+import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../utils/vehicleUtils';
 
 function Settings({ data, updateData }) {
   // Tab State
@@ -15,13 +16,13 @@ function Settings({ data, updateData }) {
   const [deleteType, setDeleteType] = useState(null);
 
   // Drivers State
-  const [driverForm, setDriverForm] = useState({ name: '', phone: '', active: true });
+  const [driverForm, setDriverForm] = useState({ name: '', phone: '', address: '', postalCode: '', city: '', active: true, vehicleIds: [] });
   const [editingDriverId, setEditingDriverId] = useState(null);
   const [deleteDriverId, setDeleteDriverId] = useState(null);
   const [showDriverForm, setShowDriverForm] = useState(false);
 
   // Vehicles State
-  const [vehicleForm, setVehicleForm] = useState({ regNo: '', type: '', driverId: '', active: true });
+  const [vehicleForm, setVehicleForm] = useState({ regNo: '', type: '', driverIds: [], active: true });
   const [editingVehicleId, setEditingVehicleId] = useState(null);
   const [deleteVehicleId, setDeleteVehicleId] = useState(null);
   const [showVehicleForm, setShowVehicleForm] = useState(false);
@@ -56,6 +57,9 @@ function Settings({ data, updateData }) {
   const [showCustomerPriceForm, setShowCustomerPriceForm] = useState(false);
   const [selectedCustomerVehicleType, setSelectedCustomerVehicleType] = useState('');
   const [expandedCustomerId, setExpandedCustomerId] = useState(null);
+  const [expandedLocationId, setExpandedLocationId] = useState(null);
+  const [expandedDriverId, setExpandedDriverId] = useState(null);
+  const [expandedVehicleId, setExpandedVehicleId] = useState(null);
   const [customerSortField, setCustomerSortField] = useState('customerNumber');
   const [customerSortDirection, setCustomerSortDirection] = useState('asc');
 
@@ -133,31 +137,49 @@ function Settings({ data, updateData }) {
     }
 
     const code = generateDriverCode(driverForm.name);
+    const driverData = {
+      ...driverForm,
+      vehicleIds: Array.isArray(driverForm.vehicleIds) ? driverForm.vehicleIds : []
+    };
 
+    let updatedDrivers;
     if (editingDriverId) {
-      const updatedDrivers = data.drivers.map(d =>
-        d.id === editingDriverId ? { ...driverForm, id: editingDriverId, code } : d
+      updatedDrivers = data.drivers.map(d =>
+        d.id === editingDriverId ? { ...driverData, id: editingDriverId, code } : d
       );
-      updateData({ drivers: updatedDrivers });
     } else {
-      const newDriver = { ...driverForm, id: generateId('drv'), code };
-      updateData({ drivers: [...data.drivers, newDriver] });
+      updatedDrivers = [...data.drivers, { ...driverData, id: generateId('drv'), code }];
     }
 
+    const syncedVehicles = syncVehicleDriverIdsFromDrivers(data.vehicles, updatedDrivers);
+    updateData({ drivers: updatedDrivers, vehicles: syncedVehicles });
     resetDriverForm();
   };
 
   const resetDriverForm = () => {
-    setDriverForm({ name: '', phone: '', active: true });
+    setDriverForm({ name: '', phone: '', address: '', postalCode: '', city: '', active: true, vehicleIds: [] });
     setEditingDriverId(null);
     setShowDriverForm(false);
   };
 
   const handleEditDriver = (driver) => {
-    setDriverForm(driver);
+    const vehicleIds = Array.isArray(driver.vehicleIds) ? driver.vehicleIds : [];
+    setDriverForm({
+      ...driver,
+      address: driver.address || '',
+      postalCode: driver.postalCode || '',
+      city: driver.city || '',
+      vehicleIds
+    });
     setEditingDriverId(driver.id);
     setShowDriverForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDriverVehicleToggle = (vehicleId) => {
+    const ids = driverForm.vehicleIds || [];
+    const next = ids.includes(vehicleId) ? ids.filter(id => id !== vehicleId) : [...ids, vehicleId];
+    setDriverForm({ ...driverForm, vehicleIds: next });
   };
 
   const handleDeleteDriver = () => {
@@ -186,30 +208,43 @@ function Settings({ data, updateData }) {
       return;
     }
 
+    const vehicleData = {
+      ...vehicleForm,
+      driverIds: Array.isArray(vehicleForm.driverIds) ? vehicleForm.driverIds : []
+    };
+
+    let updatedVehicles;
     if (editingVehicleId) {
-      const updatedVehicles = data.vehicles.map(v =>
-        v.id === editingVehicleId ? { ...vehicleForm, id: editingVehicleId } : v
+      updatedVehicles = data.vehicles.map(v =>
+        v.id === editingVehicleId ? { ...vehicleData, id: editingVehicleId } : v
       );
-      updateData({ vehicles: updatedVehicles });
     } else {
-      const newVehicle = { ...vehicleForm, id: generateId('veh') };
-      updateData({ vehicles: [...data.vehicles, newVehicle] });
+      updatedVehicles = [...data.vehicles, { ...vehicleData, id: generateId('veh') }];
     }
 
+    const { vehicles: syncedVehicles, drivers: syncedDrivers } = syncVehicleDriverRelation(updatedVehicles, data.drivers);
+    updateData({ vehicles: syncedVehicles, drivers: syncedDrivers });
     resetVehicleForm();
   };
 
   const resetVehicleForm = () => {
-    setVehicleForm({ regNo: '', type: '', driverId: '', active: true });
+    setVehicleForm({ regNo: '', type: '', driverIds: [], active: true });
     setEditingVehicleId(null);
     setShowVehicleForm(false);
   };
 
   const handleEditVehicle = (vehicle) => {
-    setVehicleForm(vehicle);
+    const driverIds = Array.isArray(vehicle.driverIds) ? vehicle.driverIds : (vehicle.driverId ? [vehicle.driverId] : []);
+    setVehicleForm({ ...vehicle, driverIds });
     setEditingVehicleId(vehicle.id);
     setShowVehicleForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleVehicleDriverToggle = (driverId) => {
+    const ids = vehicleForm.driverIds || [];
+    const next = ids.includes(driverId) ? ids.filter(id => id !== driverId) : [...ids, driverId];
+    setVehicleForm({ ...vehicleForm, driverIds: next });
   };
 
   const handleDeleteVehicle = () => {
@@ -495,6 +530,7 @@ function Settings({ data, updateData }) {
         return;
       }
 
+      migrateVehicleDriverData(importedData);
       updateData(importedData);
       saveData(importedData);
       
@@ -660,6 +696,90 @@ function Settings({ data, updateData }) {
       {/* Tab Content */}
       {currentTab === 'fordon' && (
         <div>
+        {showVehicleForm ? (
+          <div className="form">
+            <h2>{editingVehicleId ? 'Redigera fordon' : 'Nytt fordon'}</h2>
+            <form onSubmit={handleVehicleSubmit}>
+              <div className="form-section">
+                <div className="form-section-title">Grunduppgifter</div>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="text-muted-2 label-sm">Reg.nr *</label>
+                    <input
+                      type="text"
+                      value={vehicleForm.regNo}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, regNo: e.target.value })}
+                      className="form-input"
+                      placeholder="ABC123"
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="text-muted-2 label-sm">Fordonstyp *</label>
+                    <select
+                      value={vehicleForm.type}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, type: e.target.value })}
+                      className="form-select"
+                      required
+                    >
+                      <option value="">Välj typ</option>
+                      {data.vehicleTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Förare som får framföra fordonet</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
+                    {data.drivers.filter(d => d.active).map(driver => (
+                      <label key={driver.id} className="checkbox-label" style={{ margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          checked={(vehicleForm.driverIds || []).includes(driver.id)}
+                          onChange={() => handleVehicleDriverToggle(driver.id)}
+                        />
+                        {driver.code || generateDriverCode(driver.name)} – {driver.name}
+                      </label>
+                    ))}
+                    {data.drivers.filter(d => d.active).length === 0 && (
+                      <span className="text-muted text-sm">Inga aktiva förare</span>
+                    )}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={vehicleForm.active}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, active: e.target.checked })}
+                    />
+                    Aktiv
+                  </label>
+                </div>
+              </div>
+              <div className="form-actions">
+                {editingVehicleId && (
+                  <>
+                    <button type="button" onClick={() => toggleVehicleActive(editingVehicleId, vehicleForm.active)} className="btn btn-secondary btn-small">
+                      {vehicleForm.active ? 'Inaktivera' : 'Aktivera'}
+                    </button>
+                    <button type="button" onClick={() => setDeleteVehicleId(editingVehicleId)} className="btn btn-danger btn-small">
+                      Ta bort
+                    </button>
+                  </>
+                )}
+                <button type="button" onClick={resetVehicleForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
+                  Avbryt
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  {editingVehicleId ? 'Uppdatera' : 'Spara'}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : (
+        <>
           {/* SAMMANFATTNING */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
             <div className="stat-card" style={{ flex: 1 }}>
@@ -669,13 +789,13 @@ function Settings({ data, updateData }) {
             <div className="stat-card" style={{ flex: 1 }}>
               <div className="stat-label">Fordon med förare</div>
               <div className="stat-value">
-                {activeVehicles.filter(v => v.driverId).length}
+                {activeVehicles.filter(v => (v.driverIds || []).length > 0).length}
               </div>
             </div>
             <div className="stat-card" style={{ flex: 1 }}>
               <div className="stat-label">Fordon utan förare</div>
               <div className="stat-value">
-                {activeVehicles.filter(v => !v.driverId).length}
+                {activeVehicles.filter(v => !(v.driverIds || []).length).length}
               </div>
             </div>
             <div className="stat-card" style={{ flex: 1 }}>
@@ -685,107 +805,17 @@ function Settings({ data, updateData }) {
           </div>
 
           {/* TWO COLUMN LAYOUT */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
             {/* LEFT COLUMN - AKTIVA FORDON OCH INAKTIVA FORDON */}
             <div>
               {/* AKTIVA FORDON */}
               <div className="form" style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ margin: 0 }}>Aktiva fordon ({activeVehicles.length})</h2>
-              {!showVehicleForm && (
-                <button onClick={() => setShowVehicleForm(true)} className="btn btn-primary btn-small">
-                  + Nytt
-                </button>
-              )}
+              <button onClick={() => setShowVehicleForm(true)} className="btn btn-primary btn-small">
+                + Nytt
+              </button>
             </div>
-
-            {showVehicleForm && (
-              <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-                <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
-                  {editingVehicleId ? 'Redigera fordon' : 'Nytt fordon'}
-                </h3>
-                
-                <form onSubmit={handleVehicleSubmit}>
-                  <div className="form-row" style={{ gap: '0.5rem' }}>
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <input
-                        type="text"
-                        value={vehicleForm.regNo}
-                        onChange={(e) => setVehicleForm({ ...vehicleForm, regNo: e.target.value })}
-                        className="form-input"
-                        placeholder="Reg.nr (ABC123)"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <select
-                        value={vehicleForm.type}
-                        onChange={(e) => setVehicleForm({ ...vehicleForm, type: e.target.value })}
-                        className="form-select"
-                        required
-                      >
-                        <option value="">Fordonstyp</option>
-                        {data.vehicleTypes.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <select
-                      value={vehicleForm.driverId || ''}
-                      onChange={(e) => setVehicleForm({ ...vehicleForm, driverId: e.target.value })}
-                      className="form-select"
-                    >
-                      <option value="">Ingen förare tilldelad</option>
-                      {data.drivers.filter(d => d.active).map(driver => (
-                        <option key={driver.id} value={driver.id}>{driver.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={vehicleForm.active}
-                        onChange={(e) => setVehicleForm({ ...vehicleForm, active: e.target.checked })}
-                      />
-                      Aktiv
-                    </label>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button type="submit" className="btn btn-primary btn-small">
-                      {editingVehicleId ? 'Spara' : 'Lägg till'}
-                    </button>
-                    {editingVehicleId && (
-                      <>
-                        <button 
-                          type="button" 
-                          onClick={() => toggleVehicleActive(editingVehicleId, vehicleForm.active)} 
-                          className="btn btn-secondary btn-small"
-                        >
-                          {vehicleForm.active ? 'Inaktivera' : 'Aktivera'}
-                        </button>
-                        <button 
-                          type="button" 
-                          onClick={() => setDeleteVehicleId(editingVehicleId)} 
-                          className="btn btn-danger btn-small"
-                        >
-                          Ta bort
-                        </button>
-                      </>
-                    )}
-                    <button type="button" onClick={resetVehicleForm} className="btn btn-secondary btn-small">
-                      Avbryt
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
 
             {activeVehicles.length === 0 ? (
               <div className="empty-state">
@@ -811,27 +841,32 @@ function Settings({ data, updateData }) {
                     </thead>
                     <tbody>
                       {displayedActiveVehicles.map(vehicle => {
-                        const assignedDriver = data.drivers.find(d => d.id === vehicle.driverId);
+                        const driverIds = vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
+                        const assignedDrivers = driverIds.map(id => data.drivers.find(d => d.id === id)).filter(Boolean);
                         return (
                           <tr key={vehicle.id}>
                             <td><strong>{vehicle.regNo}</strong></td>
                             <td>{vehicle.type}</td>
                             <td>
-                              {assignedDriver ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  <span style={{
-                                    background: '#667eea',
-                                    color: 'white',
-                                    padding: '0.2rem 0.4rem',
-                                    borderRadius: '3px',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.7rem',
-                                    minWidth: '45px',
-                                    textAlign: 'center'
-                                  }}>
-                                    {assignedDriver.code || generateDriverCode(assignedDriver.name)}
-                                  </span>
-                                  <span className="text-base">{assignedDriver.name}</span>
+                              {assignedDrivers.length > 0 ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  {assignedDrivers.map((d, i) => (
+                                    <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                      {i > 0 && <span className="text-muted">,</span>}
+                                      <span style={{
+                                        background: '#667eea',
+                                        color: 'white',
+                                        padding: '0.2rem 0.4rem',
+                                        borderRadius: '3px',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.7rem',
+                                        minWidth: '45px',
+                                        textAlign: 'center'
+                                      }}>
+                                        {d.code || generateDriverCode(d.name)}
+                                      </span>
+                                    </span>
+                                  ))}
                                 </div>
                               ) : (
                                 <span className="text-sm text-muted">-</span>
@@ -886,27 +921,32 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
                   </thead>
                   <tbody>
                     {displayedInactiveVehicles.map(vehicle => {
-                      const assignedDriver = data.drivers.find(d => d.id === vehicle.driverId);
+                      const driverIds = vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
+                      const assignedDrivers = driverIds.map(id => data.drivers.find(d => d.id === id)).filter(Boolean);
                       return (
                         <tr key={vehicle.id} style={{ opacity: 0.6 }}>
                           <td>{vehicle.regNo}</td>
                           <td>{vehicle.type}</td>
                           <td>
-                            {assignedDriver ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{
-                                  background: '#95a5a6',
-                                  color: 'white',
-                                  padding: '0.2rem 0.4rem',
-                                  borderRadius: '3px',
-                                  fontWeight: 'bold',
-                                  fontSize: '0.7rem',
-                                  minWidth: '45px',
-                                  textAlign: 'center'
-                                }}>
-                                  {assignedDriver.code || generateDriverCode(assignedDriver.name)}
-                                </span>
-                                <span className="text-base">{assignedDriver.name}</span>
+                            {assignedDrivers.length > 0 ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                {assignedDrivers.map((d, i) => (
+                                  <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    {i > 0 && <span className="text-muted">,</span>}
+                                    <span style={{
+                                      background: '#95a5a6',
+                                      color: 'white',
+                                      padding: '0.2rem 0.4rem',
+                                      borderRadius: '3px',
+                                      fontWeight: 'bold',
+                                      fontSize: '0.7rem',
+                                      minWidth: '45px',
+                                      textAlign: 'center'
+                                    }}>
+                                      {d.code || generateDriverCode(d.name)}
+                                    </span>
+                                  </span>
+                                ))}
                               </div>
                             ) : (
                               <span className="text-sm text-muted">-</span>
@@ -1032,31 +1072,23 @@ className="btn btn-small btn-danger text-sm"
               </div>
             </div>
           </div>
+        </>
+        )}
         </div>
       )}
 
       {/* FÖRARE TAB */}
       {currentTab === 'forare' && (
         <div>
-          {/* AKTIVA FÖRARE */}
-          <div className="form" style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0 }}>Aktiva förare ({activeDrivers.length})</h2>
-              {!showDriverForm && (
-                <button onClick={() => setShowDriverForm(true)} className="btn btn-primary btn-small">
-                  + Ny
-                </button>
-              )}
-            </div>
-            {showDriverForm && (
-              <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-                <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
-                  {editingDriverId ? 'Redigera förare' : 'Ny förare'}
-                </h3>
-                
-                <form onSubmit={handleDriverSubmit}>
-                  <div className="form-row" style={{ gap: '0.5rem' }}>
+          {showDriverForm ? (
+            <div className="form">
+              <h2>{editingDriverId ? 'Redigera förare' : 'Ny förare'}</h2>
+              <form onSubmit={handleDriverSubmit}>
+                <div className="form-section">
+                  <div className="form-section-title">Grunduppgifter</div>
+                  <div className="form-row">
                     <div className="form-group" style={{ flex: 2 }}>
+                      <label className="text-muted-2 label-sm">Namn *</label>
                       <input
                         type="text"
                         value={driverForm.name}
@@ -1071,8 +1103,8 @@ className="btn btn-small btn-danger text-sm"
                         </div>
                       )}
                     </div>
-
                     <div className="form-group" style={{ flex: 1 }}>
+                      <label className="text-muted-2 label-sm">Telefon</label>
                       <input
                         type="tel"
                         value={driverForm.phone}
@@ -1081,48 +1113,100 @@ className="btn btn-small btn-danger text-sm"
                         placeholder="Telefon"
                       />
                     </div>
-
-                    <div className="form-group">
-                      <label className="checkbox-label" style={{ marginTop: '0.5rem' }}>
-                        <input
-                          type="checkbox"
-                          checked={driverForm.active}
-                          onChange={(e) => setDriverForm({ ...driverForm, active: e.target.checked })}
-                        />
-                        Aktiv
-                      </label>
+                  </div>
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={driverForm.active}
+                        onChange={(e) => setDriverForm({ ...driverForm, active: e.target.checked })}
+                      />
+                      Aktiv
+                    </label>
+                  </div>
+                  <div className="form-group">
+                    <label className="text-muted-2 label-sm">Fordon som föraren får använda</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
+                      {data.vehicles.filter(v => v.active).map(vehicle => (
+                        <label key={vehicle.id} className="checkbox-label" style={{ margin: 0 }}>
+                          <input
+                            type="checkbox"
+                            checked={(driverForm.vehicleIds || []).includes(vehicle.id)}
+                            onChange={() => handleDriverVehicleToggle(vehicle.id)}
+                          />
+                          {vehicle.regNo} ({vehicle.type})
+                        </label>
+                      ))}
+                      {data.vehicles.filter(v => v.active).length === 0 && (
+                        <span className="text-muted text-sm">Inga aktiva fordon</span>
+                      )}
                     </div>
                   </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button type="submit" className="btn btn-primary btn-small">
-                      {editingDriverId ? 'Spara' : 'Lägg till'}
-                    </button>
-                    {editingDriverId && (
-                      <>
-                        <button 
-                          type="button" 
-                          onClick={() => toggleDriverActive(editingDriverId, driverForm.active)} 
-                          className="btn btn-secondary btn-small"
-                        >
-                          {driverForm.active ? 'Inaktivera' : 'Aktivera'}
-                        </button>
-                        <button 
-                          type="button" 
-                          onClick={() => setDeleteDriverId(editingDriverId)} 
-                          className="btn btn-danger btn-small"
-                        >
-                          Ta bort
-                        </button>
-                      </>
-                    )}
-                    <button type="button" onClick={resetDriverForm} className="btn btn-secondary btn-small">
-                      Avbryt
-                    </button>
+                </div>
+                <div className="form-section">
+                  <div className="form-section-title">Adress</div>
+                  <div className="form-group">
+                    <label className="text-muted-2 label-sm">Adress</label>
+                    <input
+                      type="text"
+                      value={driverForm.address}
+                      onChange={(e) => setDriverForm({ ...driverForm, address: e.target.value })}
+                      className="form-input"
+                      placeholder="Adress"
+                    />
                   </div>
-                </form>
-              </div>
-            )}
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 0.5 }}>
+                      <label className="text-muted-2 label-sm">Postnr</label>
+                      <input
+                        type="text"
+                        value={driverForm.postalCode}
+                        onChange={(e) => setDriverForm({ ...driverForm, postalCode: e.target.value })}
+                        className="form-input"
+                        placeholder="Postnr"
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="text-muted-2 label-sm">Ort</label>
+                      <input
+                        type="text"
+                        value={driverForm.city}
+                        onChange={(e) => setDriverForm({ ...driverForm, city: e.target.value })}
+                        className="form-input"
+                        placeholder="Ort"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="form-actions">
+                  {editingDriverId && (
+                    <>
+                      <button type="button" onClick={() => toggleDriverActive(editingDriverId, driverForm.active)} className="btn btn-secondary btn-small">
+                        {driverForm.active ? 'Inaktivera' : 'Aktivera'}
+                      </button>
+                      <button type="button" onClick={() => setDeleteDriverId(editingDriverId)} className="btn btn-danger btn-small">
+                        Ta bort
+                      </button>
+                    </>
+                  )}
+                  <button type="button" onClick={resetDriverForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
+                    Avbryt
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    {editingDriverId ? 'Uppdatera' : 'Spara'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+          <>
+          <div className="form" style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ margin: 0 }}>Aktiva förare ({activeDrivers.length})</h2>
+              <button onClick={() => setShowDriverForm(true)} className="btn btn-primary btn-small">
+                + Ny
+              </button>
+            </div>
 
             {activeDrivers.length === 0 ? (
               <div className="empty-state">
@@ -1148,59 +1232,84 @@ className="btn btn-small btn-danger text-sm"
                     </thead>
                     <tbody>
                       {displayedActiveDrivers.map(driver => {
-                        const assignedVehicles = data.vehicles.filter(v => v.driverId === driver.id && v.active);
+                        const isExpanded = expandedDriverId === driver.id;
+                        const assignedVehicles = data.vehicles.filter(v => (v.driverIds || (v.driverId ? [v.driverId] : [])).includes(driver.id) && v.active);
                         return (
-                          <tr key={driver.id}>
-                            <td style={{ whiteSpace: 'nowrap' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ 
-                                  background: '#667eea', 
-                                  color: 'white', 
-                                  padding: '0.2rem 0.4rem', 
-                                  borderRadius: '3px',
-                                  fontWeight: 'bold',
-                                  fontSize: '0.7rem',
-                                  minWidth: '45px',
-                                  textAlign: 'center'
-                                }}>
-                                  {driver.code || generateDriverCode(driver.name)}
-                                </span>
-                                <strong className="text-base">{driver.name}</strong>
-                              </div>
-                            </td>
-                            <td>{driver.phone || '-'}</td>
-                            <td>
-                              {assignedVehicles.length > 0 ? (
-                                <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                  {assignedVehicles.map(vehicle => (
-                                    <span 
-                                      key={vehicle.id}
-                                      style={{ 
-                                        background: '#e8f5e9', 
-                                        color: '#2e7d32', 
-                                        padding: '0.15rem 0.4rem', 
-                                        borderRadius: '3px',
-                                        fontSize: '0.7rem',
-                                        fontWeight: 'bold'
-                                      }}
-                                    >
-                                      {vehicle.regNo}
-                                    </span>
-                                  ))}
+                          <React.Fragment key={driver.id}>
+                            <tr
+                              onClick={() => setExpandedDriverId(isExpanded ? null : driver.id)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              <td style={{ whiteSpace: 'nowrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                  <span className="text-2xs text-muted">{isExpanded ? '▼' : '▶'}</span>
+                                  <span style={{
+                                    background: '#667eea',
+                                    color: 'white',
+                                    padding: '0.2rem 0.4rem',
+                                    borderRadius: '3px',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.7rem',
+                                    minWidth: '45px',
+                                    textAlign: 'center'
+                                  }}>
+                                    {driver.code || generateDriverCode(driver.name)}
+                                  </span>
+                                  <strong className="text-base">{driver.name}</strong>
                                 </div>
-                              ) : (
-                                <span className="text-sm text-muted">-</span>
-                              )}
-                            </td>
-                            <td>
-                              <button
-                                onClick={() => handleEditDriver(driver)}
-className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
-                              >
-                                Redigera
-                              </button>
-                            </td>
-                          </tr>
+                              </td>
+                              <td>{driver.phone || '-'}</td>
+                              <td>
+                                {isExpanded && assignedVehicles.length > 0 ? (
+                                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                                    {assignedVehicles.map(vehicle => (
+                                      <span key={vehicle.id} style={{ background: '#e8f5e9', color: '#2e7d32', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem', fontWeight: 'bold' }}>{vehicle.regNo}</span>
+                                    ))}
+                                  </div>
+                                ) : assignedVehicles.length > 0 ? (
+                                  <span className="text-muted text-sm">{assignedVehicles.length} fordon</span>
+                                ) : (
+                                  <span className="text-sm text-muted">-</span>
+                                )}
+                              </td>
+                              <td onClick={e => e.stopPropagation()}>
+                                <button
+                                  onClick={() => handleEditDriver(driver)}
+                                  className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                                >
+                                  Redigera
+                                </button>
+                              </td>
+                            </tr>
+                            {isExpanded && (
+                              <tr>
+                                <td colSpan={4} style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', verticalAlign: 'top' }}>
+                                  <div className="mb-1" style={{ fontWeight: 600 }}>{driver.name}</div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
+                                    <div>
+                                      <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Kod: </span><span className="detail-value">{driver.code || '-'}</span></div>
+                                      <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Telefon: </span><span className="detail-value">{driver.phone || '-'}</span></div>
+                                      <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Adress: </span><span className="detail-value">{driver.address || '-'}</span></div>
+                                      <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Postnr / Ort: </span><span className="detail-value">{[driver.postalCode, driver.city].filter(Boolean).join(' ') || '-'}</span></div>
+                                    </div>
+                                    <div>
+                                      {assignedVehicles.length > 0 ? (
+                                        <div><span className="detail-label">Tilldelade fordon: </span>
+                                          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                                            {assignedVehicles.map(v => (
+                                              <span key={v.id} style={{ background: '#e8f5e9', color: '#2e7d32', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem' }}>{v.regNo}</span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <span className="text-muted">Inga fordon tilldelade</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         );
                       })}
                     </tbody>
@@ -1241,61 +1350,86 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
                   </thead>
                   <tbody>
                     {displayedInactiveDrivers.map(driver => {
-                      const assignedVehicles = data.vehicles.filter(v => v.driverId === driver.id);
+                      const isExpanded = expandedDriverId === driver.id;
+                      const assignedVehicles = data.vehicles.filter(v => (v.driverIds || (v.driverId ? [v.driverId] : [])).includes(driver.id));
                       return (
-                        <tr key={driver.id} style={{ opacity: 0.6 }}>
-                          <td style={{ whiteSpace: 'nowrap' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ 
-                                background: '#95a5a6', 
-                                color: 'white', 
-                                padding: '0.2rem 0.4rem', 
-                                borderRadius: '3px',
-                                fontWeight: 'bold',
-                                fontSize: '0.7rem',
-                                minWidth: '45px',
-                                textAlign: 'center'
-                              }}>
-                                {driver.code || generateDriverCode(driver.name)}
-                              </span>
-                              <span className="text-base">{driver.name}</span>
-                            </div>
-                          </td>
-                          <td>{driver.phone || '-'}</td>
-                          <td>
-                            {assignedVehicles.length > 0 ? (
-                              <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                {assignedVehicles.map(vehicle => (
-                                  <span 
-                                    key={vehicle.id}
-                                    style={{ 
-                                      background: '#e0e0e0', 
-                                      color: '#616161', 
-                                      padding: '0.15rem 0.4rem', 
-                                      borderRadius: '3px',
-                                      fontSize: '0.7rem',
-                                      fontWeight: 'bold'
-                                    }}
-                                  >
+                        <React.Fragment key={driver.id}>
+                          <tr
+                            onClick={() => setExpandedDriverId(isExpanded ? null : driver.id)}
+                            style={{ cursor: 'pointer', opacity: 0.6 }}
+                          >
+                            <td style={{ whiteSpace: 'nowrap' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <span className="text-2xs text-muted">{isExpanded ? '▼' : '▶'}</span>
+                                <span style={{
+                                  background: '#95a5a6',
+                                  color: 'white',
+                                  padding: '0.2rem 0.4rem',
+                                  borderRadius: '3px',
+                                  fontWeight: 'bold',
+                                  fontSize: '0.7rem',
+                                  minWidth: '45px',
+                                  textAlign: 'center'
+                                }}>
+                                  {driver.code || generateDriverCode(driver.name)}
+                                </span>
+                                <span className="text-base">{driver.name}</span>
+                              </div>
+                            </td>
+                            <td>{driver.phone || '-'}</td>
+                            <td>
+                              {isExpanded && assignedVehicles.length > 0 ? (
+                                <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                                  {assignedVehicles.map(vehicle => (
+                                    <span key={vehicle.id} style={{ background: '#e0e0e0', color: '#616161', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem', fontWeight: 'bold' }}>
                                     {vehicle.regNo}
                                   </span>
                                 ))}
                               </div>
+                            ) : assignedVehicles.length > 0 ? (
+                              <span className="text-muted text-sm">{assignedVehicles.length} fordon</span>
                             ) : (
                               <span className="text-sm text-muted">-</span>
                             )}
                           </td>
-                          <td>
+                          <td onClick={e => e.stopPropagation()}>
                             <button
                               onClick={() => handleEditDriver(driver)}
-className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                              className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                             >
                               Redigera
                             </button>
                           </td>
                         </tr>
-                      );
-                    })}
+                        {isExpanded && (
+                          <tr>
+                            <td colSpan={4} style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', verticalAlign: 'top', opacity: 0.9 }}>
+                              <div className="mb-1" style={{ fontWeight: 600 }}>{driver.name}</div>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
+                                <div>
+                                  <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Kod: </span><span className="detail-value">{driver.code || '-'}</span></div>
+                                  <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Telefon: </span><span className="detail-value">{driver.phone || '-'}</span></div>
+                                  <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Adress: </span><span className="detail-value">{driver.address || '-'}</span></div>
+                                  <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Postnr / Ort: </span><span className="detail-value">{[driver.postalCode, driver.city].filter(Boolean).join(' ') || '-'}</span></div>
+                                </div>
+                                <div>
+                                  {assignedVehicles.length > 0 ? (
+                                    <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                                      {assignedVehicles.map(v => (
+                                        <span key={v.id} style={{ background: '#e0e0e0', color: '#616161', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem' }}>{v.regNo}</span>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted">Inga fordon tilldelade</span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
@@ -1310,30 +1444,20 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
               )}
             </div>
           )}
+          </>
+          )}
         </div>
       )}
 
       {/* KUNDER TAB */}
       {currentTab === 'kunder' && (
         <div>
-          <div className="form" style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0 }}>Kunder ({data.customers.length})</h2>
-              {!showCustomerForm && (
-                <button onClick={() => setShowCustomerForm(true)} className="btn btn-primary btn-small">
-                  + Nytt
-                </button>
-              )}
-            </div>
-
-            {showCustomerForm && (
-              <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '1.5rem', alignItems: 'start' }}>
+        {showCustomerForm ? (
+          <div className="form">
+            <h2>{editingCustomerId ? 'Redigera kund' : 'Ny kund'}</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '1.5rem', alignItems: 'start' }}>
                   {/* Vänster: kompakt kundformulär */}
                   <div>
-                    <h3 className="section-title section-title--tight">
-                      {editingCustomerId ? 'Redigera kund' : 'Ny kund'}
-                    </h3>
                     <form onSubmit={handleCustomerSubmit} className="text-sm">
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
                         <input type="text" name="name" value={customerForm.name} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Namn *" required />
@@ -1425,8 +1549,16 @@ className="form-select form-input input-sm" style={{ width: '100%', maxWidth: '2
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+          </div>
+        ) : (
+          <>
+          <div className="form" style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ margin: 0 }}>Kunder ({data.customers.length})</h2>
+              <button onClick={() => setShowCustomerForm(true)} className="btn btn-primary btn-small">
+                + Nytt
+              </button>
+            </div>
 
             {activeCustomers.length === 0 ? (
               <div className="empty-state">
@@ -1616,103 +1748,78 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
               </div>
             </div>
           )}
+          </>
+        )}
         </div>
       )}
 
       {/* PLATSER TAB */}
       {currentTab === 'platser' && (
-        <div className="form" style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ margin: 0 }}>Platser ({(data.pickupLocations || []).length})</h2>
-          {!showLocationForm && (
-            <button onClick={() => setShowLocationForm(true)} className="btn btn-primary btn-small">
-              + Ny plats
-            </button>
-          )}
-        </div>
-
-        {showLocationForm && (
-          <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-            <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
-              {editingLocationId ? 'Redigera plats' : 'Ny plats'}
-            </h3>
-            
+        <div>
+        {showLocationForm ? (
+          <div className="form">
+            <h2>{editingLocationId ? 'Redigera plats' : 'Ny plats'}</h2>
             <form onSubmit={handleLocationSubmit}>
-              <div className="form-group">
-                <input
-                  type="text"
-                  value={locationForm.name}
-                  onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })}
-                  className="form-input"
-                  placeholder="Namn (t.ex. Huvudlager, Hamnen...)"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <input
-                  type="text"
-                  value={locationForm.address}
-                  onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })}
-                  className="form-input"
-                  placeholder="Adress"
-                  required
-                />
-              </div>
-
-              <div className="form-row" style={{ gap: '0.5rem' }}>
-                <div className="form-group" style={{ flex: 1 }}>
+              <div className="form-section">
+                <div className="form-section-title">Grunduppgifter</div>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Namn *</label>
                   <input
                     type="text"
-                    value={locationForm.postalCode}
-                    onChange={(e) => setLocationForm({ ...locationForm, postalCode: e.target.value })}
+                    value={locationForm.name}
+                    onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })}
                     className="form-input"
-                    placeholder="Postnummer"
+                    placeholder="Namn (t.ex. Huvudlager, Hamnen...)"
+                    required
                   />
                 </div>
-                <div className="form-group" style={{ flex: 2 }}>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Adress *</label>
                   <input
                     type="text"
-                    value={locationForm.city}
-                    onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })}
+                    value={locationForm.address}
+                    onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })}
                     className="form-input"
-                    placeholder="Ort"
+                    placeholder="Adress"
+                    required
                   />
                 </div>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: 0.5 }}>
+                    <label className="text-muted-2 label-sm">Postnr</label>
+                    <input
+                      type="text"
+                      value={locationForm.postalCode}
+                      onChange={(e) => setLocationForm({ ...locationForm, postalCode: e.target.value })}
+                      className="form-input"
+                      placeholder="Postnummer"
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="text-muted-2 label-sm">Ort</label>
+                    <input
+                      type="text"
+                      value={locationForm.city}
+                      onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })}
+                      className="form-input"
+                      placeholder="Ort"
+                    />
+                  </div>
+                </div>
               </div>
-
-              <div className="form-group">
-                <label className="label-sm text-muted" style={{ display: 'block', marginBottom: '0.5rem', fontSize: 'var(--font-size-base)' }}>
-                  Kopplade kunder (valfritt)
-                </label>
-                <div style={{ 
-                  maxHeight: '200px', 
-                  overflowY: 'auto', 
-                  border: '1px solid var(--color-border)', 
-                  borderRadius: '6px', 
-                  padding: '0.5rem',
-                  backgroundColor: 'var(--color-bg)'
-                }}>
+              <div className="form-section">
+                <div className="form-section-title">Kopplade kunder</div>
+                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.5rem', backgroundColor: 'var(--color-bg)' }}>
                   {data.customers.map(customer => (
-                    <label 
-                      key={customer.id} 
-                      className="checkbox-label" 
-                      style={{ display: 'block', padding: '0.25rem 0', margin: 0 }}
-                    >
+                    <label key={customer.id} className="checkbox-label" style={{ display: 'block', padding: '0.25rem 0', margin: 0 }}>
                       <input
                         type="checkbox"
                         checked={locationForm.customerIds.includes(customer.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setLocationForm({ 
-                              ...locationForm, 
-                              customerIds: [...locationForm.customerIds, customer.id] 
-                            });
+                            setLocationForm({ ...locationForm, customerIds: [...locationForm.customerIds, customer.id] });
                           } else {
-                            setLocationForm({ 
-                              ...locationForm, 
-                              customerIds: locationForm.customerIds.filter(id => id !== customer.id) 
-                            });
+                            setLocationForm({ ...locationForm, customerIds: locationForm.customerIds.filter(id => id !== customer.id) });
                           }
                         }}
                       />
@@ -1721,27 +1828,29 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
                   ))}
                 </div>
               </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                <button type="submit" className="btn btn-primary btn-small">
-                  {editingLocationId ? 'Spara' : 'Lägg till'}
-                </button>
+              <div className="form-actions">
                 {editingLocationId && (
-                  <button 
-                    type="button" 
-                    onClick={() => setDeleteLocationId(editingLocationId)} 
-                    className="btn btn-danger btn-small"
-                  >
+                  <button type="button" onClick={() => setDeleteLocationId(editingLocationId)} className="btn btn-danger btn-small">
                     Ta bort
                   </button>
                 )}
-                <button type="button" onClick={resetLocationForm} className="btn btn-secondary btn-small">
+                <button type="button" onClick={resetLocationForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
                   Avbryt
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  {editingLocationId ? 'Uppdatera' : 'Spara'}
                 </button>
               </div>
             </form>
           </div>
-        )}
+        ) : (
+        <div className="form" style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0 }}>Platser ({(data.pickupLocations || []).length})</h2>
+          <button onClick={() => setShowLocationForm(true)} className="btn btn-primary btn-small">
+            + Ny plats
+          </button>
+        </div>
 
         {(data.pickupLocations || []).length === 0 ? (
           <div className="empty-state">
@@ -1762,56 +1871,73 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
               </thead>
               <tbody>
                 {(data.pickupLocations || []).map(location => {
-                  // Handle both old and new format
+                  const isExpanded = expandedLocationId === location.id;
                   const customerIds = location.customerIds || (location.customerId ? [location.customerId] : []);
                   const customers = customerIds
                     .map(id => data.customers.find(c => c.id === id))
                     .filter(Boolean);
                   
                   return (
-                    <tr key={location.id}>
-                      <td style={{ whiteSpace: 'nowrap' }}><strong>{location.name}</strong></td>
-                      <td>{location.address}</td>
-                      <td>{location.postalCode || '-'}</td>
-                      <td>{location.city || '-'}</td>
-                      <td>
-                        {customers.length > 0 ? (
-                          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                            {customers.map(customer => (
-                              <span 
-                                key={customer.id}
-                                style={{ 
-                                  background: '#667eea', 
-                                  color: 'white', 
-                                  padding: '0.15rem 0.4rem', 
-                                  borderRadius: '3px',
-                                  fontSize: '0.7rem',
-                                  fontWeight: 'bold',
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                {customer.name}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span style={{ color: '#95a5a6' }}>-</span>
-                        )}
-                      </td>
-                      <td style={{ whiteSpace: 'nowrap' }}>
-                        <button
-                          onClick={() => handleEditLocation(location)}
-                          className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
-                        >
-                          Redigera
-                        </button>
-                      </td>
-                    </tr>
+                    <React.Fragment key={location.id}>
+                      <tr
+                        onClick={() => setExpandedLocationId(isExpanded ? null : location.id)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <span className="text-2xs text-muted" style={{ marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
+                          <strong>{location.name}</strong>
+                        </td>
+                        <td>{location.address}</td>
+                        <td>{location.postalCode || '-'}</td>
+                        <td>{location.city || '-'}</td>
+                        <td onClick={e => e.stopPropagation()}>
+                          {customers.length > 0 ? (
+                            <span className="text-muted text-sm">{customers.length} kund(er)</span>
+                          ) : (
+                            <span style={{ color: '#95a5a6' }}>-</span>
+                          )}
+                        </td>
+                        <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                          <button
+                            onClick={() => handleEditLocation(location)}
+                            className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                          >
+                            Redigera
+                          </button>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={6} style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', verticalAlign: 'top' }}>
+                            <div className="mb-1" style={{ fontWeight: 600 }}>{location.name}</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
+                              <div>
+                                <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Adress: </span><span className="detail-value">{location.address || '-'}</span></div>
+                                <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Postnr / Ort: </span><span className="detail-value">{[location.postalCode, location.city].filter(Boolean).join(' ') || '-'}</span></div>
+                              </div>
+                              <div>
+                                {customers.length > 0 ? (
+                                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                                    {customers.map(customer => (
+                                      <span key={customer.id} style={{ background: '#667eea', color: 'white', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem' }}>{customer.name}</span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-muted">Inga kunder kopplade</span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>
             </table>
           </div>
+        )}
+        </div>
         )}
         </div>
       )}

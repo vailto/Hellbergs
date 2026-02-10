@@ -175,24 +175,24 @@ const getMockData = () => {
     }
   ];
 
-  const drivers = [
-    { id: 'drv_mock_1', name: 'Kalle Karlsson', phone: '070-111 11 11', active: true, code: 'KAKA' },
-    { id: 'drv_mock_2', name: 'Lisa Lind', phone: '070-222 22 22', active: true, code: 'LILI' },
-    { id: 'drv_mock_3', name: 'Olof Olsson', phone: '070-333 33 33', active: true, code: 'OLOL' },
-    { id: 'drv_mock_4', name: 'Sara Svensson', phone: '070-444 44 44', active: true, code: 'SASV' },
-    { id: 'drv_mock_5', name: 'Peter Pettersson', phone: '070-555 55 55', active: true, code: 'PEPE' },
-    { id: 'drv_mock_6', name: 'Emma Eriksson', phone: '070-666 66 66', active: true, code: 'EMER' },
-    { id: 'drv_mock_7', name: 'Johan Johansson', phone: '070-777 77 77', active: true, code: 'JOJO' }
+  const vehicles = [
+    { id: 'veh_mock_1', regNo: 'ABC123', type: 'Skåpbil', driverIds: ['drv_mock_1'], active: true },
+    { id: 'veh_mock_2', regNo: 'DEF456', type: 'Skåpbil', driverIds: [], active: true },
+    { id: 'veh_mock_3', regNo: 'SLP789', type: 'Släp', driverIds: ['drv_mock_2'], active: true },
+    { id: 'veh_mock_4', regNo: 'GHI012', type: 'Skåpbil', driverIds: ['drv_mock_3'], active: true },
+    { id: 'veh_mock_5', regNo: 'JKL345', type: 'Skåpbil', driverIds: ['drv_mock_4'], active: true },
+    { id: 'veh_mock_6', regNo: 'SLP456', type: 'Släp', driverIds: ['drv_mock_5'], active: true },
+    { id: 'veh_mock_7', regNo: 'MNO678', type: 'Skåpbil', driverIds: ['drv_mock_6'], active: true }
   ];
 
-  const vehicles = [
-    { id: 'veh_mock_1', regNo: 'ABC123', type: 'Skåpbil', driverId: 'drv_mock_1', active: true },
-    { id: 'veh_mock_2', regNo: 'DEF456', type: 'Skåpbil', driverId: null, active: true },
-    { id: 'veh_mock_3', regNo: 'SLP789', type: 'Släp', driverId: 'drv_mock_2', active: true },
-    { id: 'veh_mock_4', regNo: 'GHI012', type: 'Skåpbil', driverId: 'drv_mock_3', active: true },
-    { id: 'veh_mock_5', regNo: 'JKL345', type: 'Skåpbil', driverId: 'drv_mock_4', active: true },
-    { id: 'veh_mock_6', regNo: 'SLP456', type: 'Släp', driverId: 'drv_mock_5', active: true },
-    { id: 'veh_mock_7', regNo: 'MNO678', type: 'Skåpbil', driverId: 'drv_mock_6', active: true }
+  const drivers = [
+    { id: 'drv_mock_1', name: 'Kalle Karlsson', phone: '070-111 11 11', active: true, code: 'KAKA', vehicleIds: ['veh_mock_1'] },
+    { id: 'drv_mock_2', name: 'Lisa Lind', phone: '070-222 22 22', active: true, code: 'LILI', vehicleIds: ['veh_mock_3'] },
+    { id: 'drv_mock_3', name: 'Olof Olsson', phone: '070-333 33 33', active: true, code: 'OLOL', vehicleIds: ['veh_mock_4'] },
+    { id: 'drv_mock_4', name: 'Sara Svensson', phone: '070-444 44 44', active: true, code: 'SASV', vehicleIds: ['veh_mock_5'] },
+    { id: 'drv_mock_5', name: 'Peter Pettersson', phone: '070-555 55 55', active: true, code: 'PEPE', vehicleIds: ['veh_mock_6'] },
+    { id: 'drv_mock_6', name: 'Emma Eriksson', phone: '070-666 66 66', active: true, code: 'EMER', vehicleIds: ['veh_mock_7'] },
+    { id: 'drv_mock_7', name: 'Johan Johansson', phone: '070-777 77 77', active: true, code: 'JOJO', vehicleIds: [] }
   ];
 
   const pickupLocations = [

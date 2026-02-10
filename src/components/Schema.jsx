@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatTime24, getCustomerShort } from '../utils/formatters';
+import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
 
 function getMondayOfWeek(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
@@ -50,6 +51,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
   const [blockNameEditValue, setBlockNameEditValue] = useState(null);
   const [dragOverVehicleId, setDragOverVehicleId] = useState(null);
   const [dragOverUnplanned, setDragOverUnplanned] = useState(false);
+  const [schemaRowMode, setSchemaRowMode] = useState('vehicle'); // 'vehicle' | 'driver'
 
   const weekDays = Array.from({ length: 5 }, (_, i) => {
     const d = new Date(weekStart + 'T12:00:00');
@@ -110,6 +112,19 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
     bookings
       .filter(b => {
         if (b.vehicleId !== vehicleId) return false;
+        const dayStart = b.pickupDate || b.date;
+        const dayEnd = b.deliveryDate || dayStart;
+        const firstDay = displayDays[0];
+        const lastDay = displayDays[displayDays.length - 1];
+        return dayEnd >= firstDay && dayStart <= lastDay;
+      })
+      .sort((a, b) => (a.pickupDate || a.date || '').localeCompare(b.pickupDate || b.date || '') || (a.pickupTime || a.time || '').localeCompare(b.pickupTime || b.time || ''));
+
+  // Per förare för visade dagar: alla bokningar som överlappar displayDays
+  const getBookingsForDriverWeek = (driverId) =>
+    bookings
+      .filter(b => {
+        if (b.driverId !== driverId) return false;
         const dayStart = b.pickupDate || b.date;
         const dayEnd = b.deliveryDate || dayStart;
         const firstDay = displayDays[0];
@@ -241,8 +256,10 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
   };
 
   const handleVehicleAssign = (bookingId, vehicleId) => {
-    const vehicle = (data.vehicles || []).find(v => v.id === vehicleId);
-    const driverId = vehicle?.driverId || null;
+    const booking = (data.bookings || []).find(b => b.id === bookingId);
+    const authorizedDrivers = vehicleId ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
+    const keepDriver = vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
+    const driverId = keepDriver ? booking.driverId : null;
     const updatedBookings = (data.bookings || []).map(b => {
       if (b.id !== bookingId) return b;
       const next = { ...b, vehicleId: vehicleId || null, driverId };
@@ -264,15 +281,15 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
   };
 
   const handleDropOnVehicle = (bookingId, vehicleId) => {
-    const vehicle = (data.vehicles || []).find(v => v.id === vehicleId);
-    const driverId = vehicle?.driverId || null;
+    const authorizedDrivers = (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId));
+    const driverId = authorizedDrivers.length === 1 ? authorizedDrivers[0].id : null;
     const updatedBookings = (data.bookings || []).map(b => {
       if (b.id !== bookingId) return b;
-      const next = { ...b, vehicleId, driverId, status: 'Planerad' };
-      return next;
+      return { ...b, vehicleId, driverId, status: 'Planerad' };
     });
     updateData({ bookings: updatedBookings });
     setDragOverVehicleId(null);
+    setSelectedBooking(prev => prev?.id === bookingId ? { ...prev, vehicleId, driverId } : prev);
     setPendingOverlap({ vehicleId, bookingId });
   };
 
@@ -498,17 +515,36 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
           minWidth: 0
         }}
       >
-        {/* Header: Fordon + 5 dagar (en cell per dag) */}
-        <div className="text-2xs text-muted" style={{ gridColumn: '1', padding: '0.5rem 0.5rem', background: 'var(--color-bg-elevated)', fontWeight: 600 }}>
-          Fordon / Dag
-        </div>
+        {/* Header: Fordon/Förare toggle + dagar */}
+        <button
+          type="button"
+          onClick={() => setSchemaRowMode(prev => prev === 'vehicle' ? 'driver' : 'vehicle')}
+          className="btn btn-small btn-secondary"
+          style={{
+            gridColumn: '1',
+            padding: '0.5rem 0.5rem',
+            background: 'var(--color-bg-elevated)',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            border: '1px solid var(--color-border)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            color: 'var(--color-text)'
+          }}
+        >
+          {schemaRowMode === 'vehicle' ? 'Fordon' : 'Förare'} / Dag
+        </button>
         {headerDayCells}
 
         {/* Oplanerade – en rad, barer i grid */}
         <div
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && setSchemaRowMode(prev => prev === 'vehicle' ? 'driver' : 'vehicle')}
           onDragOver={handleUnplannedDragOver}
           onDragLeave={handleUnplannedDragLeave}
           onDrop={handleUnplannedDrop}
+          onClick={() => setSchemaRowMode(prev => prev === 'vehicle' ? 'driver' : 'vehicle')}
           style={{
             gridColumn: '1',
             padding: '0.5rem 0.5rem',
@@ -517,7 +553,8 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
             color: 'var(--color-text)',
             fontSize: '0.75rem',
             fontWeight: 600,
-            transition: 'background 0.15s ease'
+            transition: 'background 0.15s ease',
+            cursor: 'pointer'
           }}
         >
           Oplanerade
@@ -586,32 +623,52 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
           ))}
         </div>
 
-        {/* En rad per bil: sammanhängande rad (bar över flera dagar) + tunna daglinjer */}
-        {activeVehicles.map(vehicle => {
-          const weekBookings = getBookingsForVehicleWeek(vehicle.id);
+        {/* En rad per bil ELLER per förare */}
+        {(schemaRowMode === 'vehicle' ? activeVehicles : activeDrivers).map((item) => {
+          const isVehicle = schemaRowMode === 'vehicle';
+          const id = item.id;
+          const label = isVehicle ? item.regNo : item.name;
+          const weekBookings = isVehicle ? getBookingsForVehicleWeek(id) : getBookingsForDriverWeek(id);
+          const handleDragOver = isVehicle ? (e) => handleVehicleDragOver(e, id) : undefined;
+          const handleDrop = isVehicle ? (e) => handleVehicleDrop(e, id) : (e) => {
+            e.preventDefault();
+            const bookingId = e.dataTransfer.getData(DRAG_BOOKING_KEY);
+            if (bookingId) handleDriverAssign(bookingId, id);
+            setDragOverVehicleId(null);
+          };
+          const handleDragOverDriver = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            setDragOverVehicleId(id); // reuse for driver highlight
+          };
           return (
-            <React.Fragment key={vehicle.id}>
+            <React.Fragment key={id}>
               <div
-                onDragOver={(e) => handleVehicleDragOver(e, vehicle.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && setSchemaRowMode(prev => prev === 'vehicle' ? 'driver' : 'vehicle')}
+                onDragOver={handleDragOver || handleDragOverDriver}
                 onDragLeave={handleVehicleDragLeave}
-                onDrop={(e) => handleVehicleDrop(e, vehicle.id)}
+                onDrop={handleDrop}
+                onClick={() => setSchemaRowMode(prev => prev === 'vehicle' ? 'driver' : 'vehicle')}
                 style={{
                   gridColumn: '1',
                   padding: '0.5rem 0.5rem',
-                  background: dragOverVehicleId === vehicle.id ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-bg-elevated)',
+                  background: dragOverVehicleId === id ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-bg-elevated)',
                   borderTop: '1px solid var(--color-border)',
                   color: 'var(--color-text)',
                   fontSize: '0.8rem',
                   fontWeight: 600,
-                  transition: 'background 0.15s ease'
+                  transition: 'background 0.15s ease',
+                  cursor: 'pointer'
                 }}
               >
-                {vehicle.regNo}
+                {label}
               </div>
               <div
-                onDragOver={(e) => handleVehicleDragOver(e, vehicle.id)}
+                onDragOver={handleDragOver || handleDragOverDriver}
                 onDragLeave={handleVehicleDragLeave}
-                onDrop={(e) => handleVehicleDrop(e, vehicle.id)}
+                onDrop={handleDrop}
                 style={{
                   gridColumn: '2 / -1',
                   position: 'relative',
@@ -619,7 +676,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                   gridTemplateColumns: `repeat(${totalSegmentCols}, minmax(0, 1fr))`,
                   gap: 0,
                   padding: '0.2rem',
-                  background: dragOverVehicleId === vehicle.id ? 'rgba(34, 197, 94, 0.12)' : 'var(--color-bg)',
+                  background: dragOverVehicleId === id ? 'rgba(34, 197, 94, 0.12)' : 'var(--color-bg)',
                   borderTop: '1px solid var(--color-border)',
                   minHeight: '36px',
                   alignContent: 'start',
@@ -703,14 +760,18 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                         <div className="detail-value" style={{ fontWeight: 600 }}>
                           {formatTime24(b.pickupTime || b.time)}
                         </div>
-                        <div className="text-muted-2" style={{ lineHeight: 1.2 }}>{getCustomerShort(customer)}</div>
+                        <div className="text-muted-2" style={{ lineHeight: 1.2 }}>
+                          {schemaRowMode === 'driver'
+                            ? ((data.vehicles || []).find(v => v.id === b.vehicleId)?.regNo || '–')
+                            : getCustomerShort(customer)}
+                        </div>
                       </div>
                     );
                   });
                 })()}
                 {displayDays.length > 1 && [1, 2, 3, 4].slice(0, displayDays.length - 1).map((d) => (
                   <div
-                    key={`vehicle-sep-${vehicle.id}-${d}`}
+                    key={`row-sep-${id}-${d}`}
                     style={{
                       position: 'absolute',
                       left: `${(d * SEGMENTS_PER_DAY / totalSegmentCols) * 100}%`,
@@ -978,9 +1039,28 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                       style={{ width: '100%' }}
                     >
                       <option value="">Ej tilldelad</option>
-                      {activeVehicles.map(v => (
-                        <option key={v.id} value={v.id}>{v.regNo}</option>
-                      ))}
+                      {(() => {
+                        const available = activeVehicles.filter(v => !isVehicleOccupied(v.id, booking, data.bookings || []));
+                        const occupied = activeVehicles.filter(v => isVehicleOccupied(v.id, booking, data.bookings || []));
+                        return (
+                          <>
+                            {available.length > 0 && (
+                              <optgroup label="Tillgängliga">
+                                {available.map(v => (
+                                  <option key={v.id} value={v.id}>{v.regNo}</option>
+                                ))}
+                              </optgroup>
+                            )}
+                            {occupied.length > 0 && (
+                              <optgroup label="Upptagna">
+                                {occupied.map(v => (
+                                  <option key={v.id} value={v.id}>{v.regNo}</option>
+                                ))}
+                              </optgroup>
+                            )}
+                          </>
+                        );
+                      })()}
                     </select>
                   </div>
                   <div className="form-group" style={{ marginBottom: '1rem' }}>
@@ -992,9 +1072,34 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                       style={{ width: '100%' }}
                     >
                       <option value="">Ej tilldelad</option>
-                      {activeDrivers.map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
+                      {(() => {
+                        const eligible = booking.vehicleId
+                          ? activeDrivers.filter(d => (d.vehicleIds || []).includes(booking.vehicleId) || d.id === booking.driverId)
+                          : activeDrivers;
+                        const available = eligible.filter(d => !isDriverOccupied(d.id, booking, data.bookings || []));
+                        const occupied = eligible.filter(d => isDriverOccupied(d.id, booking, data.bookings || []));
+                        return (
+                          <>
+                            {booking.vehicleId && eligible.length === 0 && (
+                              <option disabled>Inga behöriga förare för valt fordon</option>
+                            )}
+                            {available.length > 0 && (
+                              <optgroup label="Tillgängliga">
+                                {available.map(d => (
+                                  <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                              </optgroup>
+                            )}
+                            {occupied.length > 0 && (
+                              <optgroup label="Upptagna">
+                                {occupied.map(d => (
+                                  <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                              </optgroup>
+                            )}
+                          </>
+                        );
+                      })()}
                     </select>
                   </div>
                 </>

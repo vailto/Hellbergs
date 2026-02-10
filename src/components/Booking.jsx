@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTime24, getCurrentTime24, getCustomerShort } from '../utils/formatters';
+import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
 import { BOOKING_STATUSES } from '../utils/constants';
 import { validateBooking } from '../utils/validation';
 import CostEntryModal from './CostEntryModal';
@@ -64,6 +65,11 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     deliveryContactPhone: '',
     km: '',
     amountSek: '',
+    costStops: '',
+    costWaitHours: '',
+    costDriveHours: '',
+    costUseFixed: false,
+    costFixedAmount: '',
     status: 'Bokad',
     note: ''
   });
@@ -79,6 +85,19 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     if (name === 'customerId') {
       setPickupMode('customer');
       setSelectedPickupLocationId('');
+    }
+
+    if (name === 'vehicleId') {
+      const vehicleId = value || null;
+      const authorizedDrivers = vehicleId
+        ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId))
+        : [];
+      const driverId = authorizedDrivers.length === 1 ? authorizedDrivers[0].id : null;
+      setFormData(prev => ({
+        ...prev,
+        vehicleId: vehicleId || '',
+        driverId: driverId || ''
+      }));
     }
 
     if (errors[name]) {
@@ -127,10 +146,16 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
   };
 
   const handleEdit = (booking) => {
+    const cd = booking.costDetails || {};
     setFormData({
       ...booking,
       km: booking.km !== null ? String(booking.km) : '',
-      amountSek: booking.amountSek !== null ? String(booking.amountSek) : ''
+      amountSek: booking.amountSek !== null ? String(booking.amountSek) : '',
+      costStops: cd.stops != null ? String(cd.stops) : '',
+      costWaitHours: cd.waitHours != null ? String(cd.waitHours) : '',
+      costDriveHours: cd.driveHours != null ? String(cd.driveHours) : '',
+      costUseFixed: cd.fixed != null && cd.fixed !== 0,
+      costFixedAmount: cd.fixed != null ? String(cd.fixed) : ''
     });
     setEditingId(booking.id);
     setShowForm(true);
@@ -162,24 +187,36 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     }
 
     const existing = editingId ? data.bookings.find(b => b.id === editingId) : null;
+    const kmVal = formData.km !== '' && formData.km != null ? parseNumber(formData.km) : null;
+    const amountVal = formData.amountSek !== '' && formData.amountSek != null ? parseNumber(formData.amountSek) : null;
+    const num = (v) => parseNumber(v) ?? 0;
+    const costDetails = {
+      km: num(formData.km) || undefined,
+      stops: num(formData.costStops) || undefined,
+      waitHours: num(formData.costWaitHours) || undefined,
+      driveHours: num(formData.costDriveHours) || undefined,
+      fixed: formData.costUseFixed ? (num(formData.costFixedAmount) ?? undefined) : undefined
+    };
+    const hasCostDetails = costDetails.km || costDetails.stops || costDetails.waitHours || costDetails.driveHours || (formData.costUseFixed && costDetails.fixed != null);
     const bookingData = editingId && existing
       ? {
           ...formData,
           id: editingId,
           bookingNo: existing.bookingNo,
-          vehicleId: existing.vehicleId ?? null,
-          driverId: existing.driverId ?? null,
-          km: existing.km ?? null,
-          amountSek: existing.amountSek ?? null,
-          costDetails: existing.costDetails ?? undefined
+          vehicleId: formData.vehicleId || null,
+          driverId: formData.driverId || null,
+          km: kmVal,
+          amountSek: amountVal,
+          costDetails: hasCostDetails ? costDetails : (existing.costDetails ?? undefined)
         }
       : {
           ...formData,
-          vehicleId: null,
-          driverId: null,
-          km: null,
-          amountSek: null,
-          costDetails: undefined
+          vehicleId: formData.vehicleId || null,
+          driverId: formData.driverId || null,
+          status: formData.vehicleId ? 'Planerad' : formData.status,
+          km: kmVal,
+          amountSek: amountVal,
+          costDetails: hasCostDetails ? costDetails : undefined
         };
 
     if (editingId) {
@@ -277,12 +314,17 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       deliveryTime: getCurrentTime24(),
       deliveryContactName: '',
       deliveryContactPhone: '',
-      km: '',
-      amountSek: '',
-      status: 'Bokad',
-      note: ''
-    });
-    setEditingId(null);
+    km: '',
+    amountSek: '',
+    costStops: '',
+    costWaitHours: '',
+    costDriveHours: '',
+    costUseFixed: false,
+    costFixedAmount: '',
+    status: 'Bokad',
+    note: ''
+  });
+  setEditingId(null);
     setErrors({});
     setPickupMode('customer');
     setDeliveryMode('customer');
@@ -297,6 +339,63 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       setCurrentSection(returnToSection);
       if (setReturnToSection) setReturnToSection(null);
     }
+  };
+
+  const handleDuplicateBooking = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const defaultTime = getCurrentTime24();
+    const duplicateData = {
+      customerId: formData.customerId,
+      vehicleId: null,
+      driverId: null,
+      hasContainer: formData.hasContainer,
+      hasTrailer: formData.hasTrailer,
+      containerNr: formData.containerNr || '',
+      trailerNr: formData.trailerNr || '',
+      marking: formData.marking || '',
+      pickupAddress: formData.pickupAddress || '',
+      pickupPostalCode: formData.pickupPostalCode || '',
+      pickupCity: formData.pickupCity || '',
+      pickupDate: todayStr,
+      pickupTime: defaultTime,
+      pickupContactName: formData.pickupContactName || '',
+      pickupContactPhone: formData.pickupContactPhone || '',
+      deliveryAddress: formData.deliveryAddress || '',
+      deliveryPostalCode: formData.deliveryPostalCode || '',
+      deliveryCity: formData.deliveryCity || '',
+      deliveryDate: todayStr,
+      deliveryTime: defaultTime,
+      deliveryContactName: formData.deliveryContactName || '',
+      deliveryContactPhone: formData.deliveryContactPhone || '',
+      km: '',
+      amountSek: '',
+      costStops: '',
+      costWaitHours: '',
+      costDriveHours: '',
+      costUseFixed: false,
+      costFixedAmount: '',
+      status: 'Bokad',
+      note: formData.note || ''
+    };
+    const { bookingNo, lastBookingNumber } = generateBookingNumber(data.lastBookingNumber);
+    const newBooking = {
+      ...duplicateData,
+      id: generateId('bk'),
+      bookingNo,
+      date: todayStr,
+      time: defaultTime
+    };
+    updateData({
+      bookings: [...data.bookings, newBooking],
+      lastBookingNumber
+    });
+    setFormData(duplicateData);
+    setEditingId(null);
+    setPickupMode('customer');
+    setDeliveryMode('customer');
+    setSelectedPickupLocationId('');
+    setSelectedDeliveryLocationId('');
+    setErrors({});
   };
 
   // New customer modal handlers
@@ -347,14 +446,24 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
   const activeCustomers = data.customers.filter(c => c.active);
   const activeVehicles = data.vehicles.filter(v => v.active);
   const activeDrivers = data.drivers.filter(d => d.active);
+  const formVehicleId = formData.vehicleId || null;
+  const formDriverId = formData.driverId || null;
+  const driversForSelectedVehicle = formVehicleId
+    ? activeDrivers.filter(d => (d.vehicleIds || []).includes(formVehicleId) || d.id === formDriverId)
+    : activeDrivers;
+
+  const vehicleOccupied = (vehicleId, booking) => isVehicleOccupied(vehicleId, booking, data.bookings || []);
+  const driverOccupied = (driverId, booking) => isDriverOccupied(driverId, booking, data.bookings || []);
 
   const handleVehicleAssign = (bookingId, vehicleId) => {
-    const vehicle = data.vehicles.find(v => v.id === vehicleId);
-    const driverId = vehicle?.driverId || null;
+    const booking = data.bookings.find(b => b.id === bookingId);
+    const authorizedDrivers = vehicleId ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
+    const keepDriver = vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
+    const driverId = keepDriver ? booking.driverId : null;
     const updatedBookings = data.bookings.map(b => {
       if (b.id !== bookingId) return b;
       const next = { ...b, vehicleId: vehicleId || null, driverId };
-      if (vehicleId && b.status === 'Bokad') next.status = 'Planerad';
+      if (vehicleId && (b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId))) next.status = 'Planerad';
       if (!vehicleId && b.status === 'Planerad') next.status = 'Bokad';
       return next;
     });
@@ -362,9 +471,13 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
   };
 
   const handleDriverAssign = (bookingId, driverId) => {
-    const updatedBookings = data.bookings.map(b =>
-      b.id === bookingId ? { ...b, driverId: driverId || null } : b
-    );
+    const updatedBookings = data.bookings.map(b => {
+      if (b.id !== bookingId) return b;
+      const next = { ...b, driverId: driverId || null };
+      // Om fordon redan tilldelat och status Bokad, sätt till Planerad
+      if (b.vehicleId && driverId && b.status === 'Bokad') next.status = 'Planerad';
+      return next;
+    });
     updateData({ bookings: updatedBookings });
   };
 
@@ -544,13 +657,14 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Grunduppgifter */}
-            <div className="form-section">
+            {/* Grunduppgifter + Fordon och förare (side by side) */}
+            <div className="form-row form-row--two-cols">
+            <div className="form-section" style={{ flex: 1, marginBottom: 0 }}>
               <div className="form-section-title">Grunduppgifter</div>
               
-              <div className="form-row">
+              <div className="form-row form-row--customer-priority">
                 <div className="form-group">
-                  <label className="text-muted-2" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                  <label className="text-muted-2 label-sm">
                     Kund *
                   </label>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -580,8 +694,8 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                 </div>
 
                 {editingId && (
-                  <div className="form-group">
-                    <label className="text-muted-2" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                  <div className="form-group" style={{ maxWidth: '120px' }}>
+                    <label className="text-muted-2 label-sm">
                       Status
                     </label>
                     <select
@@ -664,8 +778,51 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
               </div>
             </div>
 
+            {/* Fordon och förare */}
+            <div className="form-section" style={{ flex: 1, marginBottom: 0, minWidth: 200 }}>
+              <div className="form-section-title">Fordon och förare</div>
+              <div className="form-row" style={{ gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Fordon</label>
+                  <select
+                    name="vehicleId"
+                    value={formData.vehicleId || ''}
+                    onChange={handleChange}
+                    className="form-select"
+                  >
+                    <option value="">Välj fordon</option>
+                    {activeVehicles.map(v => (
+                      <option key={v.id} value={v.id}>
+                        {v.regNo} ({v.type})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Förare</label>
+                  <select
+                    name="driverId"
+                    value={formData.driverId || ''}
+                    onChange={handleChange}
+                    className="form-select"
+                  >
+                    <option value="">Välj förare</option>
+                    {formVehicleId && driversForSelectedVehicle.length === 0 && (
+                      <option disabled>Inga behöriga förare för valt fordon</option>
+                    )}
+                    {driversForSelectedVehicle.map(d => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            </div>
+
             {/* Upphämtning och Lämning */}
-            <div className="form-row" style={{ gap: '1.5rem' }}>
+            <div className="form-row" style={{ gap: '0.75rem' }}>
               {/* Upphämtning */}
               <div className="form-section" style={{ flex: 1, marginBottom: 0 }}>
                 <div className="form-section-title">Upphämtning</div>
@@ -1019,8 +1176,93 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
               </div>
             </div>
 
+            {/* Prissättning */}
+            <div className="form-section" style={{ marginTop: '0.75rem' }}>
+              <div className="form-section-title">Prissättning</div>
+              <div className="form-row" style={{ gap: '0.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))' }}>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Km</label>
+                  <input
+                    type="text"
+                    name="km"
+                    value={formData.km}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Stopp</label>
+                  <input
+                    type="text"
+                    name="costStops"
+                    value={formData.costStops}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Väntetid (h)</label>
+                  <input
+                    type="text"
+                    name="costWaitHours"
+                    value={formData.costWaitHours}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Timpris (h)</label>
+                  <input
+                    type="text"
+                    name="costDriveHours"
+                    value={formData.costDriveHours}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Fast pris</label>
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="costUseFixed"
+                      checked={formData.costUseFixed}
+                      onChange={handleChange}
+                    />
+                    Ja
+                  </label>
+                  {formData.costUseFixed && (
+                    <input
+                      type="text"
+                      name="costFixedAmount"
+                      value={formData.costFixedAmount}
+                      onChange={handleChange}
+                      className="form-input"
+                      placeholder="SEK"
+                      style={{ marginTop: '0.25rem' }}
+                    />
+                  )}
+                </div>
+                <div className="form-group">
+                  <label className="text-muted-2 label-sm">Belopp (SEK)</label>
+                  <input
+                    type="text"
+                    name="amountSek"
+                    value={formData.amountSek}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Anteckningar */}
-            <div className="form-section" style={{ marginTop: '1.5rem' }}>
+            <div className="form-section">
               <div className="form-section-title">Anteckningar</div>
 
               <div className="form-group">
@@ -1037,13 +1279,22 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
 
             <div className="form-actions">
               {editingId && (
-                <button
-                  type="button"
-                  onClick={() => handleDelete(editingId)}
-                  className="btn btn-danger"
-                >
-                  Ta bort
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(editingId)}
+                    className="btn btn-danger"
+                  >
+                    Ta bort
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDuplicateBooking}
+                    className="btn btn-secondary"
+                  >
+                    Duplicera
+                  </button>
+                </>
               )}
               <button type="button" onClick={handleCancelForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
                 Avbryt
@@ -1610,9 +1861,28 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                 }}
                               >
                                 <option value="">Ej tilldelad</option>
-                                {activeVehicles.map(v => (
-                                  <option key={v.id} value={v.id}>{v.regNo}</option>
-                                ))}
+                                {(() => {
+                                  const available = activeVehicles.filter(v => !vehicleOccupied(v.id, booking));
+                                  const occupied = activeVehicles.filter(v => vehicleOccupied(v.id, booking));
+                                  return (
+                                    <>
+                                      {available.length > 0 && (
+                                        <optgroup label="Tillgängliga">
+                                          {available.map(v => (
+                                            <option key={v.id} value={v.id}>{v.regNo}</option>
+                                          ))}
+                                        </optgroup>
+                                      )}
+                                      {occupied.length > 0 && (
+                                        <optgroup label="Upptagna">
+                                          {occupied.map(v => (
+                                            <option key={v.id} value={v.id}>{v.regNo}</option>
+                                          ))}
+                                        </optgroup>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </select>
                             ) : (
                               (vehicle ? vehicle.regNo : '-')
@@ -1638,9 +1908,34 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                 }}
                               >
                                 <option value="">Ej tilldelad</option>
-                                {activeDrivers.map(d => (
-                                  <option key={d.id} value={d.id}>{d.name}</option>
-                                ))}
+                                {(() => {
+                                  const eligible = booking.vehicleId
+                                    ? activeDrivers.filter(d => (d.vehicleIds || []).includes(booking.vehicleId) || d.id === booking.driverId)
+                                    : activeDrivers;
+                                  const available = eligible.filter(d => !driverOccupied(d.id, booking));
+                                  const occupied = eligible.filter(d => driverOccupied(d.id, booking));
+                                  return (
+                                    <>
+                                      {booking.vehicleId && eligible.length === 0 && (
+                                        <option disabled>Inga behöriga förare</option>
+                                      )}
+                                      {available.length > 0 && (
+                                        <optgroup label="Tillgängliga">
+                                          {available.map(d => (
+                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                          ))}
+                                        </optgroup>
+                                      )}
+                                      {occupied.length > 0 && (
+                                        <optgroup label="Upptagna">
+                                          {occupied.map(d => (
+                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                          ))}
+                                        </optgroup>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </select>
                             ) : (
                               (driver ? driver.name : '-')
