@@ -791,3 +791,44 @@ h2 {
   padding-bottom: 0.5rem;
 }
 
+/* Common layout utilities */
+.nowrap { white-space: nowrap; }
+.flex-row { display: flex; gap: 0.5rem; }
+.flex-center { display: flex; align-items: center; gap: 0.5rem; }
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Badge styles (driver, vehicle, customer) */
+.badge-driver {
+  background: #667eea;
+  color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.7rem;
+  min-width: 45px;
+  text-align: center;
+}
+.badge-driver-inactive {
+  background: #95a5a6;
+  color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.7rem;
+  min-width: 45px;
+  text-align: center;
+}
+.badge-vehicle {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
