@@ -41,6 +41,22 @@ export const formatTime = (timeStr) => {
   return timeStr;
 };
 
+/** Nuvarande tid i 24h-format HH:mm (för formulär m.m.) */
+export const getCurrentTime24 = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+
+/** Tidssträng till 24h-format HH:MM (t.ex. "8:00" → "08:00", visning överallt) */
+export const formatTime24 = (timeStr) => {
+  if (!timeStr) return '–';
+  const parts = String(timeStr).trim().split(':');
+  const h = parseInt(parts[0], 10) || 0;
+  const m = parseInt(parts[1], 10) || 0;
+  const h24 = h % 24;
+  return `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
 export const generateBookingNumber = (lastBookingNumber) => {
   const currentYear = new Date().getFullYear();
   

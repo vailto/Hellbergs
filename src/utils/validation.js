@@ -91,15 +91,8 @@ export const validateBooking = (booking) => {
   // Delivery time
   const deliveryTimeError = validateTime(booking.deliveryTime);
   if (deliveryTimeError) errors.deliveryTime = deliveryTimeError;
-  
-  // Km validation
-  const kmError = validateNumber(booking.km, 'Km', 0);
-  if (kmError) errors.km = kmError;
-  
-  // Amount validation
-  const amountError = validateNumber(booking.amountSek, 'Belopp', 0);
-  if (amountError) errors.amountSek = amountError;
-  
+
+  // vehicleId, driverId, km, amountSek are optional – set in Planning / cost entry
   return Object.keys(errors).length > 0 ? errors : null;
 };
 

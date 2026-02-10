@@ -5,6 +5,7 @@ import ConfirmModal from './ConfirmModal';
 function Customers({ data, updateData }) {
   const [formData, setFormData] = useState({
     name: '',
+    shortName: '',
     address: '',
     postalCode: '',
     city: '',
@@ -86,6 +87,7 @@ function Customers({ data, updateData }) {
   const resetForm = () => {
     setFormData({
       name: '',
+      shortName: '',
       address: '',
       postalCode: '',
       city: '',
@@ -137,6 +139,7 @@ function Customers({ data, updateData }) {
   const handleNewCustomer = () => {
     setFormData({
       name: '',
+      shortName: '',
       address: '',
       postalCode: '',
       city: '',
@@ -273,6 +276,18 @@ function Customers({ data, updateData }) {
                 placeholder="Kundnummer"
               />
             </div>
+          </div>
+
+          <div className="form-group">
+            <input
+              type="text"
+              name="shortName"
+              value={formData.shortName}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="Förkortning (4–6 bokstäver, används i schemavy)"
+              maxLength={6}
+            />
           </div>
 
           <div className="form-group">

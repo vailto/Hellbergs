@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { generateId, generateBookingNumber, formatNumber, parseNumber } from '../utils/formatters';
+import React, { useState, useEffect } from 'react';
+import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTime24, getCurrentTime24 } from '../utils/formatters';
 import { validateBooking } from '../utils/validation';
+import CostEntryModal from './CostEntryModal';
+import TimeInput24 from './TimeInput24';
 
-function Booking({ data, updateData, setCurrentSection }) {
-  const [currentTab, setCurrentTab] = useState('planerad');
+function Booking({ data, updateData, setCurrentSection, editingBookingId, setEditingBookingId, returnToSection, setReturnToSection }) {
+  const [currentTab, setCurrentTab] = useState('bokad');
+  const [costEntryBookingId, setCostEntryBookingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
@@ -17,6 +20,9 @@ function Booking({ data, updateData, setCurrentSection }) {
   const [tempLocationCustomerId, setTempLocationCustomerId] = useState('');
   const [pendingBookingData, setPendingBookingData] = useState(null);
   const [expandedBookingId, setExpandedBookingId] = useState(null);
+  const [expandedBlockId, setExpandedBlockId] = useState(null);
+  const [editingBlockId, setEditingBlockId] = useState(null);
+  const [editingBlockNameValue, setEditingBlockNameValue] = useState('');
   const [sortField, setSortField] = useState('pickupDate');
   const [sortDirection, setSortDirection] = useState('desc');
   
@@ -45,19 +51,19 @@ function Booking({ data, updateData, setCurrentSection }) {
     pickupPostalCode: '',
     pickupCity: '',
     pickupDate: new Date().toISOString().split('T')[0],
-    pickupTime: new Date().toTimeString().slice(0, 5),
+    pickupTime: getCurrentTime24(),
     pickupContactName: '',
     pickupContactPhone: '',
     deliveryAddress: '',
     deliveryPostalCode: '',
     deliveryCity: '',
     deliveryDate: new Date().toISOString().split('T')[0],
-    deliveryTime: new Date().toTimeString().slice(0, 5),
+    deliveryTime: getCurrentTime24(),
     deliveryContactName: '',
     deliveryContactPhone: '',
     km: '',
     amountSek: '',
-    status: 'Planerad',
+    status: 'Bokad',
     note: ''
   });
 
@@ -67,17 +73,6 @@ function Booking({ data, updateData, setCurrentSection }) {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
-    // If vehicle changes, auto-fill driver if vehicle has one
-    if (name === 'vehicleId') {
-      const vehicle = data.vehicles.find(v => v.id === value);
-      if (vehicle && vehicle.driverId) {
-        setFormData(prev => ({
-          ...prev,
-          driverId: vehicle.driverId
-        }));
-      }
-    }
 
     // Reset pickup mode when customer changes
     if (name === 'customerId') {
@@ -140,6 +135,14 @@ function Booking({ data, updateData, setCurrentSection }) {
     setShowForm(true);
   };
 
+  // Öppna redigering när vi kommer från Schema (editingBookingId satt från App)
+  useEffect(() => {
+    if (!editingBookingId || !setEditingBookingId || !data?.bookings) return;
+    const b = data.bookings.find(x => x.id === editingBookingId);
+    if (b) handleEdit(b);
+    setEditingBookingId(null);
+  }, [editingBookingId]);
+
   const handleDelete = (bookingId) => {
     if (window.confirm('Är du säker på att du vill ta bort denna bokning?')) {
       const updatedBookings = data.bookings.filter(b => b.id !== bookingId);
@@ -157,21 +160,38 @@ function Booking({ data, updateData, setCurrentSection }) {
       return;
     }
 
-    // Prepare booking data
-    const bookingData = {
-      ...formData,
-      km: parseNumber(formData.km),
-      amountSek: parseNumber(formData.amountSek)
-    };
+    const existing = editingId ? data.bookings.find(b => b.id === editingId) : null;
+    const bookingData = editingId && existing
+      ? {
+          ...formData,
+          id: editingId,
+          bookingNo: existing.bookingNo,
+          vehicleId: existing.vehicleId ?? null,
+          driverId: existing.driverId ?? null,
+          km: existing.km ?? null,
+          amountSek: existing.amountSek ?? null,
+          costDetails: existing.costDetails ?? undefined
+        }
+      : {
+          ...formData,
+          vehicleId: null,
+          driverId: null,
+          km: null,
+          amountSek: null,
+          costDetails: undefined
+        };
 
     if (editingId) {
-      // Update existing booking
       const updatedBookings = data.bookings.map(b =>
-        b.id === editingId ? { ...bookingData, id: editingId, bookingNo: b.bookingNo } : b
+        b.id === editingId ? bookingData : b
       );
       updateData({ bookings: updatedBookings });
       resetForm();
       setShowForm(false);
+      if (returnToSection && setCurrentSection) {
+        setCurrentSection(returnToSection);
+        if (setReturnToSection) setReturnToSection(null);
+      }
     } else {
       // Check if we should ask to save pickup location
       const pickupAddressExists = data.pickupLocations.some(
@@ -246,19 +266,19 @@ function Booking({ data, updateData, setCurrentSection }) {
       pickupPostalCode: '',
       pickupCity: '',
       pickupDate: new Date().toISOString().split('T')[0],
-      pickupTime: new Date().toTimeString().slice(0, 5),
+      pickupTime: getCurrentTime24(),
       pickupContactName: '',
       pickupContactPhone: '',
       deliveryAddress: '',
       deliveryPostalCode: '',
       deliveryCity: '',
       deliveryDate: new Date().toISOString().split('T')[0],
-      deliveryTime: new Date().toTimeString().slice(0, 5),
+      deliveryTime: getCurrentTime24(),
       deliveryContactName: '',
       deliveryContactPhone: '',
       km: '',
       amountSek: '',
-      status: 'Planerad',
+      status: 'Bokad',
       note: ''
     });
     setEditingId(null);
@@ -272,6 +292,10 @@ function Booking({ data, updateData, setCurrentSection }) {
   const handleCancelForm = () => {
     resetForm();
     setShowForm(false);
+    if (returnToSection && setCurrentSection) {
+      setCurrentSection(returnToSection);
+      if (setReturnToSection) setReturnToSection(null);
+    }
   };
 
   // New customer modal handlers
@@ -320,8 +344,43 @@ function Booking({ data, updateData, setCurrentSection }) {
   };
 
   const activeCustomers = data.customers.filter(c => c.active);
-  const activeDrivers = data.drivers.filter(d => d.active);
   const activeVehicles = data.vehicles.filter(v => v.active);
+  const activeDrivers = data.drivers.filter(d => d.active);
+
+  const handleVehicleAssign = (bookingId, vehicleId) => {
+    const vehicle = data.vehicles.find(v => v.id === vehicleId);
+    const driverId = vehicle?.driverId || null;
+    const updatedBookings = data.bookings.map(b => {
+      if (b.id !== bookingId) return b;
+      const next = { ...b, vehicleId: vehicleId || null, driverId };
+      if (vehicleId && b.status === 'Bokad') next.status = 'Planerad';
+      if (!vehicleId && b.status === 'Planerad') next.status = 'Bokad';
+      return next;
+    });
+    updateData({ bookings: updatedBookings });
+  };
+
+  const handleDriverAssign = (bookingId, driverId) => {
+    const updatedBookings = data.bookings.map(b =>
+      b.id === bookingId ? { ...b, driverId: driverId || null } : b
+    );
+    updateData({ bookings: updatedBookings });
+  };
+
+  const handleStatusChange = (bookingId, newStatus) => {
+    const updatedBookings = data.bookings.map(b =>
+      b.id === bookingId ? { ...b, status: newStatus } : b
+    );
+    updateData({ bookings: updatedBookings });
+  };
+
+  const handleCostSave = (updatedBooking) => {
+    const updatedBookings = data.bookings.map(b =>
+      b.id === updatedBooking.id ? { ...updatedBooking, status: 'Prissatt' } : b
+    );
+    updateData({ bookings: updatedBookings });
+    setCostEntryBookingId(null);
+  };
 
   // Sorting function
   const handleSort = (field) => {
@@ -333,63 +392,123 @@ function Booking({ data, updateData, setCurrentSection }) {
     }
   };
 
-  const sortBookings = (bookings) => {
-    return [...bookings].sort((a, b) => {
-      let aVal, bVal;
+  const filterByTab = (b) => {
+    if (currentTab === 'bokad') return b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId);
+    if (currentTab === 'planerad') return b.status === 'Planerad' && b.vehicleId;
+    if (currentTab === 'genomford') return b.status === 'Genomförd';
+    if (currentTab === 'prissatt') return b.status === 'Prissatt';
+    if (currentTab === 'fakturerad') return b.status === 'Fakturerad';
+    return false;
+  };
 
-      switch (sortField) {
-        case 'bookingNo':
-          aVal = a.bookingNo || '';
-          bVal = b.bookingNo || '';
-          break;
-        case 'pickupDate':
-          aVal = a.pickupDate || a.date || '';
-          bVal = b.pickupDate || b.date || '';
-          break;
-        case 'customer':
-          const customerA = data.customers.find(c => c.id === a.customerId);
-          const customerB = data.customers.find(c => c.id === b.customerId);
-          aVal = customerA?.name || '';
-          bVal = customerB?.name || '';
-          break;
-        case 'vehicle':
-          const vehicleA = data.vehicles.find(v => v.id === a.vehicleId);
-          const vehicleB = data.vehicles.find(v => v.id === b.vehicleId);
-          aVal = vehicleA?.regNo || '';
-          bVal = vehicleB?.regNo || '';
-          break;
-        case 'pickup':
-          const pickupLocA = data.pickupLocations.find(
-            loc => loc.address.toLowerCase() === a.pickupAddress?.toLowerCase()
-          );
-          const pickupLocB = data.pickupLocations.find(
-            loc => loc.address.toLowerCase() === b.pickupAddress?.toLowerCase()
-          );
-          aVal = pickupLocA?.name || a.pickupCity || a.pickupAddress || '';
-          bVal = pickupLocB?.name || b.pickupCity || b.pickupAddress || '';
-          break;
-        case 'delivery':
-          const deliveryLocA = data.pickupLocations.find(
-            loc => loc.address.toLowerCase() === a.deliveryAddress?.toLowerCase()
-          );
-          const deliveryLocB = data.pickupLocations.find(
-            loc => loc.address.toLowerCase() === b.deliveryAddress?.toLowerCase()
-          );
-          aVal = deliveryLocA?.name || a.deliveryCity || a.deliveryAddress || '';
-          bVal = deliveryLocB?.name || b.deliveryCity || b.deliveryAddress || '';
-          break;
-        case 'status':
-          aVal = a.status || '';
-          bVal = b.status || '';
-          break;
-        default:
-          return 0;
+  const getCustomerShort = (customer) => {
+    if (!customer) return '–';
+    const s = (customer.shortName || '').trim();
+    if (s) return s;
+    return (customer.name || '').slice(0, 6) || '–';
+  };
+
+  const compareBookings = (a, b) => {
+    let aVal, bVal;
+    switch (sortField) {
+      case 'bookingNo':
+        aVal = a.bookingNo || '';
+        bVal = b.bookingNo || '';
+        break;
+      case 'pickupDate':
+        aVal = a.pickupDate || a.date || '';
+        bVal = b.pickupDate || b.date || '';
+        break;
+      case 'customer': {
+        const customerA = data.customers.find(c => c.id === a.customerId);
+        const customerB = data.customers.find(c => c.id === b.customerId);
+        aVal = customerA?.name || '';
+        bVal = customerB?.name || '';
+        break;
       }
+      case 'vehicle': {
+        const vehicleA = data.vehicles.find(v => v.id === a.vehicleId);
+        const vehicleB = data.vehicles.find(v => v.id === b.vehicleId);
+        aVal = vehicleA?.regNo || '';
+        bVal = vehicleB?.regNo || '';
+        break;
+      }
+      case 'pickup': {
+        const pickupLocA = data.pickupLocations.find(
+          loc => loc.address.toLowerCase() === a.pickupAddress?.toLowerCase()
+        );
+        const pickupLocB = data.pickupLocations.find(
+          loc => loc.address.toLowerCase() === b.pickupAddress?.toLowerCase()
+        );
+        aVal = pickupLocA?.name || a.pickupCity || a.pickupAddress || '';
+        bVal = pickupLocB?.name || b.pickupCity || b.pickupAddress || '';
+        break;
+      }
+      case 'delivery': {
+        const deliveryLocA = data.pickupLocations.find(
+          loc => loc.address.toLowerCase() === a.deliveryAddress?.toLowerCase()
+        );
+        const deliveryLocB = data.pickupLocations.find(
+          loc => loc.address.toLowerCase() === b.deliveryAddress?.toLowerCase()
+        );
+        aVal = deliveryLocA?.name || a.deliveryCity || a.deliveryAddress || '';
+        bVal = deliveryLocB?.name || b.deliveryCity || b.deliveryAddress || '';
+        break;
+      }
+      case 'status':
+        aVal = a.status || '';
+        bVal = b.status || '';
+        break;
+      default:
+        return 0;
+    }
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  };
 
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
+  const sortBookings = (bookings) => {
+    return [...bookings].sort(compareBookings);
+  };
+
+  // Rader att visa: enskilda bokningar (utan blockId) + block (en rad per block med flera bokningar)
+  const getDisplayRows = () => {
+    const filtered = (data.bookings || []).filter(filterByTab);
+    const standalone = filtered.filter(b => !b.blockId);
+    const blockIds = [...new Set(filtered.map(b => b.blockId).filter(Boolean))];
+    const blockRows = blockIds.map(blockId => {
+      const block = (data.bookingBlocks || []).find(bl => bl.id === blockId);
+      const bookings = filtered.filter(b => b.blockId === blockId);
+      return block && bookings.length ? { type: 'block', block, bookings } : null;
+    }).filter(Boolean);
+    const rows = [
+      ...standalone.map(b => ({ type: 'booking', booking: b })),
+      ...blockRows
+    ];
+    return rows.sort((ra, rb) => {
+      const bookA = ra.type === 'booking' ? ra.booking : ra.bookings[0];
+      const bookB = rb.type === 'booking' ? rb.booking : rb.bookings[0];
+      return compareBookings(bookA, bookB);
     });
+  };
+
+  // Platt lista att rendera: block-rad + vid expand underliggande bokningsrader
+  const getRowsToRender = () => {
+    const displayRows = getDisplayRows();
+    const out = [];
+    for (const row of displayRows) {
+      if (row.type === 'booking') {
+        out.push({ type: 'booking', booking: row.booking, isInBlock: false });
+      } else {
+        out.push({ type: 'block', block: row.block, bookings: row.bookings });
+        if (expandedBlockId === row.block.id) {
+          for (const b of row.bookings) {
+            out.push({ type: 'booking', booking: b, isInBlock: true });
+          }
+        }
+      }
+    }
+    return out;
   };
   
   // Get pickup locations for selected customer
@@ -477,54 +596,14 @@ function Booking({ data, updateData, setCurrentSection }) {
                       onChange={handleChange}
                       className="form-select"
                     >
+                      <option value="Bokad">Bokad</option>
                       <option value="Planerad">Planerad</option>
                       <option value="Genomförd">Genomförd</option>
+                      <option value="Prissatt">Prissatt</option>
                       <option value="Fakturerad">Fakturerad</option>
-                      <option value="Avbruten">Avbruten</option>
                     </select>
                   </div>
                 )}
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e1e8ed' }}>
-                    Fordon *
-                  </label>
-                  <select
-                    name="vehicleId"
-                    value={formData.vehicleId}
-                    onChange={handleChange}
-                    className={`form-select ${errors.vehicleId ? 'error' : ''}`}
-                  >
-                    <option value="">Välj fordon</option>
-                    {activeVehicles.map(vehicle => (
-                      <option key={vehicle.id} value={vehicle.id}>
-                        {vehicle.regNo} ({vehicle.type})
-                      </option>
-                    ))}
-                  </select>
-                  {errors.vehicleId && <div className="form-error">{errors.vehicleId}</div>}
-                </div>
-
-                <div className="form-group">
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e1e8ed' }}>
-                    Förare
-                  </label>
-                  <select
-                    name="driverId"
-                    value={formData.driverId}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    <option value="">Välj förare</option>
-                    {activeDrivers.map(driver => (
-                      <option key={driver.id} value={driver.id}>
-                        {driver.code || driver.name.substring(0, 4).toUpperCase()} - {driver.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <div className="form-row">
@@ -735,12 +814,12 @@ function Booking({ data, updateData, setCurrentSection }) {
                   </div>
 
                   <div className="form-group">
-                    <input
-                      type="time"
+                    <TimeInput24
                       name="pickupTime"
                       value={formData.pickupTime}
                       onChange={handleChange}
-                      className={`form-input ${errors.pickupTime ? 'error' : ''}`}
+                      className="form-input"
+                      hasError={!!errors.pickupTime}
                     />
                     {errors.pickupTime && <div className="form-error">{errors.pickupTime}</div>}
                   </div>
@@ -911,12 +990,12 @@ function Booking({ data, updateData, setCurrentSection }) {
                   </div>
 
                   <div className="form-group">
-                    <input
-                      type="time"
+                    <TimeInput24
                       name="deliveryTime"
                       value={formData.deliveryTime}
                       onChange={handleChange}
-                      className={`form-input ${errors.deliveryTime ? 'error' : ''}`}
+                      className="form-input"
+                      hasError={!!errors.deliveryTime}
                     />
                     {errors.deliveryTime && <div className="form-error">{errors.deliveryTime}</div>}
                   </div>
@@ -948,35 +1027,9 @@ function Booking({ data, updateData, setCurrentSection }) {
               </div>
             </div>
 
-            {/* Ekonomi & Anteckningar */}
+            {/* Anteckningar */}
             <div className="form-section" style={{ marginTop: '1.5rem' }}>
-              <div className="form-section-title">Ekonomi & Anteckningar</div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <input
-                    type="text"
-                    name="km"
-                    value={formData.km}
-                    onChange={handleChange}
-                    className={`form-input ${errors.km ? 'error' : ''}`}
-                    placeholder="Sträcka (km)"
-                  />
-                  {errors.km && <div className="form-error">{errors.km}</div>}
-                </div>
-
-                <div className="form-group">
-                  <input
-                    type="text"
-                    name="amountSek"
-                    value={formData.amountSek}
-                    onChange={handleChange}
-                    className={`form-input ${errors.amountSek ? 'error' : ''}`}
-                    placeholder="Pris (SEK)"
-                  />
-                  {errors.amountSek && <div className="form-error">{errors.amountSek}</div>}
-                </div>
-              </div>
+              <div className="form-section-title">Anteckningar</div>
 
               <div className="form-group">
                 <textarea
@@ -1084,6 +1137,73 @@ function Booking({ data, updateData, setCurrentSection }) {
           </div>
         </div>
       )}
+
+      {/* Redigera blocknamn – modal (ersätter prompt så att det fungerar överallt) */}
+      {editingBlockId && (() => {
+        const block = (data.bookingBlocks || []).find(bl => bl.id === editingBlockId);
+        const handleSaveBlockName = () => {
+          const name = editingBlockNameValue.trim();
+          if (!name || !block) return;
+          const updatedBlocks = (data.bookingBlocks || []).map(bl =>
+            bl.id === editingBlockId ? { ...bl, name } : bl
+          );
+          updateData({ bookingBlocks: updatedBlocks });
+          setEditingBlockId(null);
+          setEditingBlockNameValue('');
+        };
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}
+            onClick={() => { setEditingBlockId(null); setEditingBlockNameValue(''); }}
+          >
+            <div
+              style={{
+                backgroundColor: '#1a2332',
+                padding: '1.5rem',
+                borderRadius: '8px',
+                width: '90%',
+                maxWidth: '400px',
+                border: '1px solid #2a3647'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#e1e8ed' }}>Blocknamn</h2>
+              <input
+                type="text"
+                value={editingBlockNameValue}
+                onChange={(e) => setEditingBlockNameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveBlockName();
+                  if (e.key === 'Escape') { setEditingBlockId(null); setEditingBlockNameValue(''); }
+                }}
+                className="form-input"
+                placeholder="t.ex. City-turen"
+                style={{ marginBottom: '1rem' }}
+                autoFocus
+              />
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => { setEditingBlockId(null); setEditingBlockNameValue(''); }} className="btn btn-secondary">
+                  Avbryt
+                </button>
+                <button type="button" onClick={handleSaveBlockName} className="btn btn-primary" disabled={!editingBlockNameValue.trim()}>
+                  Spara
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* New Customer Modal */}
       {showNewCustomerModal && (
@@ -1249,6 +1369,17 @@ function Booking({ data, updateData, setCurrentSection }) {
             paddingBottom: '0'
           }}>
             <button
+              onClick={() => setCurrentTab('bokad')}
+              className={`btn btn-small ${currentTab === 'bokad' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{
+                borderRadius: '6px 6px 0 0',
+                borderBottom: currentTab === 'bokad' ? '2px solid #2563ab' : 'none',
+                marginBottom: '-2px'
+              }}
+            >
+              Bokade ({data.bookings.filter(b => b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId)).length})
+            </button>
+            <button
               onClick={() => setCurrentTab('planerad')}
               className={`btn btn-small ${currentTab === 'planerad' ? 'btn-primary' : 'btn-secondary'}`}
               style={{
@@ -1257,7 +1388,7 @@ function Booking({ data, updateData, setCurrentSection }) {
                 marginBottom: '-2px'
               }}
             >
-              Planerade ({data.bookings.filter(b => b.status === 'Planerad').length})
+              Planerade ({data.bookings.filter(b => b.status === 'Planerad' && b.vehicleId).length})
             </button>
             <button
               onClick={() => setCurrentTab('genomford')}
@@ -1269,6 +1400,17 @@ function Booking({ data, updateData, setCurrentSection }) {
               }}
             >
               Genomförda ({data.bookings.filter(b => b.status === 'Genomförd').length})
+            </button>
+            <button
+              onClick={() => setCurrentTab('prissatt')}
+              className={`btn btn-small ${currentTab === 'prissatt' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{
+                borderRadius: '6px 6px 0 0',
+                borderBottom: currentTab === 'prissatt' ? '2px solid #2563ab' : 'none',
+                marginBottom: '-2px'
+              }}
+            >
+              Prissatta ({data.bookings.filter(b => b.status === 'Prissatt').length})
             </button>
             <button
               onClick={() => setCurrentTab('fakturerad')}
@@ -1283,12 +1425,14 @@ function Booking({ data, updateData, setCurrentSection }) {
             </button>
           </div>
 
-          {data.bookings.filter(b => b.status === (currentTab === 'planerad' ? 'Planerad' : currentTab === 'genomford' ? 'Genomförd' : 'Fakturerad')).length === 0 ? (
+          {getDisplayRows().length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon"></div>
               <p>
+                {currentTab === 'bokad' && 'Inga bokade bokningar ännu'}
                 {currentTab === 'planerad' && 'Inga planerade bokningar ännu'}
                 {currentTab === 'genomford' && 'Inga genomförda bokningar ännu'}
+                {currentTab === 'prissatt' && 'Inga prissatta bokningar ännu'}
                 {currentTab === 'fakturerad' && 'Inga fakturerade bokningar ännu'}
               </p>
             </div>
@@ -1321,6 +1465,7 @@ function Booking({ data, updateData, setCurrentSection }) {
                         {sortField === 'vehicle' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
                       </span>
                     </th>
+                    <th>Förare</th>
                     <th className="sortable" onClick={() => handleSort('pickup')}>
                       Upphämtning
                       <span className="sort-indicator">
@@ -1339,17 +1484,83 @@ function Booking({ data, updateData, setCurrentSection }) {
                         {sortField === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
                       </span>
                     </th>
-                    <th>Åtgärder</th>
+                    <th title="Åtgärder" style={{ width: '1%', whiteSpace: 'nowrap' }}>Åtg.</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortBookings(data.bookings.filter(b => b.status === (currentTab === 'planerad' ? 'Planerad' : currentTab === 'genomford' ? 'Genomförd' : 'Fakturerad'))).map(booking => {
+                  {getRowsToRender().map((item, idx) => {
+                    if (item.type === 'block') {
+                      const { block, bookings } = item;
+                      const first = bookings[0];
+                      const isBlockExpanded = expandedBlockId === block.id;
+                      const vehicle = data.vehicles.find(v => v.id === first?.vehicleId);
+                      const driver = data.drivers.find(d => d.id === first?.driverId);
+                      return (
+                        <tr
+                          key={`block-${block.id}`}
+                          onClick={() => setExpandedBlockId(isBlockExpanded ? null : block.id)}
+                          style={{ cursor: 'pointer', background: isBlockExpanded ? 'rgba(42, 54, 71, 0.3)' : undefined }}
+                        >
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#8899a6' }}>
+                                {isBlockExpanded ? '▼' : '▶'}
+                              </span>
+                              <strong
+                                style={{ cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingBlockId(block.id);
+                                  setEditingBlockNameValue(block.name || '');
+                                }}
+                                title="Klicka för att byta blocknamn"
+                              >
+                                {block.name}
+                              </strong>
+                            </div>
+                          </td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{first?.pickupDate || first?.date || '–'}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{bookings.length} körningar</td>
+                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                            {vehicle ? vehicle.regNo : '–'}
+                          </td>
+                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                            {driver ? driver.name : '–'}
+                          </td>
+                          <td style={{ whiteSpace: 'nowrap' }}>–</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>–</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <span className={`status-badge status-${(first?.status || 'planerad').toLowerCase()}`}>
+                              {first?.status || 'Planerad'}
+                            </span>
+                          </td>
+                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setEditingBlockId(block.id);
+                                setEditingBlockNameValue(block.name || '');
+                              }}
+                              className="btn btn-small btn-secondary"
+                              title="Redigera blocknamn"
+                              style={{ minWidth: '2rem', padding: '0.35rem' }}
+                              aria-label="Redigera blocknamn"
+                            >
+                              ✎
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    const booking = item.booking;
                     const customer = data.customers.find(c => c.id === booking.customerId);
                     const vehicle = data.vehicles.find(v => v.id === booking.vehicleId);
                     const driver = data.drivers.find(d => d.id === booking.driverId);
                     const isExpanded = expandedBookingId === booking.id;
 
-                    // Formatera upphämtning och avlämning - visa platsnamn från sparade platser
                     const pickupLocationData = data.pickupLocations.find(
                       loc => loc.address.toLowerCase() === booking.pickupAddress?.toLowerCase()
                     );
@@ -1370,9 +1581,12 @@ function Booking({ data, updateData, setCurrentSection }) {
                       <React.Fragment key={booking.id}>
                         <tr
                           onClick={() => setExpandedBookingId(isExpanded ? null : booking.id)}
-                          style={{ cursor: 'pointer' }}
+                          style={{
+                            cursor: 'pointer',
+                            ...(item.isInBlock ? { background: 'rgba(15, 20, 25, 0.6)' } : {})
+                          }}
                         >
-                          <td style={{ whiteSpace: 'nowrap' }}>
+                          <td style={{ whiteSpace: 'nowrap', paddingLeft: item.isInBlock ? '2rem' : undefined }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <span style={{ fontSize: '0.7rem', color: '#8899a6' }}>
                                 {isExpanded ? '▼' : '▶'}
@@ -1383,8 +1597,63 @@ function Booking({ data, updateData, setCurrentSection }) {
                           <td style={{ whiteSpace: 'nowrap' }}>
                             {booking.pickupDate || booking.date}
                           </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>{customer?.name || 'Okänd'}</td>
-                          <td style={{ whiteSpace: 'nowrap' }}>{vehicle ? vehicle.regNo : '-'}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{getCustomerShort(customer)}</td>
+                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                            {(currentTab === 'bokad' || currentTab === 'planerad') ? (
+                              <select
+                                value={booking.vehicleId || ''}
+                                onChange={(e) => handleVehicleAssign(booking.id, e.target.value || null)}
+                                className="form-select table-select-inline"
+                                style={{
+                                  minWidth: '58px',
+                                  maxWidth: '72px',
+                                  padding: '0.2rem 0.35rem',
+                                  fontSize: '0.75rem',
+                                  appearance: 'none',
+                                  WebkitAppearance: 'none',
+                                  background: booking.vehicleId ? '#1a2332' : '#0f1419',
+                                  color: '#e1e8ed',
+                                  border: '1px solid #2a3647',
+                                  borderRadius: '4px'
+                                }}
+                              >
+                                <option value="">Ej tilldelad</option>
+                                {activeVehicles.map(v => (
+                                  <option key={v.id} value={v.id}>{v.regNo}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              (vehicle ? vehicle.regNo : '-')
+                            )}
+                          </td>
+                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                            {(currentTab === 'bokad' || currentTab === 'planerad') ? (
+                              <select
+                                value={booking.driverId || ''}
+                                onChange={(e) => handleDriverAssign(booking.id, e.target.value || null)}
+                                className="form-select table-select-inline"
+                                style={{
+                                  minWidth: '70px',
+                                  maxWidth: '88px',
+                                  padding: '0.2rem 0.35rem',
+                                  fontSize: '0.75rem',
+                                  appearance: 'none',
+                                  WebkitAppearance: 'none',
+                                  background: booking.driverId ? '#1a2332' : '#0f1419',
+                                  color: '#e1e8ed',
+                                  border: '1px solid #2a3647',
+                                  borderRadius: '4px'
+                                }}
+                              >
+                                <option value="">Ej tilldelad</option>
+                                {activeDrivers.map(d => (
+                                  <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              (driver ? driver.name : '-')
+                            )}
+                          </td>
                           <td style={{ whiteSpace: 'nowrap' }}>
                             {pickupLocation}
                           </td>
@@ -1392,23 +1661,54 @@ function Booking({ data, updateData, setCurrentSection }) {
                             {deliveryLocation}
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            <span className={`status-badge status-${booking.status.toLowerCase()}`}>
-                              {booking.status}
+                            <span className={`status-badge status-${(booking.status === 'Planerad' && !booking.vehicleId ? 'Bokad' : booking.status).toLowerCase()}`}>
+                              {booking.status === 'Planerad' && !booking.vehicleId ? 'Bokad' : booking.status}
                             </span>
                           </td>
                           <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
-                            <button
-                              onClick={() => handleEdit(booking)}
-                              className="btn btn-small btn-primary"
-                            >
-                              Redigera
-                            </button>
+                            <div className="table-actions" style={{ flexWrap: 'nowrap' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(booking)}
+                                className="btn btn-small btn-primary"
+                                title="Redigera"
+                                style={{ minWidth: '2rem', padding: '0.35rem' }}
+                                aria-label="Redigera"
+                              >
+                                ✎
+                              </button>
+                              {booking.status === 'Genomförd' && (
+                                <button
+                                  onClick={() => setCostEntryBookingId(booking.id)}
+                                  className="btn btn-small btn-warning"
+                                  title="Prissätta (ange kostnad)"
+                                  style={{ minWidth: '2rem', padding: '0.35rem' }}
+                                  aria-label="Prissätta"
+                                >
+                                  $
+                                </button>
+                              )}
+                              {booking.status === 'Prissatt' && (
+                                <button
+                                  onClick={() => handleStatusChange(booking.id, 'Fakturerad')}
+                                  className="btn btn-small btn-success"
+                                  title="Fakturera"
+                                  style={{ minWidth: '2rem', padding: '0.35rem' }}
+                                  aria-label="Fakturera"
+                                >
+                                  🧾
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                         
                         {isExpanded && (
                           <tr>
-                            <td colSpan="8" style={{ backgroundColor: '#0f1419', padding: '1rem' }}>
+                            <td colSpan="9" style={{ backgroundColor: '#0f1419', padding: '1rem' }}>
+                              <div style={{ marginBottom: '1rem', fontSize: '1rem', color: '#e1e8ed', fontWeight: 600 }}>
+                                {customer?.name || 'Okänd'}
+                              </div>
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                                 {/* Upphämtning */}
                                 <div>
@@ -1426,7 +1726,7 @@ function Booking({ data, updateData, setCurrentSection }) {
                                     </div>
                                     <div>
                                       <span style={{ color: '#8899a6' }}>Tid: </span>
-                                      <span style={{ color: '#e1e8ed' }}>{booking.pickupTime || booking.time || '-'}</span>
+                                      <span style={{ color: '#e1e8ed' }}>{formatTime24(booking.pickupTime || booking.time)}</span>
                                     </div>
                                     {booking.pickupContactName && (
                                       <div>
@@ -1459,7 +1759,7 @@ function Booking({ data, updateData, setCurrentSection }) {
                                     </div>
                                     <div>
                                       <span style={{ color: '#8899a6' }}>Tid: </span>
-                                      <span style={{ color: '#e1e8ed' }}>{booking.deliveryTime || '-'}</span>
+                                      <span style={{ color: '#e1e8ed' }}>{formatTime24(booking.deliveryTime)}</span>
                                     </div>
                                     {booking.deliveryContactName && (
                                       <div>
@@ -1526,6 +1826,18 @@ function Booking({ data, updateData, setCurrentSection }) {
           )}
         </>
       )}
+
+      {costEntryBookingId && (() => {
+        const booking = data.bookings.find(b => b.id === costEntryBookingId);
+        return booking ? (
+          <CostEntryModal
+            booking={booking}
+            data={data}
+            onSave={handleCostSave}
+            onClose={() => setCostEntryBookingId(null)}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }

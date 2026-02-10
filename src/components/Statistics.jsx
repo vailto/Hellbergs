@@ -66,8 +66,10 @@ function Statistics({ data }) {
 
     // Calculate by status
     const byStatus = {
+      'Bokad': 0,
       'Planerad': 0,
       'Genomförd': 0,
+      'Prissatt': 0,
       'Fakturerad': 0
     };
     filteredBookings.forEach(booking => {
@@ -384,9 +386,11 @@ function Statistics({ data }) {
             <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #2a3647' }}>
               <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.5rem' }}>Status</div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <span className="status-badge status-planned">Planerad: {stats.byStatus['Planerad']}</span>
-                <span className="status-badge status-completed">Genomförd: {stats.byStatus['Genomförd']}</span>
-                <span className="status-badge status-invoiced">Fakturerad: {stats.byStatus['Fakturerad']}</span>
+                <span className="status-badge status-bokad">Bokad: {stats.byStatus['Bokad']}</span>
+                <span className="status-badge status-planerad">Planerad: {stats.byStatus['Planerad']}</span>
+                <span className="status-badge status-genomförd">Genomförd: {stats.byStatus['Genomförd']}</span>
+                <span className="status-badge status-prissatt">Prissatta: {stats.byStatus['Prissatt']}</span>
+                <span className="status-badge status-fakturerad">Fakturerad: {stats.byStatus['Fakturerad']}</span>
               </div>
             </div>
           </div>

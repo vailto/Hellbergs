@@ -8,6 +8,7 @@ const DEFAULT_DATA = {
   vehicles: [],
   vehicleTypes: ['Skåpbil', 'Släp'],
   bookings: [],
+  bookingBlocks: [],
   pickupLocations: [],
   lastBookingNumber: { year: new Date().getFullYear(), number: 0 }
 };
@@ -22,7 +23,8 @@ export const loadData = () => {
         ...DEFAULT_DATA,
         ...data,
         vehicleTypes: data.vehicleTypes || DEFAULT_DATA.vehicleTypes,
-        pickupLocations: data.pickupLocations || []
+        pickupLocations: data.pickupLocations || [],
+        bookingBlocks: data.bookingBlocks || []
       };
       
       // Ensure all vehicles have a driverId field (even if null)

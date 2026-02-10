@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 import { generateId } from '../utils/formatters';
 import { exportToJSON, importFromJSON, saveData } from '../utils/storage';
+import getMockData from '../data/mockData';
 
 function Settings({ data, updateData }) {
   // Tab State
@@ -37,6 +38,7 @@ function Settings({ data, updateData }) {
   // Customer State
   const [customerForm, setCustomerForm] = useState({
     name: '',
+    shortName: '',
     address: '',
     postalCode: '',
     city: '',
@@ -68,6 +70,7 @@ function Settings({ data, updateData }) {
   const [driverSortField, setDriverSortField] = useState('name');
   const [driverSortDirection, setDriverSortDirection] = useState('asc');
   const [vehicleTypeSortDirection, setVehicleTypeSortDirection] = useState('asc');
+  const [testDataLoaded, setTestDataLoaded] = useState(false);
 
   // Vehicle Types Handlers
   const handleAddType = (e) => {
@@ -326,6 +329,7 @@ function Settings({ data, updateData }) {
   const resetCustomerForm = () => {
     setCustomerForm({
       name: '',
+      shortName: '',
       address: '',
       postalCode: '',
       city: '',
@@ -348,6 +352,7 @@ function Settings({ data, updateData }) {
       pricesByVehicleType: customer.pricesByVehicleType || {}
     });
     setEditingCustomerId(customer.id);
+    setExpandedCustomerId(null);
     setShowCustomerForm(true);
     setShowCustomerPriceForm(false);
     setSelectedCustomerVehicleType('');
@@ -395,6 +400,24 @@ function Settings({ data, updateData }) {
 
   const toggleCustomerExpand = (customerId) => {
     setExpandedCustomerId(expandedCustomerId === customerId ? null : customerId);
+  };
+
+  const handleLoadTestData = () => {
+    try {
+      const mock = getMockData();
+      updateData({
+        customers: mock.customers,
+        drivers: mock.drivers,
+        vehicles: mock.vehicles,
+        pickupLocations: mock.pickupLocations,
+        bookings: mock.bookings,
+        lastBookingNumber: mock.lastBookingNumber
+      });
+      setTestDataLoaded(true);
+    } catch (err) {
+      console.error('Ladda testdata:', err);
+      alert('Kunde inte ladda testdata: ' + (err.message || err));
+    }
   };
 
   const handleCustomerSort = (field) => {
@@ -622,6 +645,17 @@ function Settings({ data, updateData }) {
           }}
         >
           Backup
+        </button>
+        <button
+          onClick={() => setCurrentTab('testdata')}
+          className={`btn btn-small ${currentTab === 'testdata' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: currentTab === 'testdata' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px'
+          }}
+        >
+          Testdata
         </button>
       </div>
 
@@ -1301,145 +1335,104 @@ function Settings({ data, updateData }) {
 
             {showCustomerForm && (
               <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-                <h3 style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.75rem', marginTop: 0 }}>
-                  {editingCustomerId ? 'Redigera kund' : 'Ny kund'}
-                </h3>
-
-                <form onSubmit={handleCustomerSubmit}>
-                  <div className="form-row" style={{ gap: '0.5rem' }}>
-                    <div className="form-group" style={{ flex: 2 }}>
-                      <input
-                        type="text"
-                        name="name"
-                        value={customerForm.name}
-                        onChange={handleCustomerChange}
-                        className="form-input"
-                        placeholder="Namn *"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <input
-                        type="text"
-                        name="customerNumber"
-                        value={customerForm.customerNumber}
-                        onChange={handleCustomerChange}
-                        className="form-input"
-                        placeholder="Kundnummer"
-                      />
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '1.5rem', alignItems: 'start' }}>
+                  {/* Vänster: kompakt kundformulär */}
+                  <div>
+                    <h3 style={{ fontSize: '0.7rem', color: '#6c757d', marginBottom: '0.25rem', marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {editingCustomerId ? 'Redigera kund' : 'Ny kund'}
+                    </h3>
+                    <form onSubmit={handleCustomerSubmit} style={{ fontSize: '0.75rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
+                        <input type="text" name="name" value={customerForm.name} onChange={handleCustomerChange} className="form-input" placeholder="Namn *" required style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                        <input type="text" name="customerNumber" value={customerForm.customerNumber} onChange={handleCustomerChange} className="form-input" placeholder="Kundnr" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem', width: '5.5rem' }} />
+                      </div>
+                      <div style={{ marginBottom: '0.2rem' }}>
+                        <input type="text" name="shortName" value={customerForm.shortName || ''} onChange={handleCustomerChange} className="form-input" placeholder="Förkortning" maxLength={6} style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                      </div>
+                      <div style={{ marginBottom: '0.2rem' }}>
+                        <input type="text" name="contactPerson" value={customerForm.contactPerson} onChange={handleCustomerChange} className="form-input" placeholder="Kontaktperson" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                      </div>
+                      <div style={{ marginBottom: '0.2rem' }}>
+                        <input type="text" name="address" value={customerForm.address} onChange={handleCustomerChange} className="form-input" placeholder="Adress" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
+                        <input type="text" name="postalCode" value={customerForm.postalCode} onChange={handleCustomerChange} className="form-input" placeholder="Postnr" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem', width: '4rem' }} />
+                        <input type="text" name="city" value={customerForm.city} onChange={handleCustomerChange} className="form-input" placeholder="Ort" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
+                        <input type="tel" name="phone" value={customerForm.phone} onChange={handleCustomerChange} className="form-input" placeholder="Telefon" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                        <input type="tel" name="mobile" value={customerForm.mobile} onChange={handleCustomerChange} className="form-input" placeholder="Mobil" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                      </div>
+                      <label className="checkbox-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <input type="checkbox" name="active" checked={customerForm.active} onChange={handleCustomerChange} />
+                        Aktiv
+                      </label>
+                      <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
+                        <button type="submit" className="btn btn-primary btn-small" style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem' }}>{editingCustomerId ? 'Spara' : 'Lägg till'}</button>
+                        {editingCustomerId && (
+                          <>
+                            <button type="button" onClick={() => toggleCustomerActive(editingCustomerId, customerForm.active)} className="btn btn-secondary btn-small" style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem' }}>{customerForm.active ? 'Inaktivera' : 'Aktivera'}</button>
+                            <button type="button" onClick={() => setDeleteCustomerId(editingCustomerId)} className="btn btn-danger btn-small" style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem' }}>Ta bort</button>
+                          </>
+                        )}
+                        <button type="button" onClick={resetCustomerForm} className="btn btn-secondary btn-small" style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem' }}>Avbryt</button>
+                      </div>
+                    </form>
                   </div>
 
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      name="contactPerson"
-                      value={customerForm.contactPerson}
-                      onChange={handleCustomerChange}
-                      className="form-input"
-                      placeholder="Kontaktperson"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      name="address"
-                      value={customerForm.address}
-                      onChange={handleCustomerChange}
-                      className="form-input"
-                      placeholder="Adress"
-                    />
-                  </div>
-
-                  <div className="form-row" style={{ gap: '0.5rem' }}>
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <input
-                        type="text"
-                        name="postalCode"
-                        value={customerForm.postalCode}
-                        onChange={handleCustomerChange}
-                        className="form-input"
-                        placeholder="Postnummer"
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ flex: 2 }}>
-                      <input
-                        type="text"
-                        name="city"
-                        value={customerForm.city}
-                        onChange={handleCustomerChange}
-                        className="form-input"
-                        placeholder="Ort"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row" style={{ gap: '0.5rem' }}>
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={customerForm.phone}
-                        onChange={handleCustomerChange}
-                        className="form-input"
-                        placeholder="Telefon"
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <input
-                        type="tel"
-                        name="mobile"
-                        value={customerForm.mobile}
-                        onChange={handleCustomerChange}
-                        className="form-input"
-                        placeholder="Mobil"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        name="active"
-                        checked={customerForm.active}
-                        onChange={handleCustomerChange}
-                      />
-                      Aktiv
-                    </label>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button type="submit" className="btn btn-primary btn-small">
-                      {editingCustomerId ? 'Spara' : 'Lägg till'}
-                    </button>
-                    {editingCustomerId && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => toggleCustomerActive(editingCustomerId, customerForm.active)}
-                          className="btn btn-secondary btn-small"
+                  {/* Höger: priser per fordonstyp, väntetid m.m. */}
+                  <div>
+                    <h3 style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.5rem', marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Priser (kundspecifika)
+                    </h3>
+                    <div style={{ fontSize: '0.8rem' }}>
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <select
+                          value={selectedCustomerVehicleType}
+                          onChange={handleCustomerVehicleTypeSelect}
+                          className="form-select"
+                          style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', width: '100%', maxWidth: '200px' }}
                         >
-                          {customerForm.active ? 'Inaktivera' : 'Aktivera'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteCustomerId(editingCustomerId)}
-                          className="btn btn-danger btn-small"
-                        >
-                          Ta bort
-                        </button>
-                      </>
-                    )}
-                    <button type="button" onClick={resetCustomerForm} className="btn btn-secondary btn-small">
-                      Avbryt
-                    </button>
+                          <option value="">+ Lägg till fordonstyp</option>
+                          {(data.vehicleTypes || []).filter(t => !customerForm.pricesByVehicleType[t]).map(t => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                      {Object.entries(customerForm.pricesByVehicleType || {}).map(([vehicleType, prices]) => (
+                        <div key={vehicleType} style={{ marginBottom: '0.75rem', padding: '0.5rem', background: '#1a2332', borderRadius: '6px', border: '1px solid #2a3647', display: 'flex', alignItems: 'flex-end', gap: '0.75rem', flexWrap: 'wrap' }}>
+                          <strong style={{ fontSize: '0.8rem', color: '#e1e8ed', flexShrink: 0, marginBottom: '0.25rem' }}>{vehicleType}</strong>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(70px, 1fr))', gap: '0.35rem', flex: 1, minWidth: 0 }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>kr/km</label>
+                              <input type="text" inputMode="decimal" value={prices.km || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'km', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>kr/stopp</label>
+                              <input type="text" inputMode="decimal" value={prices.stop || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'stop', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>Väntetid kr/h</label>
+                              <input type="text" inputMode="decimal" value={prices.wait || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'wait', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>Timpris kr</label>
+                              <input type="text" inputMode="decimal" value={prices.hour || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'hour', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>Fast kr</label>
+                              <input type="text" inputMode="decimal" value={prices.fixed || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'fixed', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                            </div>
+                          </div>
+                          <button type="button" onClick={() => handleRemoveCustomerPriceTemplate(vehicleType)} className="btn btn-danger btn-small" style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', flexShrink: 0, marginBottom: '0.25rem', marginLeft: 'auto' }}>Ta bort</button>
+                        </div>
+                      ))}
+                      {(!customerForm.pricesByVehicleType || Object.keys(customerForm.pricesByVehicleType).length === 0) && (
+                        <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: 0 }}>Välj fordonstyp ovan för att lägga till priser (kr/km, väntetid, timpris m.m.)</p>
+                      )}
+                    </div>
                   </div>
-                </form>
+                </div>
               </div>
             )}
 
@@ -1476,24 +1469,64 @@ function Settings({ data, updateData }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {activeCustomers.map(customer => (
-                      <tr key={customer.id}>
-                        <td>{customer.customerNumber || '-'}</td>
-                        <td><strong>{customer.name}</strong></td>
-                        <td>{customer.contactPerson || '-'}</td>
-                        <td>{customer.mobile || '-'}</td>
-                        <td>{customer.city || '-'}</td>
-                        <td>
-                          <button
-                            onClick={() => handleEditCustomer(customer)}
-                            className="btn btn-small btn-primary"
-                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+                    {activeCustomers.map(customer => {
+                      const isExpanded = expandedCustomerId === customer.id;
+                      return (
+                        <React.Fragment key={customer.id}>
+                          <tr
+                            onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
+                            style={{ cursor: 'pointer' }}
                           >
-                            Redigera
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                            <td style={{ whiteSpace: 'nowrap' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#8899a6', marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
+                              {customer.customerNumber || '-'}
+                            </td>
+                            <td><strong>{customer.name}</strong></td>
+                            <td>{customer.contactPerson || '-'}</td>
+                            <td>{customer.mobile || '-'}</td>
+                            <td>{customer.city || '-'}</td>
+                            <td onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => handleEditCustomer(customer)}
+                                className="btn btn-small btn-primary"
+                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+                              >
+                                Redigera
+                              </button>
+                            </td>
+                          </tr>
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={6} style={{ backgroundColor: '#0f1419', padding: '1rem', verticalAlign: 'top' }}>
+                                <div style={{ marginBottom: '0.75rem', fontSize: '1rem', color: '#e1e8ed', fontWeight: 600 }}>
+                                  {customer.name}
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
+                                  <div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Kundnr: </span><span style={{ color: '#e1e8ed' }}>{customer.customerNumber || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Förkortning: </span><span style={{ color: '#e1e8ed' }}>{customer.shortName || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Kontaktperson: </span><span style={{ color: '#e1e8ed' }}>{customer.contactPerson || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Telefon: </span><span style={{ color: '#e1e8ed' }}>{customer.phone || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Mobil: </span><span style={{ color: '#e1e8ed' }}>{customer.mobile || '-'}</span></div>
+                                  </div>
+                                  <div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Adress: </span><span style={{ color: '#e1e8ed' }}>{customer.address || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Postnr / Ort: </span><span style={{ color: '#e1e8ed' }}>{[customer.postalCode, customer.city].filter(Boolean).join(' ') || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Aktiv: </span><span style={{ color: '#e1e8ed' }}>{customer.active ? 'Ja' : 'Nej'}</span></div>
+                                    {(customer.pricesByVehicleType && Object.keys(customer.pricesByVehicleType).length > 0) && (
+                                      <div style={{ marginTop: '0.5rem' }}>
+                                        <span style={{ color: '#8899a6' }}>Priser: </span>
+                                        <span style={{ color: '#e1e8ed' }}>{Object.keys(customer.pricesByVehicleType).join(', ')}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1532,24 +1565,64 @@ function Settings({ data, updateData }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {inactiveCustomers.map(customer => (
-                      <tr key={customer.id} style={{ opacity: 0.6 }}>
-                        <td>{customer.customerNumber || '-'}</td>
-                        <td>{customer.name}</td>
-                        <td>{customer.contactPerson || '-'}</td>
-                        <td>{customer.mobile || '-'}</td>
-                        <td>{customer.city || '-'}</td>
-                        <td>
-                          <button
-                            onClick={() => handleEditCustomer(customer)}
-                            className="btn btn-small btn-primary"
-                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+                    {inactiveCustomers.map(customer => {
+                      const isExpanded = expandedCustomerId === customer.id;
+                      return (
+                        <React.Fragment key={customer.id}>
+                          <tr
+                            onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
+                            style={{ cursor: 'pointer', opacity: 0.6 }}
                           >
-                            Redigera
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                            <td style={{ whiteSpace: 'nowrap' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#8899a6', marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
+                              {customer.customerNumber || '-'}
+                            </td>
+                            <td>{customer.name}</td>
+                            <td>{customer.contactPerson || '-'}</td>
+                            <td>{customer.mobile || '-'}</td>
+                            <td>{customer.city || '-'}</td>
+                            <td onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => handleEditCustomer(customer)}
+                                className="btn btn-small btn-primary"
+                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+                              >
+                                Redigera
+                              </button>
+                            </td>
+                          </tr>
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={6} style={{ backgroundColor: '#0f1419', padding: '1rem', verticalAlign: 'top' }}>
+                                <div style={{ marginBottom: '0.75rem', fontSize: '1rem', color: '#e1e8ed', fontWeight: 600 }}>
+                                  {customer.name}
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
+                                  <div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Kundnr: </span><span style={{ color: '#e1e8ed' }}>{customer.customerNumber || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Förkortning: </span><span style={{ color: '#e1e8ed' }}>{customer.shortName || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Kontaktperson: </span><span style={{ color: '#e1e8ed' }}>{customer.contactPerson || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Telefon: </span><span style={{ color: '#e1e8ed' }}>{customer.phone || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Mobil: </span><span style={{ color: '#e1e8ed' }}>{customer.mobile || '-'}</span></div>
+                                  </div>
+                                  <div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Adress: </span><span style={{ color: '#e1e8ed' }}>{customer.address || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Postnr / Ort: </span><span style={{ color: '#e1e8ed' }}>{[customer.postalCode, customer.city].filter(Boolean).join(' ') || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Aktiv: </span><span style={{ color: '#e1e8ed' }}>Nej</span></div>
+                                    {(customer.pricesByVehicleType && Object.keys(customer.pricesByVehicleType).length > 0) && (
+                                      <div style={{ marginTop: '0.5rem' }}>
+                                        <span style={{ color: '#8899a6' }}>Priser: </span>
+                                        <span style={{ color: '#e1e8ed' }}>{Object.keys(customer.pricesByVehicleType).join(', ')}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1790,6 +1863,32 @@ function Settings({ data, updateData }) {
             <strong style={{ color: '#856404' }}>Varning:</strong>
             <span style={{ color: '#856404' }}> Import ersätter all befintlig data.</span>
           </div>
+        </div>
+      )}
+
+      {/* TESTDATA TAB */}
+      {currentTab === 'testdata' && (
+        <div className="form">
+          <h2 style={{ marginBottom: '1rem' }}>Testdata</h2>
+          <p style={{ color: '#7f8c8d', marginBottom: '1rem', fontSize: '0.875rem' }}>
+            Ladda in exempeldata för att testa appen: kunder, förare, bilar, platser och några bokningar (planerade, genomförda och fakturerade).
+          </p>
+          <button
+            type="button"
+            onClick={handleLoadTestData}
+            className="btn btn-primary"
+            style={{ marginBottom: '1rem' }}
+          >
+            Ladda testdata
+          </button>
+          {testDataLoaded && (
+            <p style={{ color: '#22c55e', marginBottom: '1rem', fontWeight: 600 }}>
+              Testdata laddad. Gå till Bokningar eller Planering för att se datan.
+            </p>
+          )}
+          <p style={{ color: '#8899a6', fontSize: '0.85rem' }}>
+            Gå till <strong>Bokningar</strong> för att se bokningarna, <strong>Planering</strong> för att tilldela bil/förare och ange kostnad, och flikarna <strong>Fordon</strong>, <strong>Förare</strong>, <strong>Kunder</strong>, <strong>Platser</strong> här ovanför för att se listorna.
+          </p>
         </div>
       )}
 

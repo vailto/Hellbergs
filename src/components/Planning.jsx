@@ -1,13 +1,29 @@
 import React, { useState } from 'react';
-import { formatNumber, generateId, generateBookingNumber } from '../utils/formatters';
+import { formatNumber, formatTime24, generateId, generateBookingNumber } from '../utils/formatters';
 import ConfirmModal from './ConfirmModal';
+import CostEntryModal from './CostEntryModal';
+
+// Måndag för veckan som innehåller datum
+function getMondayOfWeek(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().split('T')[0];
+}
 
 function Planning({ data, updateData, setCurrentSection }) {
+  const [planningTab, setPlanningTab] = useState('list'); // 'list' | 'week'
+  const [costEntryBookingId, setCostEntryBookingId] = useState(null);
+  const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(new Date().toISOString().split('T')[0]));
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
     customerId: '',
     status: '',
+    selectedStatuses: [],
+    includeUnplanned: false,
     vehicleId: '',
     driverId: ''
   });
@@ -18,6 +34,25 @@ function Planning({ data, updateData, setCurrentSection }) {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const toggleStatusFilter = (status) => {
+    setFilters(prev => {
+      const current = prev.selectedStatuses || [];
+      return {
+        ...prev,
+        selectedStatuses: current.includes(status)
+          ? current.filter(s => s !== status)
+          : [...current, status]
+      };
+    });
+  };
+
+  const toggleUnplannedFilter = () => {
+    setFilters(prev => ({
+      ...prev,
+      includeUnplanned: !prev.includeUnplanned
+    }));
   };
 
   const handleSort = (field) => {
@@ -47,8 +82,15 @@ function Planning({ data, updateData, setCurrentSection }) {
     if (filters.customerId) {
       filtered = filtered.filter(b => b.customerId === filters.customerId);
     }
-    if (filters.status) {
-      filtered = filtered.filter(b => b.status === filters.status);
+    const statusList = filters.selectedStatuses || [];
+    const includeUnplanned = filters.includeUnplanned;
+    if (statusList.length > 0 || includeUnplanned) {
+      filtered = filtered.filter(b => {
+        const matchesStatus = statusList.length === 0 || statusList.includes(b.status);
+        const isUnplanned = !b.vehicleId;
+        const matchesUnplanned = includeUnplanned && isUnplanned;
+        return matchesStatus || matchesUnplanned;
+      });
     }
     if (filters.vehicleId) {
       filtered = filtered.filter(b => b.vehicleId === filters.vehicleId);
@@ -142,7 +184,7 @@ function Planning({ data, updateData, setCurrentSection }) {
       ...bookingData,
       id: generateId('bk'),
       bookingNo: newBookingNo,
-      status: 'Planerad',
+      status: 'Bokad',
       pickupDate: new Date().toISOString().split('T')[0],
       date: new Date().toISOString().split('T')[0] // Keep for backwards compatibility
     };
@@ -159,9 +201,35 @@ function Planning({ data, updateData, setCurrentSection }) {
   };
 
   const handleEdit = (booking) => {
-    // Navigate to booking section and trigger edit
-    // This is a simplified approach - in a real app you'd pass the booking to edit
     setCurrentSection('booking');
+  };
+
+  const handleVehicleAssign = (bookingId, vehicleId) => {
+    const vehicle = data.vehicles.find(v => v.id === vehicleId);
+    const driverId = vehicle?.driverId || null;
+    const updatedBookings = data.bookings.map(b => {
+      if (b.id !== bookingId) return b;
+      const next = { ...b, vehicleId: vehicleId || null, driverId };
+      if (vehicleId && b.status === 'Bokad') next.status = 'Planerad';
+      if (!vehicleId && b.status === 'Planerad') next.status = 'Bokad';
+      return next;
+    });
+    updateData({ bookings: updatedBookings });
+  };
+
+  const handleDriverAssign = (bookingId, driverId) => {
+    const updatedBookings = data.bookings.map(b =>
+      b.id === bookingId ? { ...b, driverId: driverId || null } : b
+    );
+    updateData({ bookings: updatedBookings });
+  };
+
+  const handleCostSave = (updatedBooking) => {
+    const updatedBookings = data.bookings.map(b =>
+      b.id === updatedBooking.id ? updatedBooking : b
+    );
+    updateData({ bookings: updatedBookings });
+    setCostEntryBookingId(null);
   };
 
   const filteredBookings = getFilteredBookings();
@@ -169,9 +237,59 @@ function Planning({ data, updateData, setCurrentSection }) {
   const activeDrivers = data.drivers.filter(d => d.active);
   const activeVehicles = data.vehicles.filter(v => v.active);
 
+  // Veckoschema: Mån–Fre (5 dagar) från weekStart
+  const weekDays = Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(weekStart + 'T12:00:00');
+    d.setDate(d.getDate() + i);
+    return d.toISOString().split('T')[0];
+  });
+  const bookingsByDay = weekDays.map(dayStr =>
+    filteredBookings
+      .filter(b => (b.pickupDate || b.date) === dayStr)
+      .sort((a, b) => (a.pickupTime || a.time || '').localeCompare(b.pickupTime || b.time || ''))
+  );
+  const weekLabel = (() => {
+    const m = new Date(weekStart + 'T12:00:00');
+    const f = new Date(m);
+    f.setDate(f.getDate() + 4);
+    const fmt = (d) => d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
+    return `Vecka ${getWeekNumber(m)}, ${fmt(m)} – ${fmt(f)} ${m.getFullYear()}`;
+  })();
+  function getWeekNumber(d) {
+    const oneJan = new Date(d.getFullYear(), 0, 1);
+    return Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
+  }
+
   return (
     <div>
       <h1>Planering</h1>
+
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '2px solid #2a3647', paddingBottom: 0 }}>
+        <button
+          type="button"
+          onClick={() => setPlanningTab('list')}
+          className={`btn btn-small ${planningTab === 'list' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: planningTab === 'list' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px'
+          }}
+        >
+          Lista
+        </button>
+        <button
+          type="button"
+          onClick={() => setPlanningTab('week')}
+          className={`btn btn-small ${planningTab === 'week' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: planningTab === 'week' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px'
+          }}
+        >
+          Veckoschema
+        </button>
+      </div>
 
       <div className="filters">
         <h3 className="filters-title">Filter</h3>
@@ -216,19 +334,27 @@ function Planning({ data, updateData, setCurrentSection }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Status</label>
-            <select
-              name="status"
-              value={filters.status}
-              onChange={handleFilterChange}
-              className="form-select"
-            >
-              <option value="">Alla status</option>
-              <option value="Planerad">Planerad</option>
-              <option value="Genomförd">Genomförd</option>
-              <option value="Fakturerad">Fakturerad</option>
-              <option value="Avbruten">Avbruten</option>
-            </select>
+            <span className="form-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Status / typ</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1rem', alignItems: 'center' }}>
+              {['Bokad', 'Planerad', 'Genomförd', 'Fakturerad'].map(status => (
+                <label key={status} className="checkbox-label" style={{ marginBottom: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={(filters.selectedStatuses || []).includes(status)}
+                    onChange={() => toggleStatusFilter(status)}
+                  />
+                  {status}
+                </label>
+              ))}
+              <label className="checkbox-label" style={{ marginBottom: 0, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(filters.includeUnplanned)}
+                  onChange={toggleUnplannedFilter}
+                />
+                Oplanerade (inga bil)
+              </label>
+            </div>
           </div>
 
           <div className="form-group">
@@ -267,6 +393,8 @@ function Planning({ data, updateData, setCurrentSection }) {
         </div>
       </div>
 
+      {planningTab === 'list' && (
+      <>
       {filteredBookings.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon"></div>
@@ -329,18 +457,42 @@ function Planning({ data, updateData, setCurrentSection }) {
                 return (
                   <tr key={booking.id}>
                     <td>{booking.pickupDate || booking.date || '-'}</td>
-                    <td>{booking.pickupTime || booking.time || '-'}</td>
+                    <td>{formatTime24(booking.pickupTime || booking.time)}</td>
                     <td>{customer?.name || 'Okänd'}</td>
                     <td>{booking.bookingNo}</td>
-                    <td>{vehicle?.regNo || '-'}</td>
-                    <td>{driver?.name || '-'}</td>
+                    <td>
+                      <select
+                        value={booking.vehicleId || ''}
+                        onChange={(e) => handleVehicleAssign(booking.id, e.target.value || null)}
+                        className="form-select"
+                        style={{ minWidth: '100px' }}
+                      >
+                        <option value="">Ej tilldelad</option>
+                        {activeVehicles.map(v => (
+                          <option key={v.id} value={v.id}>{v.regNo}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        value={booking.driverId || ''}
+                        onChange={(e) => handleDriverAssign(booking.id, e.target.value || null)}
+                        className="form-select"
+                        style={{ minWidth: '120px' }}
+                      >
+                        <option value="">Ej tilldelad</option>
+                        {activeDrivers.map(d => (
+                          <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td>
                       <span className={`status-badge status-${booking.status.toLowerCase()}`}>
                         {booking.status}
                       </span>
                     </td>
-                    <td>{booking.km !== null ? formatNumber(booking.km) : '-'}</td>
-                    <td>{booking.amountSek !== null ? formatNumber(booking.amountSek) : '-'}</td>
+                    <td>{booking.km != null ? formatNumber(booking.km) : '-'}</td>
+                    <td>{booking.amountSek != null ? formatNumber(booking.amountSek) : '-'}</td>
                     <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {booking.note || '-'}
                     </td>
@@ -360,23 +512,32 @@ function Planning({ data, updateData, setCurrentSection }) {
                         >
                           Duplicera
                         </button>
-                        {booking.status === 'Planerad' && (
+                        {(booking.status === 'Bokad' || booking.status === 'Planerad') && (
                           <button
                             onClick={() => handleStatusChange(booking.id, 'Genomförd')}
                             className="btn btn-small btn-success"
                             title="Markera som genomförd"
                           >
-                            ✓
+                            Genomförd
                           </button>
                         )}
                         {booking.status === 'Genomförd' && (
-                          <button
-                            onClick={() => handleStatusChange(booking.id, 'Fakturerad')}
-                            className="btn btn-small btn-success"
-                            title="Markera som fakturerad"
-                          >
-                            Fakturera
-                          </button>
+                          <>
+                            <button
+                              onClick={() => setCostEntryBookingId(booking.id)}
+                              className="btn btn-small btn-secondary"
+                              title="Ange kostnad"
+                            >
+                              Ange kostnad
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(booking.id, 'Fakturerad')}
+                              className="btn btn-small btn-success"
+                              title="Markera som fakturerad"
+                            >
+                              Fakturera
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={() => setDeleteId(booking.id)}
@@ -394,6 +555,109 @@ function Planning({ data, updateData, setCurrentSection }) {
           </table>
         </div>
       )}
+      </>
+      )}
+
+      {planningTab === 'week' && (
+        <div className="planning-week-view">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => {
+                const d = new Date(weekStart + 'T12:00:00');
+                d.setDate(d.getDate() - 7);
+                setWeekStart(d.toISOString().split('T')[0]);
+              }}
+            >
+              ← Föregående vecka
+            </button>
+            <span style={{ fontWeight: 600, color: '#e1e8ed', minWidth: '220px' }}>{weekLabel}</span>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => {
+                const d = new Date(weekStart + 'T12:00:00');
+                d.setDate(d.getDate() + 7);
+                setWeekStart(d.toISOString().split('T')[0]);
+              }}
+            >
+              Nästa vecka →
+            </button>
+          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: '0.75rem',
+            minHeight: '200px'
+          }}>
+            {weekDays.map((dayStr, i) => {
+              const d = new Date(dayStr + 'T12:00:00');
+              const dayName = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre'][i];
+              const dateLabel = d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
+              const dayBookings = bookingsByDay[i];
+              return (
+                <div
+                  key={dayStr}
+                  style={{
+                    background: '#1a2332',
+                    border: '1px solid #2a3647',
+                    borderRadius: '8px',
+                    padding: '0.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: '120px'
+                  }}
+                >
+                  <div style={{ borderBottom: '1px solid #2a3647', paddingBottom: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: '#e1e8ed' }}>
+                    {dayName} {dateLabel}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+                    {dayBookings.length === 0 ? (
+                      <span style={{ fontSize: '0.8rem', color: '#8899a6' }}>Inga körningar</span>
+                    ) : (
+                      dayBookings.map(booking => {
+                        const customer = data.customers.find(c => c.id === booking.customerId);
+                        const vehicle = data.vehicles.find(v => v.id === booking.vehicleId);
+                        const status = booking.status || 'Bokad';
+                        const statusColors = {
+                          Bokad: { bg: 'rgba(239, 68, 68, 0.2)', border: '#ef4444' },
+                          Planerad: { bg: 'rgba(234, 179, 8, 0.2)', border: '#eab308' },
+                          Genomförd: { bg: 'rgba(34, 197, 94, 0.2)', border: '#22c55e' },
+                          Fakturerad: { bg: 'rgba(59, 130, 246, 0.2)', border: '#3b82f6' }
+                        };
+                        const colors = statusColors[status] || statusColors.Bokad;
+                        return (
+                          <div
+                            key={booking.id}
+                            style={{
+                              background: colors.bg,
+                              border: `1px solid ${colors.border}`,
+                              borderRadius: '6px',
+                              padding: '0.5rem',
+                              fontSize: '0.8rem'
+                            }}
+                          >
+                            <div style={{ fontWeight: 600, color: '#e1e8ed', marginBottom: '0.25rem' }}>
+                              {formatTime24(booking.pickupTime || booking.time)}
+                            </div>
+                            <div style={{ color: '#cbd5e1', marginBottom: '0.15rem' }}>
+                              {customer?.name || 'Okänd'}
+                            </div>
+                            <div style={{ color: '#8899a6', fontSize: '0.75rem' }}>
+                              {booking.bookingNo} · {vehicle ? vehicle.regNo : 'Ej tilldelad'}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {deleteId && (
         <ConfirmModal
@@ -403,6 +667,18 @@ function Planning({ data, updateData, setCurrentSection }) {
           onCancel={() => setDeleteId(null)}
         />
       )}
+
+      {costEntryBookingId && (() => {
+        const booking = data.bookings.find(b => b.id === costEntryBookingId);
+        return booking ? (
+          <CostEntryModal
+            booking={booking}
+            data={data}
+            onSave={handleCostSave}
+            onClose={() => setCostEntryBookingId(null)}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }
