@@ -3,6 +3,9 @@ import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTim
 import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
 import { BOOKING_STATUSES } from '../utils/constants';
 import { validateBooking } from '../utils/validation';
+import { compareBookings, sortBookings } from '../utils/bookingSorters';
+import { filterByTab, getBookingsByTab } from '../utils/bookingFilters';
+import { getDisplayRows, getRowsToRender } from '../utils/bookingGrouping';
 import CostEntryModal from './CostEntryModal';
 import TimeInput24 from './TimeInput24';
 
@@ -506,117 +509,16 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     }
   };
 
-  const filterByTab = (b) => {
-    if (currentTab === 'bokad') return b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId);
-    if (currentTab === 'planerad') return b.status === 'Planerad' && b.vehicleId;
-    if (currentTab === 'genomford') return b.status === 'Genomförd';
-    if (currentTab === 'prissatt') return b.status === 'Prissatt';
-    if (currentTab === 'fakturerad') return b.status === 'Fakturerad';
-    return false;
-  };
-
-  const compareBookings = (a, b) => {
-    let aVal, bVal;
-    switch (sortField) {
-      case 'bookingNo':
-        aVal = a.bookingNo || '';
-        bVal = b.bookingNo || '';
-        break;
-      case 'pickupDate':
-        aVal = a.pickupDate || a.date || '';
-        bVal = b.pickupDate || b.date || '';
-        break;
-      case 'customer': {
-        const customerA = data.customers.find(c => c.id === a.customerId);
-        const customerB = data.customers.find(c => c.id === b.customerId);
-        aVal = customerA?.name || '';
-        bVal = customerB?.name || '';
-        break;
-      }
-      case 'vehicle': {
-        const vehicleA = data.vehicles.find(v => v.id === a.vehicleId);
-        const vehicleB = data.vehicles.find(v => v.id === b.vehicleId);
-        aVal = vehicleA?.regNo || '';
-        bVal = vehicleB?.regNo || '';
-        break;
-      }
-      case 'pickup': {
-        const pickupLocA = data.pickupLocations.find(
-          loc => loc.address.toLowerCase() === a.pickupAddress?.toLowerCase()
-        );
-        const pickupLocB = data.pickupLocations.find(
-          loc => loc.address.toLowerCase() === b.pickupAddress?.toLowerCase()
-        );
-        aVal = pickupLocA?.name || a.pickupCity || a.pickupAddress || '';
-        bVal = pickupLocB?.name || b.pickupCity || b.pickupAddress || '';
-        break;
-      }
-      case 'delivery': {
-        const deliveryLocA = data.pickupLocations.find(
-          loc => loc.address.toLowerCase() === a.deliveryAddress?.toLowerCase()
-        );
-        const deliveryLocB = data.pickupLocations.find(
-          loc => loc.address.toLowerCase() === b.deliveryAddress?.toLowerCase()
-        );
-        aVal = deliveryLocA?.name || a.deliveryCity || a.deliveryAddress || '';
-        bVal = deliveryLocB?.name || b.deliveryCity || b.deliveryAddress || '';
-        break;
-      }
-      case 'status':
-        aVal = a.status || '';
-        bVal = b.status || '';
-        break;
-      default:
-        return 0;
-    }
-    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  };
-
-  const sortBookings = (bookings) => {
-    return [...bookings].sort(compareBookings);
-  };
-
-  // Rader att visa: enskilda bokningar (utan blockId) + block (en rad per block med flera bokningar)
-  const getDisplayRows = () => {
-    const filtered = (data.bookings || []).filter(filterByTab);
-    const standalone = filtered.filter(b => !b.blockId);
-    const blockIds = [...new Set(filtered.map(b => b.blockId).filter(Boolean))];
-    const blockRows = blockIds.map(blockId => {
-      const block = (data.bookingBlocks || []).find(bl => bl.id === blockId);
-      const bookings = filtered.filter(b => b.blockId === blockId);
-      return block && bookings.length ? { type: 'block', block, bookings } : null;
-    }).filter(Boolean);
-    const rows = [
-      ...standalone.map(b => ({ type: 'booking', booking: b })),
-      ...blockRows
-    ];
-    return rows.sort((ra, rb) => {
-      const bookA = ra.type === 'booking' ? ra.booking : ra.bookings[0];
-      const bookB = rb.type === 'booking' ? rb.booking : rb.bookings[0];
-      return compareBookings(bookA, bookB);
-    });
-  };
-
-  // Platt lista att rendera: block-rad + vid expand underliggande bokningsrader
-  const getRowsToRender = () => {
-    const displayRows = getDisplayRows();
-    const out = [];
-    for (const row of displayRows) {
-      if (row.type === 'booking') {
-        out.push({ type: 'booking', booking: row.booking, isInBlock: false });
-      } else {
-        out.push({ type: 'block', block: row.block, bookings: row.bookings });
-        if (expandedBlockId === row.block.id) {
-          for (const b of row.bookings) {
-            out.push({ type: 'booking', booking: b, isInBlock: true });
-          }
-        }
-      }
-    }
-    return out;
-  };
+  // Use utility functions for filtering, sorting, and grouping
+  const rowsToRender = getRowsToRender(
+    data.bookings || [],
+    data.bookingBlocks || [],
+    currentTab,
+    sortField,
+    sortDirection,
+    expandedBlockId,
+    data
+  );
   
   // Get pickup locations for selected customer
   const customerPickupLocations = formData.customerId 
@@ -1731,7 +1633,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                   </tr>
                 </thead>
                 <tbody>
-                  {getRowsToRender().map((item, idx) => {
+                  {rowsToRender.map((item, idx) => {
                     if (item.type === 'block') {
                       const { block, bookings } = item;
                       const first = bookings[0];
