@@ -851,18 +851,9 @@ function Settings({ data, updateData }) {
                               {assignedDrivers.length > 0 ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                   {assignedDrivers.map((d, i) => (
-                                    <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <span key={d.id} className="u-flex-center-sm">
                                       {i > 0 && <span className="text-muted">,</span>}
-                                      <span style={{
-                                        background: '#667eea',
-                                        color: 'white',
-                                        padding: '0.2rem 0.4rem',
-                                        borderRadius: '3px',
-                                        fontWeight: 'bold',
-                                        fontSize: '0.7rem',
-                                        minWidth: '45px',
-                                        textAlign: 'center'
-                                      }}>
+                                      <span className="badge-driver">
                                         {d.code || generateDriverCode(d.name)}
                                       </span>
                                     </span>
@@ -931,21 +922,12 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
                             {assignedDrivers.length > 0 ? (
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 {assignedDrivers.map((d, i) => (
-                                  <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                    {i > 0 && <span className="text-muted">,</span>}
-                                    <span style={{
-                                      background: '#95a5a6',
-                                      color: 'white',
-                                      padding: '0.2rem 0.4rem',
-                                      borderRadius: '3px',
-                                      fontWeight: 'bold',
-                                      fontSize: '0.7rem',
-                                      minWidth: '45px',
-                                      textAlign: 'center'
-                                    }}>
-                                      {d.code || generateDriverCode(d.name)}
+                                    <span key={d.id} className="u-flex-center-sm">
+                                      {i > 0 && <span className="text-muted">,</span>}
+                                      <span className="badge-driver-inactive">
+                                        {d.code || generateDriverCode(d.name)}
+                                      </span>
                                     </span>
-                                  </span>
                                 ))}
                               </div>
                             ) : (
@@ -1240,19 +1222,10 @@ className="btn btn-small btn-danger text-sm"
                               onClick={() => setExpandedDriverId(isExpanded ? null : driver.id)}
                               style={{ cursor: 'pointer' }}
                             >
-                              <td style={{ whiteSpace: 'nowrap' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <td className="nowrap">
+                                <div className="u-flex-center-md">
                                   <span className="text-2xs text-muted">{isExpanded ? '▼' : '▶'}</span>
-                                  <span style={{
-                                    background: '#667eea',
-                                    color: 'white',
-                                    padding: '0.2rem 0.4rem',
-                                    borderRadius: '3px',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.7rem',
-                                    minWidth: '45px',
-                                    textAlign: 'center'
-                                  }}>
+                                  <span className="badge-driver">
                                     {driver.code || generateDriverCode(driver.name)}
                                   </span>
                                   <strong className="text-base">{driver.name}</strong>
@@ -1260,17 +1233,17 @@ className="btn btn-small btn-danger text-sm"
                               </td>
                               <td>{driver.phone || '-'}</td>
                               <td>
-                                {isExpanded && assignedVehicles.length > 0 ? (
-                                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                    {assignedVehicles.map(vehicle => (
-                                      <span key={vehicle.id} style={{ background: '#e8f5e9', color: '#2e7d32', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem', fontWeight: 'bold' }}>{vehicle.regNo}</span>
-                                    ))}
-                                  </div>
-                                ) : assignedVehicles.length > 0 ? (
-                                  <span className="text-muted text-sm">{assignedVehicles.length} fordon</span>
-                                ) : (
-                                  <span className="text-sm text-muted">-</span>
-                                )}
+                              {isExpanded && assignedVehicles.length > 0 ? (
+                                <div className="u-flex-gap-sm" style={{ flexWrap: 'wrap' }}>
+                                  {assignedVehicles.map(vehicle => (
+                                    <span key={vehicle.id} className="badge-vehicle">{vehicle.regNo}</span>
+                                  ))}
+                                </div>
+                              ) : assignedVehicles.length > 0 ? (
+                                <span className="text-muted text-sm">{assignedVehicles.length} fordon</span>
+                              ) : (
+                                <span className="text-sm text-muted">-</span>
+                              )}
                               </td>
                               <td onClick={e => e.stopPropagation()}>
                                 <button
@@ -1358,19 +1331,10 @@ className="btn btn-small btn-danger text-sm"
                             onClick={() => setExpandedDriverId(isExpanded ? null : driver.id)}
                             style={{ cursor: 'pointer', opacity: 0.6 }}
                           >
-                            <td style={{ whiteSpace: 'nowrap' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <td className="nowrap">
+                              <div className="u-flex-center-md">
                                 <span className="text-2xs text-muted">{isExpanded ? '▼' : '▶'}</span>
-                                <span style={{
-                                  background: '#95a5a6',
-                                  color: 'white',
-                                  padding: '0.2rem 0.4rem',
-                                  borderRadius: '3px',
-                                  fontWeight: 'bold',
-                                  fontSize: '0.7rem',
-                                  minWidth: '45px',
-                                  textAlign: 'center'
-                                }}>
+                                <span className="badge-driver-inactive">
                                   {driver.code || generateDriverCode(driver.name)}
                                 </span>
                                 <span className="text-base">{driver.name}</span>
@@ -1379,9 +1343,9 @@ className="btn btn-small btn-danger text-sm"
                             <td>{driver.phone || '-'}</td>
                             <td>
                               {isExpanded && assignedVehicles.length > 0 ? (
-                                <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                                <div className="u-flex-gap-sm" style={{ flexWrap: 'wrap' }}>
                                   {assignedVehicles.map(vehicle => (
-                                    <span key={vehicle.id} style={{ background: '#e0e0e0', color: '#616161', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                                    <span key={vehicle.id} className="badge-vehicle" style={{ opacity: 0.6 }}>
                                     {vehicle.regNo}
                                   </span>
                                 ))}
