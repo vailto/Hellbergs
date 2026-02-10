@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { formatTime24 } from '../utils/formatters';
+import { formatTime24, getCustomerShort } from '../utils/formatters';
 
 function getMondayOfWeek(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
@@ -373,12 +373,6 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
     }
   }, [selectedBlock]);
 
-  const getCustomerShort = (customer) => {
-    if (!customer) return '–';
-    const s = (customer.shortName || '').trim();
-    if (s) return s;
-    return (customer.name || '').slice(0, 6) || '–';
-  };
   const headerDayCells = displayDays.map((dayStr, dayIdx) => {
     const d = new Date(dayStr + 'T12:00:00');
     const dateLabel = d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
@@ -394,12 +388,12 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
         style={{
           gridColumn: `${2 + dayIdx * SEGMENTS_PER_DAY} / span ${SEGMENTS_PER_DAY}`,
           padding: '0.5rem 0.35rem',
-          background: '#1a2332',
-          color: '#e1e8ed',
+          background: 'var(--color-bg-elevated)',
+          color: 'var(--color-text)',
           fontSize: '0.8rem',
           fontWeight: 600,
           textAlign: 'center',
-          borderRight: dayIdx < displayDays.length - 1 ? '2px solid #2a3647' : undefined,
+          borderRight: dayIdx < displayDays.length - 1 ? '2px solid var(--color-border)' : undefined,
           cursor: isClickable ? 'pointer' : undefined
         }}
         title={isClickable ? 'Klicka för att visa denna dag' : undefined}
@@ -450,7 +444,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
             >
               ← Föregående vecka
             </button>
-            <span style={{ fontWeight: 600, color: '#e1e8ed', minWidth: '220px' }}>{weekLabel}</span>
+            <span className="detail-value" style={{ fontWeight: 600, minWidth: '220px' }}>{weekLabel}</span>
             <button
               type="button"
               className="btn btn-secondary btn-small"
@@ -476,7 +470,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
             >
               ← Föregående dag
             </button>
-            <span style={{ fontWeight: 600, color: '#e1e8ed', minWidth: '280px' }}>{dayLabel}</span>
+            <span className="detail-value" style={{ fontWeight: 600, minWidth: '280px' }}>{dayLabel}</span>
             <button
               type="button"
               className="btn btn-secondary btn-small"
@@ -497,15 +491,15 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
           display: 'grid',
           gridTemplateColumns: `100px repeat(${totalSegmentCols}, minmax(0, 1fr))`,
           gap: 0,
-          background: '#2a3647',
-          border: '1px solid #2a3647',
+          background: 'var(--color-border)',
+          border: '1px solid var(--color-border)',
           borderRadius: '8px',
           overflow: 'auto',
           minWidth: 0
         }}
       >
         {/* Header: Fordon + 5 dagar (en cell per dag) */}
-        <div style={{ gridColumn: '1', padding: '0.5rem 0.5rem', background: '#1a2332', color: '#8899a6', fontSize: '0.7rem', fontWeight: 600 }}>
+        <div className="text-2xs text-muted" style={{ gridColumn: '1', padding: '0.5rem 0.5rem', background: 'var(--color-bg-elevated)', fontWeight: 600 }}>
           Fordon / Dag
         </div>
         {headerDayCells}
@@ -518,9 +512,9 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
           style={{
             gridColumn: '1',
             padding: '0.5rem 0.5rem',
-            background: dragOverUnplanned ? 'rgba(239, 68, 68, 0.2)' : '#1a2332',
-            borderTop: '1px solid #2a3647',
-            color: '#e1e8ed',
+            background: dragOverUnplanned ? 'rgba(239, 68, 68, 0.2)' : 'var(--color-bg-elevated)',
+            borderTop: '1px solid var(--color-border)',
+            color: 'var(--color-text)',
             fontSize: '0.75rem',
             fontWeight: 600,
             transition: 'background 0.15s ease'
@@ -539,7 +533,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
             gridTemplateColumns: `repeat(${totalSegmentCols}, minmax(0, 1fr))`,
             gap: 0,
             minHeight: '36px',
-            background: dragOverUnplanned ? 'rgba(239, 68, 68, 0.12)' : '#0f1419',
+            background: dragOverUnplanned ? 'rgba(239, 68, 68, 0.12)' : 'var(--color-bg)',
             padding: '0.25rem',
             alignContent: 'start',
             transition: 'background 0.15s ease'
@@ -571,8 +565,8 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                   cursor: 'grab'
                 }}
               >
-                <span style={{ fontWeight: 600, color: '#e1e8ed' }}>{formatTime24(b.pickupTime)} – {formatTime24(b.deliveryTime)}</span>
-                <span style={{ color: '#94a3b8', marginLeft: '0.35rem' }}>{getCustomerShort(customer)}</span>
+                <span className="detail-value" style={{ fontWeight: 600 }}>{formatTime24(b.pickupTime)} – {formatTime24(b.deliveryTime)}</span>
+                <span className="text-muted-2" style={{ marginLeft: '0.35rem' }}>{getCustomerShort(customer)}</span>
               </div>
             );
           })}
@@ -585,7 +579,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                 top: 0,
                 bottom: 0,
                 width: '1px',
-                background: '#2a3647',
+                background: 'var(--color-border)',
                 pointerEvents: 'none'
               }}
             />
@@ -604,9 +598,9 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                 style={{
                   gridColumn: '1',
                   padding: '0.5rem 0.5rem',
-                  background: dragOverVehicleId === vehicle.id ? 'rgba(34, 197, 94, 0.15)' : '#1a2332',
-                  borderTop: '1px solid #2a3647',
-                  color: '#e1e8ed',
+                  background: dragOverVehicleId === vehicle.id ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-bg-elevated)',
+                  borderTop: '1px solid var(--color-border)',
+                  color: 'var(--color-text)',
                   fontSize: '0.8rem',
                   fontWeight: 600,
                   transition: 'background 0.15s ease'
@@ -625,8 +619,8 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                   gridTemplateColumns: `repeat(${totalSegmentCols}, minmax(0, 1fr))`,
                   gap: 0,
                   padding: '0.2rem',
-                  background: dragOverVehicleId === vehicle.id ? 'rgba(34, 197, 94, 0.12)' : '#0f1419',
-                  borderTop: '1px solid #2a3647',
+                  background: dragOverVehicleId === vehicle.id ? 'rgba(34, 197, 94, 0.12)' : 'var(--color-bg)',
+                  borderTop: '1px solid var(--color-border)',
                   minHeight: '36px',
                   alignContent: 'start',
                   transition: 'background 0.15s ease'
@@ -671,8 +665,8 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                             minWidth: 0
                           }}
                         >
-                          <div style={{ fontWeight: 600, color: '#e1e8ed' }}>{blockName}</div>
-                          <div style={{ color: '#94a3b8', lineHeight: 1.2 }}>{blockBookings.length} körningar</div>
+                          <div className="detail-value" style={{ fontWeight: 600 }}>{blockName}</div>
+                          <div className="text-muted-2" style={{ lineHeight: 1.2 }}>{blockBookings.length} körningar</div>
                         </div>
                       );
                     }
@@ -706,10 +700,10 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                           minWidth: 0
                         }}
                       >
-                        <div style={{ fontWeight: 600, color: '#e1e8ed' }}>
+                        <div className="detail-value" style={{ fontWeight: 600 }}>
                           {formatTime24(b.pickupTime || b.time)}
                         </div>
-                        <div style={{ color: '#94a3b8', lineHeight: 1.2 }}>{getCustomerShort(customer)}</div>
+                        <div className="text-muted-2" style={{ lineHeight: 1.2 }}>{getCustomerShort(customer)}</div>
                       </div>
                     );
                   });
@@ -723,7 +717,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                       top: 0,
                       bottom: 0,
                       width: '1px',
-                      background: '#2a3647',
+                      background: 'var(--color-border)',
                       pointerEvents: 'none'
                     }}
                   />
@@ -788,16 +782,16 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
             >
               <div
                 style={{
-                  backgroundColor: '#1a2332',
+                  backgroundColor: 'var(--color-bg-elevated)',
                   padding: '1.5rem',
                   borderRadius: '8px',
                   width: '100%',
                   maxWidth: '400px',
-                  border: '1px solid #2a3647'
+                  border: '1px solid var(--color-border)'
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <p style={{ color: '#e1e8ed', marginBottom: '1.5rem', fontSize: '1rem' }}>
+                <p className="text-lg" style={{ marginBottom: '1.5rem' }}>
                   Vill du lägga till i &quot;{existingBlock.name}&quot;?
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -857,14 +851,14 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                 borderRadius: '8px',
                 width: '100%',
                 maxWidth: '400px',
-                border: '1px solid #2a3647'
+                border: '1px solid var(--color-border)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#e1e8ed' }}>
+              <h2 className="text-subtitle" style={{ margin: '0 0 1rem 0' }}>
                 Överlappande körning
               </h2>
-              <p style={{ color: '#94a3b8', marginBottom: '1rem', fontSize: '0.9rem' }}>
+              <p className="text-muted-2 text-md" style={{ marginBottom: '1rem' }}>
                 Namnge block
               </p>
               <div className="form-group" style={{ marginBottom: '1rem' }}>
@@ -922,61 +916,61 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                 maxWidth: '520px',
                 maxHeight: '90vh',
                 overflow: 'auto',
-                border: '1px solid #2a3647'
+                border: '1px solid var(--color-border)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: '#e1e8ed' }}>
+              <h2 className="text-subtitle" style={{ margin: '0 0 0.5rem 0' }}>
                 Bokning {booking.bookingNo}
               </h2>
-              <p style={{ color: '#94a3b8', marginBottom: '1rem', fontSize: '0.9rem' }}>
+              <p className="text-muted-2 text-md" style={{ marginBottom: '1rem' }}>
                 {customer?.name || 'Okänd'} · {booking.pickupDate || booking.date} {formatTime24(booking.pickupTime)} – {formatTime24(booking.deliveryTime)}
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <h4 style={{ margin: '0 0 0.5rem 0', color: '#e1e8ed', fontSize: '0.85rem', borderBottom: '1px solid #2a3647', paddingBottom: '0.35rem' }}>
+                  <h4 className="detail-section-title" style={{ margin: '0 0 0.5rem 0', fontSize: 'var(--font-size-base)', paddingBottom: '0.35rem' }}>
                     Upphämtning
                   </h4>
                   <div style={{ display: 'grid', gap: '0.35rem', fontSize: '0.8rem' }}>
-                    <div><span style={{ color: '#8899a6' }}>Adress: </span><span style={{ color: '#e1e8ed' }}>{booking.pickupAddress || '-'}</span></div>
-                    <div><span style={{ color: '#8899a6' }}>Datum: </span><span style={{ color: '#e1e8ed' }}>{booking.pickupDate || booking.date || '-'}</span></div>
-                    <div><span style={{ color: '#8899a6' }}>Tid: </span><span style={{ color: '#e1e8ed' }}>{formatTime24(booking.pickupTime || booking.time)}</span></div>
-                    {booking.pickupContactName && <div><span style={{ color: '#8899a6' }}>Kontakt: </span><span style={{ color: '#e1e8ed' }}>{booking.pickupContactName}</span></div>}
-                    {booking.pickupContactPhone && <div><span style={{ color: '#8899a6' }}>Telefon: </span><span style={{ color: '#e1e8ed' }}>{booking.pickupContactPhone}</span></div>}
+                    <div><span className="detail-label">Adress: </span><span className="detail-value">{booking.pickupAddress || '-'}</span></div>
+                    <div><span className="detail-label">Datum: </span><span className="detail-value">{booking.pickupDate || booking.date || '-'}</span></div>
+                    <div><span className="detail-label">Tid: </span><span className="detail-value">{formatTime24(booking.pickupTime || booking.time)}</span></div>
+                    {booking.pickupContactName && <div><span className="detail-label">Kontakt: </span><span className="detail-value">{booking.pickupContactName}</span></div>}
+                    {booking.pickupContactPhone && <div><span className="detail-label">Telefon: </span><span className="detail-value">{booking.pickupContactPhone}</span></div>}
                   </div>
                 </div>
                 <div>
-                  <h4 style={{ margin: '0 0 0.5rem 0', color: '#e1e8ed', fontSize: '0.85rem', borderBottom: '1px solid #2a3647', paddingBottom: '0.35rem' }}>
+                  <h4 className="detail-section-title" style={{ margin: '0 0 0.5rem 0', fontSize: 'var(--font-size-base)', paddingBottom: '0.35rem' }}>
                     Lämning
                   </h4>
                   <div style={{ display: 'grid', gap: '0.35rem', fontSize: '0.8rem' }}>
-                    <div><span style={{ color: '#8899a6' }}>Adress: </span><span style={{ color: '#e1e8ed' }}>{booking.deliveryAddress || '-'}</span></div>
-                    <div><span style={{ color: '#8899a6' }}>Datum: </span><span style={{ color: '#e1e8ed' }}>{booking.deliveryDate || '-'}</span></div>
-                    <div><span style={{ color: '#8899a6' }}>Tid: </span><span style={{ color: '#e1e8ed' }}>{formatTime24(booking.deliveryTime)}</span></div>
-                    {booking.deliveryContactName && <div><span style={{ color: '#8899a6' }}>Kontakt: </span><span style={{ color: '#e1e8ed' }}>{booking.deliveryContactName}</span></div>}
-                    {booking.deliveryContactPhone && <div><span style={{ color: '#8899a6' }}>Telefon: </span><span style={{ color: '#e1e8ed' }}>{booking.deliveryContactPhone}</span></div>}
+                    <div><span className="detail-label">Adress: </span><span className="detail-value">{booking.deliveryAddress || '-'}</span></div>
+                    <div><span className="detail-label">Datum: </span><span className="detail-value">{booking.deliveryDate || '-'}</span></div>
+                    <div><span className="detail-label">Tid: </span><span className="detail-value">{formatTime24(booking.deliveryTime)}</span></div>
+                    {booking.deliveryContactName && <div><span className="detail-label">Kontakt: </span><span className="detail-value">{booking.deliveryContactName}</span></div>}
+                    {booking.deliveryContactPhone && <div><span className="detail-label">Telefon: </span><span className="detail-value">{booking.deliveryContactPhone}</span></div>}
                   </div>
                 </div>
               </div>
 
-              <div style={{ marginBottom: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #2a3647', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem', fontSize: '0.8rem' }}>
-                <div><span style={{ color: '#8899a6' }}>Bokningsnr: </span><span style={{ color: '#e1e8ed', fontWeight: 600 }}>{booking.bookingNo}</span></div>
-                {booking.marking && <div><span style={{ color: '#8899a6' }}>Märkning: </span><span style={{ color: '#e1e8ed', fontWeight: 600 }}>{booking.marking}</span></div>}
-                <div><span style={{ color: '#8899a6' }}>Förare: </span><span style={{ color: '#e1e8ed', fontWeight: 600 }}>{driver?.name || '-'}</span></div>
-                {booking.km != null && booking.km !== '' && <div><span style={{ color: '#8899a6' }}>Sträcka: </span><span style={{ color: '#e1e8ed', fontWeight: 600 }}>{booking.km} km</span></div>}
-                {booking.amountSek != null && booking.amountSek !== '' && <div><span style={{ color: '#8899a6' }}>Pris: </span><span style={{ color: '#e1e8ed', fontWeight: 600 }}>{booking.amountSek} SEK</span></div>}
+              <div style={{ marginBottom: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem', fontSize: '0.8rem' }}>
+                <div><span className="detail-label">Bokningsnr: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.bookingNo}</span></div>
+                {booking.marking && <div><span className="detail-label">Märkning: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.marking}</span></div>}
+                <div><span className="detail-label">Förare: </span><span className="detail-value" style={{ fontWeight: 600 }}>{driver?.name || '-'}</span></div>
+                {booking.km != null && booking.km !== '' && <div><span className="detail-label">Sträcka: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.km} km</span></div>}
+                {booking.amountSek != null && booking.amountSek !== '' && <div><span className="detail-label">Pris: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.amountSek} SEK</span></div>}
               </div>
               {booking.note && (
                 <div style={{ marginBottom: '1rem', fontSize: '0.8rem' }}>
-                  <span style={{ color: '#8899a6' }}>Anteckning: </span><span style={{ color: '#e1e8ed' }}>{booking.note}</span>
+                  <span className="detail-label">Anteckning: </span><span className="detail-value">{booking.note}</span>
                 </div>
               )}
 
               {updateData && (
                 <>
                   <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.85rem', color: '#94a3b8' }}>Fordon</label>
+                    <label className="label-sm text-muted-2">Fordon</label>
                     <select
                       value={booking.vehicleId || ''}
                       onChange={(e) => handleVehicleAssign(booking.id, e.target.value || null)}
@@ -990,7 +984,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                     </select>
                   </div>
                   <div className="form-group" style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.85rem', color: '#94a3b8' }}>Förare</label>
+                    <label className="label-sm text-muted-2">Förare</label>
                     <select
                       value={booking.driverId || ''}
                       onChange={(e) => handleDriverAssign(booking.id, e.target.value || null)}
@@ -1054,7 +1048,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                 maxWidth: '520px',
                 maxHeight: '90vh',
                 overflow: 'auto',
-                border: '1px solid #2a3647'
+                border: '1px solid var(--color-border)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -1103,7 +1097,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#e1e8ed' }}>
+                  <h2 className="text-subtitle" style={{ margin: 0 }}>
                     {selectedBlock.name}
                   </h2>
                   <button
@@ -1119,14 +1113,14 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                 </div>
               )}
               {first && (
-                <p style={{ color: '#94a3b8', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                <p className="text-muted-2 text-md" style={{ marginBottom: '1rem' }}>
                   {firstCustomer?.name || 'Okänd'} · {first.pickupDate || first.date} {formatTime24(first.pickupTime)} – {formatTime24(first.deliveryTime)}
                 </p>
               )}
               <div
                 role="button"
                 tabIndex={0}
-                style={{ marginBottom: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}
+                className="text-muted-2 text-md" style={{ marginBottom: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                 onClick={() => setBlockModalExpanded(prev => !prev)}
                 onKeyDown={(e) => e.key === 'Enter' && setBlockModalExpanded(prev => !prev)}
               >
@@ -1148,7 +1142,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                       if (selectedBlock?.blockId) handleRemoveFromBlock(b.id, selectedBlock.blockId);
                     };
                     return (
-                      <div key={b.id} style={{ padding: '0.75rem', background: '#0f1419', borderRadius: '6px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                      <div key={b.id} style={{ padding: '0.75rem', background: 'var(--color-bg)', borderRadius: '6px', fontSize: 'var(--font-size-base)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontWeight: 600, color: '#e1e8ed', marginBottom: '0.35rem' }}>Bokning {b.bookingNo}</div>
                           <div style={{ color: '#94a3b8' }}>{cust?.name || 'Okänd'} · {b.pickupDate || b.date} {formatTime24(b.pickupTime)} – {formatTime24(b.deliveryTime)}</div>

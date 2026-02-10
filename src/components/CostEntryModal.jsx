@@ -1,30 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { parseNumber, formatNumber } from '../utils/formatters';
 
-const modalOverlayStyle = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000
-};
-
-const modalContentStyle = {
-  backgroundColor: '#1a2332',
-  padding: '2rem',
-  borderRadius: '8px',
-  width: '90%',
-  maxWidth: '720px',
-  maxHeight: '90vh',
-  overflow: 'auto',
-  border: '1px solid #2a3647'
-};
-
 function CostEntryModal({ booking, data, onSave, onClose }) {
   const customer = data.customers.find(c => c.id === booking.customerId);
   const vehicle = data.vehicles.find(v => v.id === booking.vehicleId);
@@ -100,60 +76,60 @@ function CostEntryModal({ booking, data, onSave, onClose }) {
   };
 
   return (
-    <div style={modalOverlayStyle} onClick={onClose}>
-      <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
-        <h2 style={{ marginBottom: '0.35rem', fontSize: '1rem' }}>Ange kostnad</h2>
-        <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '1rem' }}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal--wide" onClick={e => e.stopPropagation()}>
+        <h2 className="modal-title text-lg">Ange kostnad</h2>
+        <p className="text-muted-2 text-sm mb-1">
           {booking.bookingNo} · {customer?.name || 'Okänd kund'}
           {vehicle && ` · ${vehicle.regNo} (${vehicleType})`}
         </p>
 
         {!vehicle ? (
-          <p style={{ color: '#e67e22', fontSize: '0.8rem', marginBottom: '1rem' }}>
+          <p className="text-sm mb-1" style={{ color: '#e67e22' }}>
             Ingen fordon tilldelad. Tilldela fordon i Planering först.
           </p>
         ) : !hasPriceTemplate ? (
-          <div style={{ marginBottom: '1rem' }}>
-            <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
+          <div className="mb-1">
+            <p className="text-muted-2 text-sm mb-1">
               Kundens prismall saknas för fordonstyp &quot;{vehicleType}&quot;. Ange totalbelopp manuellt eller lägg till prismall under Kunder.
             </p>
             <div>
-              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>Belopp (SEK)</label>
-              <input type="text" value={manualAmount} onChange={e => setManualAmount(e.target.value)} className="form-input" placeholder="0" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+              <label className="label-sm">Belopp (SEK)</label>
+              <input type="text" value={manualAmount} onChange={e => setManualAmount(e.target.value)} className="form-input input-sm" placeholder="0" />
             </div>
           </div>
         ) : (
           <>
-            <div style={{ marginBottom: '1rem', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: '1px solid #2a3647', fontSize: '0.8rem' }}>
-              <strong style={{ display: 'block', fontSize: '0.8rem', color: '#e1e8ed', marginBottom: '0.35rem' }}>Tider och antal</strong>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(70px, 1fr))', gap: '0.35rem' }}>
+            <div className="card mb-1">
+              <strong className="text-sm block mb-1">Tider och antal</strong>
+              <div className="grid-cols-5">
                 <div>
-                  <input type="text" value={km} onChange={e => setKm(e.target.value)} className="form-input" placeholder="0" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem', marginBottom: '0.15rem' }} />
-                  <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8' }}>kr/km{prices.km ? ` × ${prices.km} SEK` : ''}</label>
+                  <input type="text" value={km} onChange={e => setKm(e.target.value)} className="form-input input-sm mb-1" placeholder="0" style={{ marginBottom: '0.15rem' }} />
+                  <label className="label-sm" style={{ marginBottom: 0 }}>kr/km{prices.km ? ` × ${prices.km} SEK` : ''}</label>
                 </div>
                 <div>
-                  <input type="text" value={stops} onChange={e => setStops(e.target.value)} className="form-input" placeholder="0" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem', marginBottom: '0.15rem' }} />
-                  <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8' }}>kr/stopp{prices.stop ? ` × ${prices.stop} SEK` : ''}</label>
+                  <input type="text" value={stops} onChange={e => setStops(e.target.value)} className="form-input input-sm" placeholder="0" style={{ marginBottom: '0.15rem' }} />
+                  <label className="label-sm" style={{ marginBottom: 0 }}>kr/stopp{prices.stop ? ` × ${prices.stop} SEK` : ''}</label>
                 </div>
                 <div>
-                  <input type="text" value={waitHours} onChange={e => setWaitHours(e.target.value)} className="form-input" placeholder="0" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem', marginBottom: '0.15rem' }} />
-                  <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8' }}>Väntetid kr/h{prices.wait ? ` × ${prices.wait} SEK` : ''}</label>
+                  <input type="text" value={waitHours} onChange={e => setWaitHours(e.target.value)} className="form-input input-sm" placeholder="0" style={{ marginBottom: '0.15rem' }} />
+                  <label className="label-sm" style={{ marginBottom: 0 }}>Väntetid kr/h{prices.wait ? ` × ${prices.wait} SEK` : ''}</label>
                 </div>
                 <div>
-                  <input type="text" value={driveHours} onChange={e => setDriveHours(e.target.value)} className="form-input" placeholder="0" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem', marginBottom: '0.15rem' }} />
-                  <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8' }}>Timpris kr{prices.hour ? ` × ${prices.hour} SEK` : ''}</label>
+                  <input type="text" value={driveHours} onChange={e => setDriveHours(e.target.value)} className="form-input input-sm" placeholder="0" style={{ marginBottom: '0.15rem' }} />
+                  <label className="label-sm" style={{ marginBottom: 0 }}>Timpris kr{prices.hour ? ` × ${prices.hour} SEK` : ''}</label>
                 </div>
                 <div>
-                  <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.15rem', fontSize: '0.75rem' }}>
+                  <label className="checkbox-label text-sm" style={{ marginBottom: '0.15rem' }}>
                     <input type="checkbox" checked={useFixed} onChange={e => setUseFixed(e.target.checked)} />
                     Inkludera
                   </label>
-                  <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8' }}>Fast kr{prices.fixed ? ` × ${prices.fixed} SEK` : ''}</label>
+                  <label className="label-sm" style={{ marginBottom: 0 }}>Fast kr{prices.fixed ? ` × ${prices.fixed} SEK` : ''}</label>
                 </div>
               </div>
             </div>
             {calculatedTotal != null && (
-              <p style={{ marginBottom: '1rem', fontWeight: 600, color: '#e1e8ed', fontSize: '0.9rem' }}>
+              <p className="mb-1 text-base" style={{ fontWeight: 600 }}>
                 Summa: {formatNumber(calculatedTotal)} SEK
               </p>
             )}
@@ -161,15 +137,15 @@ function CostEntryModal({ booking, data, onSave, onClose }) {
         )}
 
         {hasPriceTemplate && (
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>Alternativt, överstig belopp (SEK)</label>
-            <input type="text" value={manualAmount} onChange={e => setManualAmount(e.target.value)} className="form-input" placeholder="Lämna tomt för beräknat belopp" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+          <div className="mb-1">
+            <label className="label-sm">Alternativt, överstig belopp (SEK)</label>
+            <input type="text" value={manualAmount} onChange={e => setManualAmount(e.target.value)} className="form-input input-sm" placeholder="Lämna tomt för beräknat belopp" />
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '0.35rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-          <button type="button" onClick={onClose} className="btn btn-secondary btn-small" style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem' }}>Avbryt</button>
-          <button type="button" onClick={handleSubmit} className="btn btn-primary btn-small" style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem' }} disabled={!canSave}>Spara</button>
+        <div className="modal-actions">
+          <button type="button" onClick={onClose} className="btn btn-secondary btn-small">Avbryt</button>
+          <button type="button" onClick={handleSubmit} className="btn btn-primary btn-small" disabled={!canSave}>Spara</button>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
+import SortIcon from './SortIcon';
 
 function Equipage({ data, updateData }) {
   const [editingVehicleId, setEditingVehicleId] = useState(null);
@@ -81,15 +82,10 @@ function Equipage({ data, updateData }) {
   const activeVehicles = sortVehicles(data.vehicles.filter(v => v.active));
   const activeDrivers = data.drivers.filter(d => d.active);
 
-  const SortIcon = ({ field }) => {
-    if (field !== sortField) return <span style={{ color: '#ccc', marginLeft: '0.25rem' }}>↕</span>;
-    return <span style={{ marginLeft: '0.25rem' }}>{sortDirection === 'asc' ? '↑' : '↓'}</span>;
-  };
-
   return (
     <div>
       <h1>Bilar</h1>
-      <p style={{ color: '#7f8c8d', marginBottom: '1.5rem' }}>
+      <p className="text-muted mb-2">
         Översikt över alla fordon och deras tilldelade förare.
       </p>
 
@@ -108,19 +104,19 @@ function Equipage({ data, updateData }) {
                   <tr>
                     <th onClick={() => handleSort('regNo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                       Reg.nr
-                      <SortIcon field="regNo" />
+                      <SortIcon field="regNo" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th onClick={() => handleSort('type')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                       Typ
-                      <SortIcon field="type" />
+                      <SortIcon field="type" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th onClick={() => handleSort('driver')} style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}>
                       Förare
-                      <SortIcon field="driver" />
+                      <SortIcon field="driver" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th onClick={() => handleSort('phone')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                       Telefon
-                      <SortIcon field="phone" />
+                      <SortIcon field="phone" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th>Åtgärder</th>
                   </tr>
@@ -159,13 +155,13 @@ function Equipage({ data, updateData }) {
                                     padding: '0.2rem 0.4rem', 
                                     borderRadius: '3px',
                                     fontWeight: 'bold',
-                                    fontSize: '0.7rem',
+                                    fontSize: 'var(--font-size-2xs)',
                                     minWidth: '45px',
                                     textAlign: 'center'
                                   }}>
                                     {assignedDriver.code || generateDriverCode(assignedDriver.name)}
                                   </span>
-                                  <strong style={{ fontSize: '0.85rem' }}>{assignedDriver.name}</strong>
+                                  <strong className="text-base">{assignedDriver.name}</strong>
                                 </div>
                               ) : (
                                 <span style={{ color: '#95a5a6' }}>Ingen</span>
@@ -182,15 +178,13 @@ function Equipage({ data, updateData }) {
                               <>
                                 <button
                                   onClick={() => handleAssignDriver(vehicle.id, selectedDriverId)}
-                                  className="btn btn-small btn-success"
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+className="btn btn-small btn-success text-sm" style={{ padding: '0.25rem 0.5rem' }}
                                 >
                                   Spara
                                 </button>
                                 <button
                                   onClick={cancelEdit}
-                                  className="btn btn-small btn-secondary"
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+className="btn btn-small btn-secondary text-sm" style={{ padding: '0.25rem 0.5rem' }}
                                 >
                                   Avbryt
                                 </button>
@@ -198,8 +192,7 @@ function Equipage({ data, updateData }) {
                             ) : (
                               <button
                                 onClick={() => startEditDriver(vehicle)}
-                                className="btn btn-small btn-primary"
-                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.5rem' }}
                               >
                                 Ändra förare
                               </button>

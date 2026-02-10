@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTime24, getCurrentTime24 } from '../utils/formatters';
+import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTime24, getCurrentTime24, getCustomerShort } from '../utils/formatters';
+import { BOOKING_STATUSES } from '../utils/constants';
 import { validateBooking } from '../utils/validation';
 import CostEntryModal from './CostEntryModal';
 import TimeInput24 from './TimeInput24';
@@ -401,13 +402,6 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     return false;
   };
 
-  const getCustomerShort = (customer) => {
-    if (!customer) return '–';
-    const s = (customer.shortName || '').trim();
-    if (s) return s;
-    return (customer.name || '').slice(0, 6) || '–';
-  };
-
   const compareBookings = (a, b) => {
     let aVal, bVal;
     switch (sortField) {
@@ -556,7 +550,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
               
               <div className="form-row">
                 <div className="form-group">
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e1e8ed' }}>
+                  <label className="text-muted-2" style={{ display: 'block', marginBottom: '0.5rem' }}>
                     Kund *
                   </label>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -587,7 +581,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
 
                 {editingId && (
                   <div className="form-group">
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e1e8ed' }}>
+                    <label className="text-muted-2" style={{ display: 'block', marginBottom: '0.5rem' }}>
                       Status
                     </label>
                     <select
@@ -596,11 +590,9 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                       onChange={handleChange}
                       className="form-select"
                     >
-                      <option value="Bokad">Bokad</option>
-                      <option value="Planerad">Planerad</option>
-                      <option value="Genomförd">Genomförd</option>
-                      <option value="Prissatt">Prissatt</option>
-                      <option value="Fakturerad">Fakturerad</option>
+                      {BOOKING_STATUSES.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -732,7 +724,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                       ))}
                     </select>
                     {customerPickupLocations.length === 0 && (
-                      <div style={{ fontSize: '0.85rem', color: '#8899a6', marginTop: '0.5rem' }}>
+                      <div className="text-base text-muted" style={{ marginTop: '0.5rem' }}>
                         Inga sparade platser för denna kund
                       </div>
                     )}
@@ -908,7 +900,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                       ))}
                     </select>
                     {customerPickupLocations.length === 0 && (
-                      <div style={{ fontSize: '0.85rem', color: '#8899a6', marginTop: '0.5rem' }}>
+                      <div className="text-base text-muted" style={{ marginTop: '0.5rem' }}>
                         Inga sparade platser för denna kund
                       </div>
                     )}
@@ -1079,15 +1071,15 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: '#1a2332',
+            backgroundColor: 'var(--color-bg-elevated)',
             padding: '2rem',
             borderRadius: '8px',
             width: '90%',
             maxWidth: '500px',
-            border: '1px solid #2a3647'
+            border: '1px solid var(--color-border)'
           }}>
             <h2 style={{ marginBottom: '1rem' }}>Spara plats?</h2>
-            <p style={{ color: '#8899a6', marginBottom: '1.5rem' }}>
+            <p className="text-muted mb-2" style={{ marginBottom: '1.5rem' }}>
               Vill du spara <strong>{pendingBookingData?.pickupAddress}</strong> som en ny plats?
             </p>
 
@@ -1114,7 +1106,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                   </option>
                 ))}
               </select>
-              <div style={{ fontSize: '0.85rem', color: '#8899a6', marginTop: '0.5rem' }}>
+              <div className="text-base text-muted" style={{ marginTop: '0.5rem' }}>
                 Välj kund för att koppla platsen (kan läggas till fler senare i Inställningar)
               </div>
             </div>
@@ -1169,16 +1161,16 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
           >
             <div
               style={{
-                backgroundColor: '#1a2332',
+                backgroundColor: 'var(--color-bg-elevated)',
                 padding: '1.5rem',
                 borderRadius: '8px',
                 width: '90%',
                 maxWidth: '400px',
-                border: '1px solid #2a3647'
+                border: '1px solid var(--color-border)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#e1e8ed' }}>Blocknamn</h2>
+              <h2 className="text-subtitle" style={{ margin: '0 0 1rem 0' }}>Blocknamn</h2>
               <input
                 type="text"
                 value={editingBlockNameValue}
@@ -1220,14 +1212,14 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: '#1a2332',
+            backgroundColor: 'var(--color-bg-elevated)',
             padding: '2rem',
             borderRadius: '8px',
             width: '90%',
             maxWidth: '600px',
             maxHeight: '90vh',
             overflow: 'auto',
-            border: '1px solid #2a3647'
+            border: '1px solid var(--color-border)'
           }}>
             <h2 style={{ marginBottom: '1.5rem' }}>Ny kund</h2>
             <form onSubmit={handleSaveTempCustomer}>
@@ -1365,7 +1357,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
             gap: '0.5rem',
             marginTop: '1.5rem',
             marginBottom: '1.5rem',
-            borderBottom: '2px solid #2a3647',
+            borderBottom: '2px solid var(--color-border)',
             paddingBottom: '0'
           }}>
             <button
@@ -1503,7 +1495,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                         >
                           <td style={{ whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ fontSize: '0.7rem', color: '#8899a6' }}>
+                              <span className="text-2xs text-muted">
                                 {isBlockExpanded ? '▼' : '▶'}
                               </span>
                               <strong
@@ -1588,7 +1580,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                         >
                           <td style={{ whiteSpace: 'nowrap', paddingLeft: item.isInBlock ? '2rem' : undefined }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ fontSize: '0.7rem', color: '#8899a6' }}>
+                              <span className="text-2xs text-muted">
                                 {isExpanded ? '▼' : '▶'}
                               </span>
                               <strong>{booking.bookingNo}</strong>
@@ -1611,9 +1603,9 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                   fontSize: '0.75rem',
                                   appearance: 'none',
                                   WebkitAppearance: 'none',
-                                  background: booking.vehicleId ? '#1a2332' : '#0f1419',
-                                  color: '#e1e8ed',
-                                  border: '1px solid #2a3647',
+                                  background: booking.vehicleId ? 'var(--color-bg-elevated)' : 'var(--color-bg)',
+                                  color: 'var(--color-text)',
+                                  border: '1px solid var(--color-border)',
                                   borderRadius: '4px'
                                 }}
                               >
@@ -1639,9 +1631,9 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                   fontSize: '0.75rem',
                                   appearance: 'none',
                                   WebkitAppearance: 'none',
-                                  background: booking.driverId ? '#1a2332' : '#0f1419',
-                                  color: '#e1e8ed',
-                                  border: '1px solid #2a3647',
+                                  background: booking.driverId ? 'var(--color-bg-elevated)' : 'var(--color-bg)',
+                                  color: 'var(--color-text)',
+                                  border: '1px solid var(--color-border)',
                                   borderRadius: '4px'
                                 }}
                               >
@@ -1705,112 +1697,54 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                         
                         {isExpanded && (
                           <tr>
-                            <td colSpan="9" style={{ backgroundColor: '#0f1419', padding: '1rem' }}>
-                              <div style={{ marginBottom: '1rem', fontSize: '1rem', color: '#e1e8ed', fontWeight: 600 }}>
+                            <td colSpan="9" style={{ backgroundColor: 'var(--color-bg)', padding: '1rem' }}>
+                              <div className="text-base mb-1" style={{ fontWeight: 600 }}>
                                 {customer?.name || 'Okänd'}
                               </div>
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                                 {/* Upphämtning */}
                                 <div>
-                                  <h4 style={{ margin: '0 0 0.75rem 0', color: '#e1e8ed', fontSize: '0.9rem', borderBottom: '1px solid #2a3647', paddingBottom: '0.5rem' }}>
-                                    Upphämtning
-                                  </h4>
-                                  <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.85rem' }}>
-                                    <div>
-                                      <span style={{ color: '#8899a6' }}>Adress: </span>
-                                      <span style={{ color: '#e1e8ed' }}>{booking.pickupAddress || '-'}</span>
-                                    </div>
-                                    <div>
-                                      <span style={{ color: '#8899a6' }}>Datum: </span>
-                                      <span style={{ color: '#e1e8ed' }}>{booking.pickupDate || booking.date || '-'}</span>
-                                    </div>
-                                    <div>
-                                      <span style={{ color: '#8899a6' }}>Tid: </span>
-                                      <span style={{ color: '#e1e8ed' }}>{formatTime24(booking.pickupTime || booking.time)}</span>
-                                    </div>
-                                    {booking.pickupContactName && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Kontakt: </span>
-                                        <span style={{ color: '#e1e8ed' }}>{booking.pickupContactName}</span>
-                                      </div>
-                                    )}
-                                    {booking.pickupContactPhone && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Telefon: </span>
-                                        <span style={{ color: '#e1e8ed' }}>{booking.pickupContactPhone}</span>
-                                      </div>
-                                    )}
+                                  <h4 className="detail-section-title">Upphämtning</h4>
+                                  <div className="text-base" style={{ display: 'grid', gap: '0.5rem' }}>
+                                    <div><span className="detail-label">Adress: </span><span className="detail-value">{booking.pickupAddress || '-'}</span></div>
+                                    <div><span className="detail-label">Datum: </span><span className="detail-value">{booking.pickupDate || booking.date || '-'}</span></div>
+                                    <div><span className="detail-label">Tid: </span><span className="detail-value">{formatTime24(booking.pickupTime || booking.time)}</span></div>
+                                    {booking.pickupContactName && (<div><span className="detail-label">Kontakt: </span><span className="detail-value">{booking.pickupContactName}</span></div>)}
+                                    {booking.pickupContactPhone && (<div><span className="detail-label">Telefon: </span><span className="detail-value">{booking.pickupContactPhone}</span></div>)}
                                   </div>
                                 </div>
 
                                 {/* Lämning */}
                                 <div>
-                                  <h4 style={{ margin: '0 0 0.75rem 0', color: '#e1e8ed', fontSize: '0.9rem', borderBottom: '1px solid #2a3647', paddingBottom: '0.5rem' }}>
-                                    Lämning
-                                  </h4>
-                                  <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.85rem' }}>
-                                    <div>
-                                      <span style={{ color: '#8899a6' }}>Adress: </span>
-                                      <span style={{ color: '#e1e8ed' }}>{booking.deliveryAddress || '-'}</span>
-                                    </div>
-                                    <div>
-                                      <span style={{ color: '#8899a6' }}>Datum: </span>
-                                      <span style={{ color: '#e1e8ed' }}>{booking.deliveryDate || '-'}</span>
-                                    </div>
-                                    <div>
-                                      <span style={{ color: '#8899a6' }}>Tid: </span>
-                                      <span style={{ color: '#e1e8ed' }}>{formatTime24(booking.deliveryTime)}</span>
-                                    </div>
-                                    {booking.deliveryContactName && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Kontakt: </span>
-                                        <span style={{ color: '#e1e8ed' }}>{booking.deliveryContactName}</span>
-                                      </div>
-                                    )}
-                                    {booking.deliveryContactPhone && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Telefon: </span>
-                                        <span style={{ color: '#e1e8ed' }}>{booking.deliveryContactPhone}</span>
-                                      </div>
-                                    )}
+                                  <h4 className="detail-section-title">Lämning</h4>
+                                  <div className="text-base" style={{ display: 'grid', gap: '0.5rem' }}>
+                                    <div><span className="detail-label">Adress: </span><span className="detail-value">{booking.deliveryAddress || '-'}</span></div>
+                                    <div><span className="detail-label">Datum: </span><span className="detail-value">{booking.deliveryDate || '-'}</span></div>
+                                    <div><span className="detail-label">Tid: </span><span className="detail-value">{formatTime24(booking.deliveryTime)}</span></div>
+                                    {booking.deliveryContactName && (<div><span className="detail-label">Kontakt: </span><span className="detail-value">{booking.deliveryContactName}</span></div>)}
+                                    {booking.deliveryContactPhone && (<div><span className="detail-label">Telefon: </span><span className="detail-value">{booking.deliveryContactPhone}</span></div>)}
                                   </div>
                                 </div>
                               </div>
 
                               {/* Övrig info */}
-                              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #2a3647' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', fontSize: '0.85rem' }}>
-                                  <div>
-                                    <span style={{ color: '#8899a6' }}>Bokningsnr: </span>
-                                    <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{booking.bookingNo}</span>
-                                  </div>
-                                  {booking.marking && (
-                                    <div>
-                                      <span style={{ color: '#8899a6' }}>Märkning: </span>
-                                      <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{booking.marking}</span>
-                                    </div>
-                                  )}
-                                  <div>
-                                    <span style={{ color: '#8899a6' }}>Förare: </span>
-                                    <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{driver?.name || '-'}</span>
-                                  </div>
-                                  {booking.km && (
-                                    <div>
-                                      <span style={{ color: '#8899a6' }}>Sträcka: </span>
-                                      <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{booking.km} km</span>
-                                    </div>
-                                  )}
+                              <div className="mt-1" style={{ paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
+                                <div className="text-base" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                                  <div><span className="detail-label">Bokningsnr: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.bookingNo}</span></div>
+                                  {booking.marking && (<div><span className="detail-label">Märkning: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.marking}</span></div>)}
+                                  <div><span className="detail-label">Förare: </span><span className="detail-value" style={{ fontWeight: 600 }}>{driver?.name || '-'}</span></div>
+                                  {booking.km && (<div><span className="detail-label">Sträcka: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.km} km</span></div>)}
                                   {booking.amountSek && (
                                     <div>
-                                      <span style={{ color: '#8899a6' }}>Pris: </span>
-                                      <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{booking.amountSek} SEK</span>
+                                      <span className="detail-label">Pris: </span>
+                                      <span className="detail-value" style={{ fontWeight: 600 }}>{booking.amountSek} SEK</span>
                                     </div>
                                   )}
                                 </div>
                                 {booking.note && (
                                   <div style={{ marginTop: '0.75rem' }}>
-                                    <span style={{ color: '#8899a6' }}>Anteckning: </span>
-                                    <span style={{ color: '#e1e8ed' }}>{booking.note}</span>
+                                    <span className="detail-label">Anteckning: </span>
+                                    <span className="detail-value">{booking.note}</span>
                                   </div>
                                 )}
                               </div>

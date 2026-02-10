@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
+import SortIcon from './SortIcon';
 import { generateId } from '../utils/formatters';
 import { exportToJSON, importFromJSON, saveData } from '../utils/storage';
 import getMockData from '../data/mockData';
@@ -574,11 +575,6 @@ function Settings({ data, updateData }) {
   const displayedActiveDrivers = showAllActiveDrivers ? activeDrivers : activeDrivers.slice(0, 5);
   const displayedInactiveDrivers = showAllInactiveDrivers ? inactiveDrivers : inactiveDrivers.slice(0, 5);
 
-  const SortIcon = ({ field, currentField, direction }) => {
-    if (field !== currentField) return <span style={{ color: '#ccc', marginLeft: '0.25rem' }}>↕</span>;
-    return <span style={{ marginLeft: '0.25rem' }}>{direction === 'asc' ? '↑' : '↓'}</span>;
-  };
-
   return (
     <div>
       <h1>Inställningar</h1>
@@ -588,7 +584,7 @@ function Settings({ data, updateData }) {
         display: 'flex',
         gap: '0.5rem',
         marginBottom: '1.5rem',
-        borderBottom: '2px solid #2a3647',
+        borderBottom: '2px solid var(--color-border)',
         paddingBottom: '0'
       }}>
         <button
@@ -703,7 +699,7 @@ function Settings({ data, updateData }) {
 
             {showVehicleForm && (
               <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-                <h3 style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.75rem', marginTop: 0 }}>
+                <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
                   {editingVehicleId ? 'Redigera fordon' : 'Nytt fordon'}
                 </h3>
                 
@@ -790,13 +786,13 @@ function Settings({ data, updateData }) {
             )}
 
             {activeVehicles.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#95a5a6' }}>
+              <div className="empty-state">
                 <p>Inga aktiva fordon</p>
               </div>
             ) : (
               <>
                 <div className="table-container">
-                  <table className="table" style={{ fontSize: '0.875rem' }}>
+                  <table className="table">
                     <thead>
                       <tr>
                         <th onClick={() => handleVehicleSort('regNo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
@@ -833,17 +829,16 @@ function Settings({ data, updateData }) {
                                   }}>
                                     {assignedDriver.code || generateDriverCode(assignedDriver.name)}
                                   </span>
-                                  <span style={{ fontSize: '0.85rem' }}>{assignedDriver.name}</span>
+                                  <span className="text-base">{assignedDriver.name}</span>
                                 </div>
                               ) : (
-                                <span style={{ color: '#95a5a6', fontSize: '0.75rem' }}>-</span>
+                                <span className="text-sm text-muted">-</span>
                               )}
                             </td>
                             <td>
                               <button
                                 onClick={() => handleEditVehicle(vehicle)}
-                                className="btn btn-small btn-primary"
-                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                               >
                                 Redigera
                               </button>
@@ -872,7 +867,7 @@ function Settings({ data, updateData }) {
                 <div className="form">
                   <h2 style={{ marginBottom: '1rem' }}>Inaktiva fordon ({inactiveVehicles.length})</h2>
               <div className="table-container">
-                <table className="table" style={{ fontSize: '0.875rem' }}>
+                <table className="table">
                   <thead>
                     <tr>
                       <th onClick={() => handleVehicleSort('regNo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
@@ -909,17 +904,16 @@ function Settings({ data, updateData }) {
                                 }}>
                                   {assignedDriver.code || generateDriverCode(assignedDriver.name)}
                                 </span>
-                                <span style={{ fontSize: '0.85rem' }}>{assignedDriver.name}</span>
+                                <span className="text-base">{assignedDriver.name}</span>
                               </div>
                             ) : (
-                              <span style={{ color: '#95a5a6', fontSize: '0.75rem' }}>-</span>
+                              <span className="text-sm text-muted">-</span>
                             )}
                           </td>
                           <td>
                             <button
                               onClick={() => handleEditVehicle(vehicle)}
-                              className="btn btn-small btn-primary"
-                              style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                             >
                               Redigera
                             </button>
@@ -957,7 +951,7 @@ function Settings({ data, updateData }) {
 
             {showVehicleTypeForm && (
               <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-                <h3 style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.75rem', marginTop: 0 }}>
+                <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
                   Ny fordonstyp
                 </h3>
 
@@ -991,12 +985,12 @@ function Settings({ data, updateData }) {
             )}
 
             {data.vehicleTypes.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#95a5a6' }}>
+              <div className="empty-state">
                 <p>Inga fordonstyper</p>
               </div>
             ) : (
               <div className="table-container">
-                <table className="table" style={{ fontSize: '0.875rem' }}>
+                <table className="table">
                   <thead>
                     <tr>
                       <th
@@ -1020,8 +1014,7 @@ function Settings({ data, updateData }) {
                           <td>
                             <button
                               onClick={() => setDeleteType(type)}
-                              className="btn btn-small btn-danger"
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+className="btn btn-small btn-danger text-sm"
                               disabled={count > 0}
                             >
                               Ta bort
@@ -1055,7 +1048,7 @@ function Settings({ data, updateData }) {
             </div>
             {showDriverForm && (
               <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-                <h3 style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.75rem', marginTop: 0 }}>
+                <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
                   {editingDriverId ? 'Redigera förare' : 'Ny förare'}
                 </h3>
                 
@@ -1071,7 +1064,7 @@ function Settings({ data, updateData }) {
                         required
                       />
                       {driverForm.name && (
-                        <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#6c757d' }}>
+                        <div className="text-sm text-muted" style={{ marginTop: '0.25rem' }}>
                           Kod: <strong>{generateDriverCode(driverForm.name)}</strong>
                         </div>
                       )}
@@ -1130,13 +1123,13 @@ function Settings({ data, updateData }) {
             )}
 
             {activeDrivers.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#95a5a6' }}>
+              <div className="empty-state">
                 <p>Inga aktiva förare</p>
               </div>
             ) : (
               <>
                 <div className="table-container">
-                  <table className="table" style={{ fontSize: '0.875rem' }}>
+                  <table className="table">
                     <thead>
                       <tr>
                         <th onClick={() => handleDriverSort('name')} style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}>
@@ -1170,7 +1163,7 @@ function Settings({ data, updateData }) {
                                 }}>
                                   {driver.code || generateDriverCode(driver.name)}
                                 </span>
-                                <strong style={{ fontSize: '0.85rem' }}>{driver.name}</strong>
+                                <strong className="text-base">{driver.name}</strong>
                               </div>
                             </td>
                             <td>{driver.phone || '-'}</td>
@@ -1194,14 +1187,13 @@ function Settings({ data, updateData }) {
                                   ))}
                                 </div>
                               ) : (
-                                <span style={{ color: '#95a5a6', fontSize: '0.75rem' }}>-</span>
+                                <span className="text-sm text-muted">-</span>
                               )}
                             </td>
                             <td>
                               <button
                                 onClick={() => handleEditDriver(driver)}
-                                className="btn btn-small btn-primary"
-                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                               >
                                 Redigera
                               </button>
@@ -1230,7 +1222,7 @@ function Settings({ data, updateData }) {
             <div className="form">
               <h2 style={{ marginBottom: '1rem' }}>Inaktiva förare ({inactiveDrivers.length})</h2>
               <div className="table-container">
-                <table className="table" style={{ fontSize: '0.875rem' }}>
+                <table className="table">
                   <thead>
                     <tr>
                       <th onClick={() => handleDriverSort('name')} style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}>
@@ -1264,7 +1256,7 @@ function Settings({ data, updateData }) {
                               }}>
                                 {driver.code || generateDriverCode(driver.name)}
                               </span>
-                              <span style={{ fontSize: '0.85rem' }}>{driver.name}</span>
+                              <span className="text-base">{driver.name}</span>
                             </div>
                           </td>
                           <td>{driver.phone || '-'}</td>
@@ -1288,14 +1280,13 @@ function Settings({ data, updateData }) {
                                 ))}
                               </div>
                             ) : (
-                              <span style={{ color: '#95a5a6', fontSize: '0.75rem' }}>-</span>
+                              <span className="text-sm text-muted">-</span>
                             )}
                           </td>
                           <td>
                             <button
                               onClick={() => handleEditDriver(driver)}
-                              className="btn btn-small btn-primary"
-                              style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                             >
                               Redigera
                             </button>
@@ -1338,60 +1329,59 @@ function Settings({ data, updateData }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '1.5rem', alignItems: 'start' }}>
                   {/* Vänster: kompakt kundformulär */}
                   <div>
-                    <h3 style={{ fontSize: '0.7rem', color: '#6c757d', marginBottom: '0.25rem', marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <h3 className="section-title section-title--tight">
                       {editingCustomerId ? 'Redigera kund' : 'Ny kund'}
                     </h3>
-                    <form onSubmit={handleCustomerSubmit} style={{ fontSize: '0.75rem' }}>
+                    <form onSubmit={handleCustomerSubmit} className="text-sm">
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
-                        <input type="text" name="name" value={customerForm.name} onChange={handleCustomerChange} className="form-input" placeholder="Namn *" required style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
-                        <input type="text" name="customerNumber" value={customerForm.customerNumber} onChange={handleCustomerChange} className="form-input" placeholder="Kundnr" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem', width: '5.5rem' }} />
+                        <input type="text" name="name" value={customerForm.name} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Namn *" required />
+                        <input type="text" name="customerNumber" value={customerForm.customerNumber} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Kundnr" style={{ width: '5.5rem' }} />
                       </div>
                       <div style={{ marginBottom: '0.2rem' }}>
-                        <input type="text" name="shortName" value={customerForm.shortName || ''} onChange={handleCustomerChange} className="form-input" placeholder="Förkortning" maxLength={6} style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                        <input type="text" name="shortName" value={customerForm.shortName || ''} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Förkortning" maxLength={6} />
                       </div>
                       <div style={{ marginBottom: '0.2rem' }}>
-                        <input type="text" name="contactPerson" value={customerForm.contactPerson} onChange={handleCustomerChange} className="form-input" placeholder="Kontaktperson" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                        <input type="text" name="contactPerson" value={customerForm.contactPerson} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Kontaktperson" />
                       </div>
                       <div style={{ marginBottom: '0.2rem' }}>
-                        <input type="text" name="address" value={customerForm.address} onChange={handleCustomerChange} className="form-input" placeholder="Adress" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                        <input type="text" name="address" value={customerForm.address} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Adress" />
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
-                        <input type="text" name="postalCode" value={customerForm.postalCode} onChange={handleCustomerChange} className="form-input" placeholder="Postnr" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem', width: '4rem' }} />
-                        <input type="text" name="city" value={customerForm.city} onChange={handleCustomerChange} className="form-input" placeholder="Ort" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                        <input type="text" name="postalCode" value={customerForm.postalCode} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Postnr" style={{ width: '4rem' }} />
+                        <input type="text" name="city" value={customerForm.city} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Ort" />
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
-                        <input type="tel" name="phone" value={customerForm.phone} onChange={handleCustomerChange} className="form-input" placeholder="Telefon" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
-                        <input type="tel" name="mobile" value={customerForm.mobile} onChange={handleCustomerChange} className="form-input" placeholder="Mobil" style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem' }} />
+                        <input type="tel" name="phone" value={customerForm.phone} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Telefon" />
+                        <input type="tel" name="mobile" value={customerForm.mobile} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Mobil" />
                       </div>
-                      <label className="checkbox-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <label className="checkbox-label text-sm" style={{ marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <input type="checkbox" name="active" checked={customerForm.active} onChange={handleCustomerChange} />
                         Aktiv
                       </label>
                       <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
-                        <button type="submit" className="btn btn-primary btn-small" style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem' }}>{editingCustomerId ? 'Spara' : 'Lägg till'}</button>
+                        <button type="submit" className="btn btn-primary btn-small text-2xs">{editingCustomerId ? 'Spara' : 'Lägg till'}</button>
                         {editingCustomerId && (
                           <>
-                            <button type="button" onClick={() => toggleCustomerActive(editingCustomerId, customerForm.active)} className="btn btn-secondary btn-small" style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem' }}>{customerForm.active ? 'Inaktivera' : 'Aktivera'}</button>
-                            <button type="button" onClick={() => setDeleteCustomerId(editingCustomerId)} className="btn btn-danger btn-small" style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem' }}>Ta bort</button>
+                            <button type="button" onClick={() => toggleCustomerActive(editingCustomerId, customerForm.active)} className="btn btn-secondary btn-small text-2xs">{customerForm.active ? 'Inaktivera' : 'Aktivera'}</button>
+                            <button type="button" onClick={() => setDeleteCustomerId(editingCustomerId)} className="btn btn-danger btn-small text-2xs">Ta bort</button>
                           </>
                         )}
-                        <button type="button" onClick={resetCustomerForm} className="btn btn-secondary btn-small" style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem' }}>Avbryt</button>
+                        <button type="button" onClick={resetCustomerForm} className="btn btn-secondary btn-small text-2xs">Avbryt</button>
                       </div>
                     </form>
                   </div>
 
                   {/* Höger: priser per fordonstyp, väntetid m.m. */}
                   <div>
-                    <h3 style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.5rem', marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <h3 className="section-title">
                       Priser (kundspecifika)
                     </h3>
-                    <div style={{ fontSize: '0.8rem' }}>
+                    <div className="text-base">
                       <div style={{ marginBottom: '0.5rem' }}>
                         <select
                           value={selectedCustomerVehicleType}
                           onChange={handleCustomerVehicleTypeSelect}
-                          className="form-select"
-                          style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', width: '100%', maxWidth: '200px' }}
+className="form-select form-input input-sm" style={{ width: '100%', maxWidth: '200px' }}
                         >
                           <option value="">+ Lägg till fordonstyp</option>
                           {(data.vehicleTypes || []).filter(t => !customerForm.pricesByVehicleType[t]).map(t => (
@@ -1400,35 +1390,35 @@ function Settings({ data, updateData }) {
                         </select>
                       </div>
                       {Object.entries(customerForm.pricesByVehicleType || {}).map(([vehicleType, prices]) => (
-                        <div key={vehicleType} style={{ marginBottom: '0.75rem', padding: '0.5rem', background: '#1a2332', borderRadius: '6px', border: '1px solid #2a3647', display: 'flex', alignItems: 'flex-end', gap: '0.75rem', flexWrap: 'wrap' }}>
-                          <strong style={{ fontSize: '0.8rem', color: '#e1e8ed', flexShrink: 0, marginBottom: '0.25rem' }}>{vehicleType}</strong>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(70px, 1fr))', gap: '0.35rem', flex: 1, minWidth: 0 }}>
+                        <div key={vehicleType} className="card-block mb-1">
+                          <strong className="text-sm block" style={{ flexShrink: 0, marginBottom: '0.25rem' }}>{vehicleType}</strong>
+                          <div className="grid-cols-5">
                             <div>
-                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>kr/km</label>
-                              <input type="text" inputMode="decimal" value={prices.km || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'km', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                              <label className="label-sm">kr/km</label>
+                              <input type="text" inputMode="decimal" value={prices.km || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'km', e.target.value)} className="form-input input-sm" placeholder="–" />
                             </div>
                             <div>
-                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>kr/stopp</label>
-                              <input type="text" inputMode="decimal" value={prices.stop || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'stop', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                              <label className="label-sm">kr/stopp</label>
+                              <input type="text" inputMode="decimal" value={prices.stop || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'stop', e.target.value)} className="form-input input-sm" placeholder="–" />
                             </div>
                             <div>
-                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>Väntetid kr/h</label>
-                              <input type="text" inputMode="decimal" value={prices.wait || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'wait', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                              <label className="label-sm">Väntetid kr/h</label>
+                              <input type="text" inputMode="decimal" value={prices.wait || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'wait', e.target.value)} className="form-input input-sm" placeholder="–" />
                             </div>
                             <div>
-                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>Timpris kr</label>
-                              <input type="text" inputMode="decimal" value={prices.hour || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'hour', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                              <label className="label-sm">Timpris kr</label>
+                              <input type="text" inputMode="decimal" value={prices.hour || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'hour', e.target.value)} className="form-input input-sm" placeholder="–" />
                             </div>
                             <div>
-                              <label style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', marginBottom: '0.15rem' }}>Fast kr</label>
-                              <input type="text" inputMode="decimal" value={prices.fixed || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'fixed', e.target.value)} className="form-input" placeholder="–" style={{ padding: '0.25rem 0.35rem', fontSize: '0.75rem' }} />
+                              <label className="label-sm">Fast kr</label>
+                              <input type="text" inputMode="decimal" value={prices.fixed || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'fixed', e.target.value)} className="form-input input-sm" placeholder="–" />
                             </div>
                           </div>
-                          <button type="button" onClick={() => handleRemoveCustomerPriceTemplate(vehicleType)} className="btn btn-danger btn-small" style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', flexShrink: 0, marginBottom: '0.25rem', marginLeft: 'auto' }}>Ta bort</button>
+                          <button type="button" onClick={() => handleRemoveCustomerPriceTemplate(vehicleType)} className="btn btn-danger btn-small text-2xs" style={{ flexShrink: 0, marginBottom: '0.25rem', marginLeft: 'auto', padding: '0.2rem 0.4rem' }}>Ta bort</button>
                         </div>
                       ))}
                       {(!customerForm.pricesByVehicleType || Object.keys(customerForm.pricesByVehicleType).length === 0) && (
-                        <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: 0 }}>Välj fordonstyp ovan för att lägga till priser (kr/km, väntetid, timpris m.m.)</p>
+                        <p className="text-muted-2 text-sm" style={{ margin: 0 }}>Välj fordonstyp ovan för att lägga till priser (kr/km, väntetid, timpris m.m.)</p>
                       )}
                     </div>
                   </div>
@@ -1437,12 +1427,12 @@ function Settings({ data, updateData }) {
             )}
 
             {activeCustomers.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#95a5a6' }}>
+              <div className="empty-state">
                 <p>Inga aktiva kunder</p>
               </div>
             ) : (
               <div className="table-container">
-                <table className="table" style={{ fontSize: '0.875rem' }}>
+                <table className="table">
                   <thead>
                     <tr>
                       <th onClick={() => handleCustomerSort('customerNumber')} style={{ cursor: 'pointer', userSelect: 'none' }}>
@@ -1478,7 +1468,7 @@ function Settings({ data, updateData }) {
                             style={{ cursor: 'pointer' }}
                           >
                             <td style={{ whiteSpace: 'nowrap' }}>
-                              <span style={{ fontSize: '0.7rem', color: '#8899a6', marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
+                              <span className="text-2xs text-muted" style={{ marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
                               {customer.customerNumber || '-'}
                             </td>
                             <td><strong>{customer.name}</strong></td>
@@ -1488,8 +1478,7 @@ function Settings({ data, updateData }) {
                             <td onClick={e => e.stopPropagation()}>
                               <button
                                 onClick={() => handleEditCustomer(customer)}
-                                className="btn btn-small btn-primary"
-                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                               >
                                 Redigera
                               </button>
@@ -1538,7 +1527,7 @@ function Settings({ data, updateData }) {
             <div className="form">
               <h2 style={{ marginBottom: '1rem' }}>Inaktiva kunder ({inactiveCustomers.length})</h2>
               <div className="table-container">
-                <table className="table" style={{ fontSize: '0.875rem' }}>
+                <table className="table">
                   <thead>
                     <tr>
                       <th onClick={() => handleCustomerSort('customerNumber')} style={{ cursor: 'pointer', userSelect: 'none' }}>
@@ -1574,7 +1563,7 @@ function Settings({ data, updateData }) {
                             style={{ cursor: 'pointer', opacity: 0.6 }}
                           >
                             <td style={{ whiteSpace: 'nowrap' }}>
-                              <span style={{ fontSize: '0.7rem', color: '#8899a6', marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
+                              <span className="text-2xs text-muted" style={{ marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
                               {customer.customerNumber || '-'}
                             </td>
                             <td>{customer.name}</td>
@@ -1584,8 +1573,7 @@ function Settings({ data, updateData }) {
                             <td onClick={e => e.stopPropagation()}>
                               <button
                                 onClick={() => handleEditCustomer(customer)}
-                                className="btn btn-small btn-primary"
-                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                               >
                                 Redigera
                               </button>
@@ -1593,26 +1581,24 @@ function Settings({ data, updateData }) {
                           </tr>
                           {isExpanded && (
                             <tr>
-                              <td colSpan={6} style={{ backgroundColor: '#0f1419', padding: '1rem', verticalAlign: 'top' }}>
-                                <div style={{ marginBottom: '0.75rem', fontSize: '1rem', color: '#e1e8ed', fontWeight: 600 }}>
-                                  {customer.name}
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
+                              <td colSpan={6} className="text-base" style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', verticalAlign: 'top' }}>
+                                <div className="mb-1" style={{ fontWeight: 600 }}>{customer.name}</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                                   <div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Kundnr: </span><span style={{ color: '#e1e8ed' }}>{customer.customerNumber || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Förkortning: </span><span style={{ color: '#e1e8ed' }}>{customer.shortName || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Kontaktperson: </span><span style={{ color: '#e1e8ed' }}>{customer.contactPerson || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Telefon: </span><span style={{ color: '#e1e8ed' }}>{customer.phone || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Mobil: </span><span style={{ color: '#e1e8ed' }}>{customer.mobile || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Kundnr: </span><span className="detail-value">{customer.customerNumber || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Förkortning: </span><span className="detail-value">{customer.shortName || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Kontaktperson: </span><span className="detail-value">{customer.contactPerson || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Telefon: </span><span className="detail-value">{customer.phone || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Mobil: </span><span className="detail-value">{customer.mobile || '-'}</span></div>
                                   </div>
                                   <div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Adress: </span><span style={{ color: '#e1e8ed' }}>{customer.address || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Postnr / Ort: </span><span style={{ color: '#e1e8ed' }}>{[customer.postalCode, customer.city].filter(Boolean).join(' ') || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Aktiv: </span><span style={{ color: '#e1e8ed' }}>Nej</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Adress: </span><span className="detail-value">{customer.address || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Postnr / Ort: </span><span className="detail-value">{[customer.postalCode, customer.city].filter(Boolean).join(' ') || '-'}</span></div>
+                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Aktiv: </span><span className="detail-value">Nej</span></div>
                                     {(customer.pricesByVehicleType && Object.keys(customer.pricesByVehicleType).length > 0) && (
                                       <div style={{ marginTop: '0.5rem' }}>
-                                        <span style={{ color: '#8899a6' }}>Priser: </span>
-                                        <span style={{ color: '#e1e8ed' }}>{Object.keys(customer.pricesByVehicleType).join(', ')}</span>
+                                        <span className="detail-label">Priser: </span>
+                                        <span className="detail-value">{Object.keys(customer.pricesByVehicleType).join(', ')}</span>
                                       </div>
                                     )}
                                   </div>
@@ -1645,7 +1631,7 @@ function Settings({ data, updateData }) {
 
         {showLocationForm && (
           <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-            <h3 style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.75rem', marginTop: 0 }}>
+            <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
               {editingLocationId ? 'Redigera plats' : 'Ny plats'}
             </h3>
             
@@ -1694,16 +1680,16 @@ function Settings({ data, updateData }) {
               </div>
 
               <div className="form-group">
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8899a6', fontSize: '0.85rem' }}>
+                <label className="label-sm text-muted" style={{ display: 'block', marginBottom: '0.5rem', fontSize: 'var(--font-size-base)' }}>
                   Kopplade kunder (valfritt)
                 </label>
                 <div style={{ 
                   maxHeight: '200px', 
                   overflowY: 'auto', 
-                  border: '1px solid #2a3647', 
+                  border: '1px solid var(--color-border)', 
                   borderRadius: '6px', 
                   padding: '0.5rem',
-                  backgroundColor: '#0f1419'
+                  backgroundColor: 'var(--color-bg)'
                 }}>
                   {data.customers.map(customer => (
                     <label 
@@ -1756,12 +1742,12 @@ function Settings({ data, updateData }) {
         )}
 
         {(data.pickupLocations || []).length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#95a5a6' }}>
+          <div className="empty-state">
             <p>Inga platser ännu</p>
           </div>
         ) : (
           <div className="table-container">
-            <table className="table" style={{ fontSize: '0.875rem' }}>
+            <table className="table">
               <thead>
                 <tr>
                   <th>Namn</th>
@@ -1813,8 +1799,7 @@ function Settings({ data, updateData }) {
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <button
                           onClick={() => handleEditLocation(location)}
-                          className="btn btn-small btn-primary"
-                          style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', width: '100%' }}
+                          className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                         >
                           Redigera
                         </button>
@@ -1886,7 +1871,7 @@ function Settings({ data, updateData }) {
               Testdata laddad. Gå till Bokningar eller Planering för att se datan.
             </p>
           )}
-          <p style={{ color: '#8899a6', fontSize: '0.85rem' }}>
+          <p className="text-muted text-base">
             Gå till <strong>Bokningar</strong> för att se bokningarna, <strong>Planering</strong> för att tilldela bil/förare och ange kostnad, och flikarna <strong>Fordon</strong>, <strong>Förare</strong>, <strong>Kunder</strong>, <strong>Platser</strong> här ovanför för att se listorna.
           </p>
         </div>

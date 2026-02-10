@@ -1,4 +1,7 @@
-// Swedish formatting utilities
+/**
+ * Swedish formatting and shared helpers: formatNumber, formatTime24, getCustomerShort, generateId, generateBookingNumber.
+ * Single source for number/date/time formatting and customer display name (short).
+ */
 
 export const formatNumber = (value) => {
   if (value === null || value === undefined || value === '') return '';
@@ -79,6 +82,14 @@ export const generateBookingNumber = (lastBookingNumber) => {
 
 export const generateId = (prefix) => {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+/** Kundförkortning för tabeller: shortName om satt, annars första 6 tecken av namn. Används i Booking, Schema m.fl. */
+export const getCustomerShort = (customer) => {
+  if (!customer) return '–';
+  const s = (customer.shortName || '').trim();
+  if (s) return s;
+  return (customer.name || '').slice(0, 6) || '–';
 };
 
 

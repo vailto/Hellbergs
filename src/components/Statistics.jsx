@@ -198,7 +198,7 @@ function Statistics({ data }) {
           marginBottom: '1rem'
         }}>
           <div style={{ flex: '1 1 150px', minWidth: '150px' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8899a6', fontSize: '0.8rem' }}>
+            <label className="label-sm text-muted" style={{ marginBottom: '0.5rem', display: 'block' }}>
               Från
             </label>
             <input
@@ -210,7 +210,7 @@ function Statistics({ data }) {
           </div>
 
           <div style={{ flex: '1 1 150px', minWidth: '150px' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8899a6', fontSize: '0.8rem' }}>
+            <label className="label-sm text-muted" style={{ marginBottom: '0.5rem', display: 'block' }}>
               Till
             </label>
             <input
@@ -272,8 +272,8 @@ function Statistics({ data }) {
                 right: 0,
                 marginTop: '0.5rem',
                 padding: '0.75rem',
-                backgroundColor: '#0f1419',
-                border: '1px solid #2a3647',
+                backgroundColor: 'var(--color-bg)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
                 maxHeight: '250px',
                 overflowY: 'auto',
@@ -327,8 +327,8 @@ function Statistics({ data }) {
                 right: 0,
                 marginTop: '0.5rem',
                 padding: '0.75rem',
-                backgroundColor: '#0f1419',
-                border: '1px solid #2a3647',
+                backgroundColor: 'var(--color-bg)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
                 maxHeight: '250px',
                 overflowY: 'auto',
@@ -372,19 +372,19 @@ function Statistics({ data }) {
           <div className="stat-label">Vald Period</div>
           <div style={{ marginTop: '1rem' }}>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Bokningar</div>
-              <div style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{stats.totalBookings}</div>
+              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>Bokningar</div>
+              <div className="text-2xl" style={{ fontWeight: 700 }}>{stats.totalBookings}</div>
             </div>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Körsträcka</div>
-              <div style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</div>
+              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>Körsträcka</div>
+              <div className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</div>
             </div>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Intäkt</div>
-              <div style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</div>
+              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>Intäkt</div>
+              <div className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</div>
             </div>
-            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #2a3647' }}>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.5rem' }}>Status</div>
+            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
+              <div className="text-sm text-muted" style={{ marginBottom: '0.5rem' }}>Status</div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <span className="status-badge status-bokad">Bokad: {stats.byStatus['Bokad']}</span>
                 <span className="status-badge status-planerad">Planerad: {stats.byStatus['Planerad']}</span>
@@ -406,7 +406,7 @@ function Statistics({ data }) {
             <div style={{ marginBottom: '0.75rem' }}>
               <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Bokningar</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{stats.totalBookings}</span>
+                <span className="text-2xl" style={{ fontWeight: 700 }}>{stats.totalBookings}</span>
                 <span style={{
                   color: stats.totalBookings >= prevStats.totalBookings ? '#34d399' : '#f87171',
                   fontSize: '0.9rem',
@@ -415,12 +415,12 @@ function Statistics({ data }) {
                   {stats.totalBookings >= prevStats.totalBookings ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalBookings, prevStats.totalBookings)).toFixed(1)}%
                 </span>
               </div>
-              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>Förra: {prevStats.totalBookings}</div>
+              <div className="text-2xs text-muted">Förra: {prevStats.totalBookings}</div>
             </div>
             <div style={{ marginBottom: '0.75rem' }}>
               <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Körsträcka</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</span>
+                <span className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</span>
                 <span style={{
                   color: stats.totalKm >= prevStats.totalKm ? '#34d399' : '#f87171',
                   fontSize: '0.9rem',
@@ -429,12 +429,12 @@ function Statistics({ data }) {
                   {stats.totalKm >= prevStats.totalKm ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalKm, prevStats.totalKm)).toFixed(1)}%
                 </span>
               </div>
-              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>Förra: {formatNumber(prevStats.totalKm)} km</div>
+              <div className="text-2xs text-muted">Förra: {formatNumber(prevStats.totalKm)} km</div>
             </div>
             <div>
               <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Intäkt</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</span>
+                <span className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</span>
                 <span style={{
                   color: stats.totalAmount >= prevStats.totalAmount ? '#34d399' : '#f87171',
                   fontSize: '0.9rem',
@@ -443,7 +443,7 @@ function Statistics({ data }) {
                   {stats.totalAmount >= prevStats.totalAmount ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalAmount, prevStats.totalAmount)).toFixed(1)}%
                 </span>
               </div>
-              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>Förra: {formatNumber(prevStats.totalAmount)} SEK</div>
+              <div className="text-2xs text-muted">Förra: {formatNumber(prevStats.totalAmount)} SEK</div>
             </div>
           </div>
         </div>
@@ -458,7 +458,7 @@ function Statistics({ data }) {
             <div style={{ marginBottom: '0.75rem' }}>
               <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Bokningar</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{stats.totalBookings}</span>
+                <span className="text-2xl" style={{ fontWeight: 700 }}>{stats.totalBookings}</span>
                 <span style={{
                   color: stats.totalBookings >= lastYearStats.totalBookings ? '#34d399' : '#f87171',
                   fontSize: '0.9rem',
@@ -472,7 +472,7 @@ function Statistics({ data }) {
             <div style={{ marginBottom: '0.75rem' }}>
               <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Körsträcka</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</span>
+                <span className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</span>
                 <span style={{
                   color: stats.totalKm >= lastYearStats.totalKm ? '#34d399' : '#f87171',
                   fontSize: '0.9rem',
@@ -486,7 +486,7 @@ function Statistics({ data }) {
             <div>
               <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Intäkt</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: '#e1e8ed', fontSize: '1.5rem', fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</span>
+                <span className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</span>
                 <span style={{
                   color: stats.totalAmount >= lastYearStats.totalAmount ? '#34d399' : '#f87171',
                   fontSize: '0.9rem',
