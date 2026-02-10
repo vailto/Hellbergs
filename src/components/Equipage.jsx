@@ -155,27 +155,18 @@ function Equipage({ data, updateData }) {
                           ) : (
                             <div>
                               {assignedDrivers.length > 0 ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <div className="flex-center" style={{ flexWrap: 'wrap' }}>
                                   {assignedDrivers.map((d, i) => (
-                                    <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <span key={d.id} className="u-flex-center-sm">
                                       {i > 0 && <span className="text-muted">,</span>}
-                                      <span style={{ 
-                                        background: '#667eea', 
-                                        color: 'white', 
-                                        padding: '0.2rem 0.4rem', 
-                                        borderRadius: '3px',
-                                        fontWeight: 'bold',
-                                        fontSize: 'var(--font-size-2xs)',
-                                        minWidth: '45px',
-                                        textAlign: 'center'
-                                      }}>
+                                      <span className="badge-driver">
                                         {d.code || generateDriverCode(d.name)}
                                       </span>
                                     </span>
                                   ))}
                                 </div>
                               ) : (
-                                <span style={{ color: '#95a5a6' }}>Ingen</span>
+                                <span className="text-muted">Ingen</span>
                               )}
                             </div>
                           )}
