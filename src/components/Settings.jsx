@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 import SortIcon from './SortIcon';
-import { generateId } from '../utils/formatters';
+import { generateId, generateDriverCode } from '../utils/formatters';
 import { exportToJSON, importFromJSON, saveData, migrateVehicleDriverData } from '../utils/storage';
 import getMockData from '../data/mockData';
 import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../utils/vehicleUtils';
@@ -113,18 +113,6 @@ function Settings({ data, updateData }) {
       vehicleTypes: data.vehicleTypes.filter(t => t !== deleteType)
     });
     setDeleteType(null);
-  };
-
-  // Generate driver code from name (e.g., "Martin Vailto" -> "MAVA")
-  const generateDriverCode = (name) => {
-    const parts = name.trim().split(' ');
-    if (parts.length < 2) {
-      // If only one name, take first 4 letters
-      return name.substring(0, 4).toUpperCase();
-    }
-    const firstName = parts[0];
-    const lastName = parts[parts.length - 1];
-    return (firstName.substring(0, 2) + lastName.substring(0, 2)).toUpperCase();
   };
 
   // Driver Handlers

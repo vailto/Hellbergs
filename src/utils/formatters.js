@@ -92,6 +92,17 @@ export const getCustomerShort = (customer) => {
   return (customer.name || '').slice(0, 6) || '–';
 };
 
+/** Generera förarkod från namn: "Martin Vailto" → "MAVA" (2 första + 2 sista från för-/efternamn) */
+export const generateDriverCode = (name) => {
+  const parts = name.trim().split(' ');
+  if (parts.length < 2) {
+    return name.substring(0, 4).toUpperCase();
+  }
+  const firstName = parts[0];
+  const lastName = parts[parts.length - 1];
+  return (firstName.substring(0, 2) + lastName.substring(0, 2)).toUpperCase();
+};
+
 
 
 

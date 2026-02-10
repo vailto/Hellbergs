@@ -2,23 +2,13 @@ import React, { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 import SortIcon from './SortIcon';
 import { syncVehicleDriverRelation } from '../utils/vehicleUtils';
+import { generateDriverCode } from '../utils/formatters';
 
 function Equipage({ data, updateData }) {
   const [editingVehicleId, setEditingVehicleId] = useState(null);
   const [selectedDriverIds, setSelectedDriverIds] = useState([]);
   const [sortField, setSortField] = useState('regNo');
   const [sortDirection, setSortDirection] = useState('asc');
-
-  // Generate driver code from name (same as in Settings)
-  const generateDriverCode = (name) => {
-    const parts = name.trim().split(' ');
-    if (parts.length < 2) {
-      return name.substring(0, 4).toUpperCase();
-    }
-    const firstName = parts[0];
-    const lastName = parts[parts.length - 1];
-    return (firstName.substring(0, 2) + lastName.substring(0, 2)).toUpperCase();
-  };
 
   const handleAssignDrivers = (vehicleId, driverIds) => {
     const updatedVehicles = data.vehicles.map(v =>
