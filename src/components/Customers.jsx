@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { generateId } from '../utils/formatters';
 import ConfirmModal from './ConfirmModal';
+import SortIcon from './SortIcon';
 
 function Customers({ data, updateData }) {
   const [formData, setFormData] = useState({
@@ -532,39 +533,27 @@ function Customers({ data, updateData }) {
               <tr>
                 <th className="sortable" onClick={() => handleSort('customerNumber')}>
                   Kundnummer
-                  <span className="sort-indicator">
-                    {sortField === 'customerNumber' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
+                  <SortIcon field="customerNumber" currentField={sortField} direction={sortDirection} />
                 </th>
                 <th className="sortable" onClick={() => handleSort('name')}>
                   Namn
-                  <span className="sort-indicator">
-                    {sortField === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
+                  <SortIcon field="name" currentField={sortField} direction={sortDirection} />
                 </th>
                 <th className="sortable" onClick={() => handleSort('contactPerson')}>
                   Kontaktperson
-                  <span className="sort-indicator">
-                    {sortField === 'contactPerson' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
+                  <SortIcon field="contactPerson" currentField={sortField} direction={sortDirection} />
                 </th>
                 <th className="sortable" onClick={() => handleSort('mobile')}>
                   Mobilnummer
-                  <span className="sort-indicator">
-                    {sortField === 'mobile' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
+                  <SortIcon field="mobile" currentField={sortField} direction={sortDirection} />
                 </th>
                 <th className="sortable" onClick={() => handleSort('city')}>
                   Ort
-                  <span className="sort-indicator">
-                    {sortField === 'city' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
+                  <SortIcon field="city" currentField={sortField} direction={sortDirection} />
                 </th>
                 <th className="sortable" onClick={() => handleSort('status')}>
                   Status
-                  <span className="sort-indicator">
-                    {sortField === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
+                  <SortIcon field="status" currentField={sortField} direction={sortDirection} />
                 </th>
                 <th>Åtgärder</th>
               </tr>

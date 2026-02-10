@@ -5,6 +5,7 @@ import { BOOKING_STATUSES } from '../utils/constants';
 import { validateBooking } from '../utils/validation';
 import CostEntryModal from './CostEntryModal';
 import TimeInput24 from './TimeInput24';
+import SortIcon from './SortIcon';
 
 function Booking({ data, updateData, setCurrentSection, editingBookingId, setEditingBookingId, returnToSection, setReturnToSection }) {
   const [currentTab, setCurrentTab] = useState('bokad');
@@ -1676,46 +1677,32 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                   <tr>
                     <th className="sortable" onClick={() => handleSort('bookingNo')}>
                       Bokningsnr
-                      <span className="sort-indicator">
-                        {sortField === 'bookingNo' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                      </span>
+                      <SortIcon field="bookingNo" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th className="sortable" onClick={() => handleSort('pickupDate')}>
                       Datum
-                      <span className="sort-indicator">
-                        {sortField === 'pickupDate' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                      </span>
+                      <SortIcon field="pickupDate" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th className="sortable" onClick={() => handleSort('customer')}>
                       Kund
-                      <span className="sort-indicator">
-                        {sortField === 'customer' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                      </span>
+                      <SortIcon field="customer" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th className="sortable" onClick={() => handleSort('vehicle')}>
                       Fordon
-                      <span className="sort-indicator">
-                        {sortField === 'vehicle' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                      </span>
+                      <SortIcon field="vehicle" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th>Förare</th>
                     <th className="sortable" onClick={() => handleSort('pickup')}>
                       Upphämtning
-                      <span className="sort-indicator">
-                        {sortField === 'pickup' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                      </span>
+                      <SortIcon field="pickup" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th className="sortable" onClick={() => handleSort('delivery')}>
                       Avlämning
-                      <span className="sort-indicator">
-                        {sortField === 'delivery' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                      </span>
+                      <SortIcon field="delivery" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th className="sortable" onClick={() => handleSort('status')}>
                       Status
-                      <span className="sort-indicator">
-                        {sortField === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                      </span>
+                      <SortIcon field="status" currentField={sortField} direction={sortDirection} />
                     </th>
                     <th title="Åtgärder" style={{ width: '1%', whiteSpace: 'nowrap' }}>Åtg.</th>
                   </tr>
