@@ -983,7 +983,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <h4 className="detail-section-title" style={{ margin: '0 0 0.5rem 0', fontSize: 'var(--font-size-base)', paddingBottom: '0.35rem' }}>
+                  <h4 className="detail-section-title">
                     Upphämtning
                   </h4>
                   <div style={{ display: 'grid', gap: '0.35rem', fontSize: '0.8rem' }}>
@@ -995,7 +995,7 @@ function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setR
                   </div>
                 </div>
                 <div>
-                  <h4 className="detail-section-title" style={{ margin: '0 0 0.5rem 0', fontSize: 'var(--font-size-base)', paddingBottom: '0.35rem' }}>
+                  <h4 className="detail-section-title">
                     Lämning
                   </h4>
                   <div style={{ display: 'grid', gap: '0.35rem', fontSize: '0.8rem' }}>
