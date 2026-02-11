@@ -8,6 +8,7 @@ import { filterByTab, getBookingsByTab } from '../utils/bookingFilters';
 import { getDisplayRows, getRowsToRender } from '../utils/bookingGrouping';
 import CostEntryModal from './CostEntryModal';
 import TimeInput24 from './TimeInput24';
+import BookingTabs from './booking/BookingTabs';
 
 function Booking({ data, updateData, setCurrentSection, editingBookingId, setEditingBookingId, returnToSection, setReturnToSection }) {
   const [currentTab, setCurrentTab] = useState('bokad');
@@ -1505,72 +1506,13 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       {!showForm && (
         <>
           {/* Tab Navigation */}
-          <div style={{
-            display: 'flex',
-            gap: '0.5rem',
-            marginTop: '1.5rem',
-            marginBottom: '1.5rem',
-            borderBottom: '2px solid var(--color-border)',
-            paddingBottom: '0'
-          }}>
-            <button
-              onClick={() => setCurrentTab('bokad')}
-              className={`btn btn-small ${currentTab === 'bokad' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'bokad' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Bokade ({data.bookings.filter(b => b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId)).length})
-            </button>
-            <button
-              onClick={() => setCurrentTab('planerad')}
-              className={`btn btn-small ${currentTab === 'planerad' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'planerad' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Planerade ({data.bookings.filter(b => b.status === 'Planerad' && b.vehicleId).length})
-            </button>
-            <button
-              onClick={() => setCurrentTab('genomford')}
-              className={`btn btn-small ${currentTab === 'genomford' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'genomford' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Genomförda ({data.bookings.filter(b => b.status === 'Genomförd').length})
-            </button>
-            <button
-              onClick={() => setCurrentTab('prissatt')}
-              className={`btn btn-small ${currentTab === 'prissatt' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'prissatt' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Prissatta ({data.bookings.filter(b => b.status === 'Prissatt').length})
-            </button>
-            <button
-              onClick={() => setCurrentTab('fakturerad')}
-              className={`btn btn-small ${currentTab === 'fakturerad' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'fakturerad' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Fakturerade ({data.bookings.filter(b => b.status === 'Fakturerad').length})
-            </button>
-          </div>
+          <BookingTabs 
+            currentTab={currentTab}
+            onTabChange={setCurrentTab}
+            bookings={data.bookings || []}
+          />
 
-          {getDisplayRows().length === 0 ? (
+          {rowsToRender.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon"></div>
               <p>
