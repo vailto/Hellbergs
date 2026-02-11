@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   generateId,
   generateBookingNumber,
@@ -19,6 +19,8 @@ function BookingPage({
   setEditingBookingId,
   returnToSection,
   setReturnToSection,
+  saveBooking: saveBookingToApi,
+  removeBooking: removeBookingFromApi,
 }) {
   // Use custom hook for all state management
   const {
@@ -175,14 +177,17 @@ function BookingPage({
     setEditingBookingId(null);
   }, [editingBookingId]);
 
-  const handleDelete = bookingId => {
+  const handleDelete = async bookingId => {
     if (window.confirm('Är du säker på att du vill ta bort denna bokning?')) {
-      const updatedBookings = data.bookings.filter(b => b.id !== bookingId);
-      updateData({ bookings: updatedBookings });
+      try {
+        await removeBookingFromApi(bookingId);
+      } catch {
+        alert('Kunde inte ta bort bokning. Försök igen.');
+      }
     }
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     // Validate
@@ -235,13 +240,16 @@ function BookingPage({
           };
 
     if (editingId) {
-      const updatedBookings = data.bookings.map(b => (b.id === editingId ? bookingData : b));
-      updateData({ bookings: updatedBookings });
-      resetForm();
-      setShowForm(false);
-      if (returnToSection && setCurrentSection) {
-        setCurrentSection(returnToSection);
-        if (setReturnToSection) setReturnToSection(null);
+      try {
+        await saveBookingToApi(bookingData);
+        resetForm();
+        setShowForm(false);
+        if (returnToSection && setCurrentSection) {
+          setCurrentSection(returnToSection);
+          if (setReturnToSection) setReturnToSection(null);
+        }
+      } catch {
+        alert('Kunde inte spara bokning. Försök igen.');
       }
     } else {
       // Check if we should ask to save pickup location
@@ -262,19 +270,21 @@ function BookingPage({
     }
   };
 
-  const saveBooking = bookingData => {
+  const saveBooking = async bookingData => {
     const { bookingNo, lastBookingNumber } = generateBookingNumber(data.lastBookingNumber);
     const newBooking = {
       ...bookingData,
       id: generateId('bk'),
       bookingNo,
     };
-    updateData({
-      bookings: [...data.bookings, newBooking],
-      lastBookingNumber,
-    });
-    resetForm();
-    setShowForm(false);
+    try {
+      await saveBookingToApi(newBooking);
+      updateData({ lastBookingNumber });
+      resetForm();
+      setShowForm(false);
+    } catch {
+      alert('Kunde inte spara bokning. Försök igen.');
+    }
   };
 
   const handleSaveLocation = shouldSave => {
@@ -414,49 +424,69 @@ function BookingPage({
     });
   };
 
-  const handleVehicleAssign = (bookingId, vehicleId) => {
+  const handleVehicleAssign = async (bookingId, vehicleId) => {
     const booking = data.bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
     const authorizedDrivers = vehicleId
       ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId))
       : [];
     const keepDriver =
       vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
     const driverId = keepDriver ? booking.driverId : null;
-    const updatedBookings = data.bookings.map(b => {
-      if (b.id !== bookingId) return b;
-      const next = { ...b, vehicleId: vehicleId || null, driverId };
-      if (vehicleId && (b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId)))
-        next.status = 'Planerad';
-      if (!vehicleId && b.status === 'Planerad') next.status = 'Bokad';
-      return next;
-    });
-    updateData({ bookings: updatedBookings });
+
+    const updatedBooking = { ...booking, vehicleId: vehicleId || null, driverId };
+    if (
+      vehicleId &&
+      (booking.status === 'Bokad' || (booking.status === 'Planerad' && !booking.vehicleId))
+    )
+      updatedBooking.status = 'Planerad';
+    if (!vehicleId && booking.status === 'Planerad') updatedBooking.status = 'Bokad';
+
+    try {
+      await saveBookingToApi(updatedBooking);
+    } catch {
+      alert('Kunde inte tilldela fordon. Försök igen.');
+    }
   };
 
-  const handleDriverAssign = (bookingId, driverId) => {
-    const updatedBookings = data.bookings.map(b => {
-      if (b.id !== bookingId) return b;
-      const next = { ...b, driverId: driverId || null };
-      // Om fordon redan tilldelat och status Bokad, sätt till Planerad
-      if (b.vehicleId && driverId && b.status === 'Bokad') next.status = 'Planerad';
-      return next;
-    });
-    updateData({ bookings: updatedBookings });
+  const handleDriverAssign = async (bookingId, driverId) => {
+    const booking = data.bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    const updatedBooking = { ...booking, driverId: driverId || null };
+    // Om fordon redan tilldelat och status Bokad, sätt till Planerad
+    if (booking.vehicleId && driverId && booking.status === 'Bokad') {
+      updatedBooking.status = 'Planerad';
+    }
+
+    try {
+      await saveBookingToApi(updatedBooking);
+    } catch {
+      alert('Kunde inte tilldela förare. Försök igen.');
+    }
   };
 
-  const handleStatusChange = (bookingId, newStatus) => {
-    const updatedBookings = data.bookings.map(b =>
-      b.id === bookingId ? { ...b, status: newStatus } : b
-    );
-    updateData({ bookings: updatedBookings });
+  const handleStatusChange = async (bookingId, newStatus) => {
+    const booking = data.bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    const updatedBooking = { ...booking, status: newStatus };
+    try {
+      await saveBookingToApi(updatedBooking);
+    } catch {
+      alert('Kunde inte ändra status. Försök igen.');
+    }
   };
 
-  const handleCostSave = updatedBooking => {
-    const updatedBookings = data.bookings.map(b =>
-      b.id === updatedBooking.id ? { ...updatedBooking, status: 'Prissatt' } : b
-    );
-    updateData({ bookings: updatedBookings });
-    setCostEntryBookingId(null);
+  const handleCostSave = async updatedBooking => {
+    const bookingWithStatus = { ...updatedBooking, status: 'Prissatt' };
+    try {
+      await saveBookingToApi(bookingWithStatus);
+      setCostEntryBookingId(null);
+    } catch {
+      alert('Kunde inte spara kostnader. Försök igen.');
+    }
   };
 
   // Sorting function

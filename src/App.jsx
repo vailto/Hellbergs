@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { loadData, saveData } from './utils/storage';
+import { useBookingSync } from './hooks/useBookingSync';
 import Booking from './components/Booking';
 import Schema from './components/Schema';
 import Customers from './components/Customers';
@@ -14,39 +15,55 @@ function App() {
   const [editingBookingId, setEditingBookingId] = useState(null);
   const [returnToSection, setReturnToSection] = useState(null);
 
-  // Save data whenever it changes
+  // Sync bookings with API
+  const { bookings, loading, saveBooking, removeBooking, updateBookings } = useBookingSync();
+
+  // Save non-booking data to localStorage
   useEffect(() => {
-    saveData(data);
+    const { bookings: _, ...otherData } = data;
+    saveData(otherData);
   }, [data]);
 
   // När leveranstid (godset ska vara framme) har passerat: sätt Planerad → Genomförd
   useEffect(() => {
-    const checkDeliveryPassed = () => {
-      setData(prev => {
-        const now = new Date();
-        const bookings = (prev.bookings || []).map(b => {
-          if (b.status !== 'Planerad' || !b.vehicleId) return b;
-          const dateStr = b.deliveryDate || b.pickupDate || b.date;
-          const timeStr = (b.deliveryTime || b.pickupTime || b.time || '23:59').trim();
-          if (!dateStr) return b;
-          const [h, m] = timeStr.split(':').map(s => parseInt(s, 10) || 0);
-          const delivery = new Date(
-            dateStr + 'T' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':00'
-          );
-          if (now < delivery) return b;
-          return { ...b, status: 'Genomförd' };
-        });
-        const changed = bookings.some((nb, i) => nb.status !== (prev.bookings || [])[i]?.status);
-        return changed ? { ...prev, bookings } : prev;
+    if (loading || bookings.length === 0) return;
+
+    const checkDeliveryPassed = async () => {
+      const now = new Date();
+      const updatedBookings = bookings.map(b => {
+        if (b.status !== 'Planerad' || !b.vehicleId) return b;
+        const dateStr = b.deliveryDate || b.pickupDate || b.date;
+        const timeStr = (b.deliveryTime || b.pickupTime || b.time || '23:59').trim();
+        if (!dateStr) return b;
+        const [h, m] = timeStr.split(':').map(s => parseInt(s, 10) || 0);
+        const delivery = new Date(
+          dateStr + 'T' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':00'
+        );
+        if (now < delivery) return b;
+        return { ...b, status: 'Genomförd' };
       });
+      const changed = updatedBookings.some((nb, i) => nb.status !== bookings[i]?.status);
+      if (changed) {
+        await updateBookings(updatedBookings);
+      }
     };
+
     checkDeliveryPassed();
     const interval = setInterval(checkDeliveryPassed, 60000); // varje minut
     return () => clearInterval(interval);
-  }, []);
+  }, [bookings, loading, updateBookings]);
 
   const updateData = updates => {
-    setData(prev => ({ ...prev, ...updates }));
+    // If updating bookings, use the API
+    if (updates.bookings !== undefined) {
+      // Handle booking updates via API (handled by child components)
+      const { bookings: _, ...otherUpdates } = updates;
+      if (Object.keys(otherUpdates).length > 0) {
+        setData(prev => ({ ...prev, ...otherUpdates }));
+      }
+    } else {
+      setData(prev => ({ ...prev, ...updates }));
+    }
   };
 
   const sections = [
@@ -57,7 +74,9 @@ function App() {
   ];
 
   const renderSection = () => {
-    const props = { data, updateData, setCurrentSection };
+    // Merge bookings from API with other data
+    const mergedData = { ...data, bookings };
+    const props = { data: mergedData, updateData, setCurrentSection, saveBooking, removeBooking };
 
     switch (currentSection) {
       case 'dashboard':
