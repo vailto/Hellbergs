@@ -127,9 +127,7 @@ function BookingTableSection({
                     >
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span className="text-2xs text-muted">
-                            {isBlockExpanded ? '▼' : '▶'}
-                          </span>
+                          <span className="text-2xs text-muted">{isBlockExpanded ? '▼' : '▶'}</span>
                           <strong
                             style={{
                               cursor: 'pointer',
@@ -201,10 +199,7 @@ function BookingTableSection({
                 );
 
                 const pickupLocation =
-                  pickupLocationData?.name ||
-                  booking.pickupCity ||
-                  booking.pickupAddress ||
-                  '-';
+                  pickupLocationData?.name || booking.pickupCity || booking.pickupAddress || '-';
                 const deliveryLocation =
                   deliveryLocationData?.name ||
                   booking.deliveryCity ||
@@ -231,17 +226,13 @@ function BookingTableSection({
                           <strong>{booking.bookingNo}</strong>
                         </div>
                       </td>
-                      <td style={{ whiteSpace: 'nowrap' }}>
-                        {booking.pickupDate || booking.date}
-                      </td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{booking.pickupDate || booking.date}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>{getCustomerShort(customer)}</td>
                       <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                         {currentTab === 'bokad' || currentTab === 'planerad' ? (
                           <select
                             value={booking.vehicleId || ''}
-                            onChange={e =>
-                              handleVehicleAssign(booking.id, e.target.value || null)
-                            }
+                            onChange={e => handleVehicleAssign(booking.id, e.target.value || null)}
                             className="form-select table-select-inline"
                             style={{
                               minWidth: '58px',
@@ -300,9 +291,7 @@ function BookingTableSection({
                         {currentTab === 'bokad' || currentTab === 'planerad' ? (
                           <select
                             value={booking.driverId || ''}
-                            onChange={e =>
-                              handleDriverAssign(booking.id, e.target.value || null)
-                            }
+                            onChange={e => handleDriverAssign(booking.id, e.target.value || null)}
                             className="form-select table-select-inline"
                             style={{
                               minWidth: '70px',
@@ -331,9 +320,7 @@ function BookingTableSection({
                               const available = eligible.filter(
                                 d => !driverOccupied(d.id, booking)
                               );
-                              const occupied = eligible.filter(d =>
-                                driverOccupied(d.id, booking)
-                              );
+                              const occupied = eligible.filter(d => driverOccupied(d.id, booking));
                               return (
                                 <>
                                   {booking.vehicleId && eligible.length === 0 && (
@@ -435,10 +422,7 @@ function BookingTableSection({
                             {/* Upphämtning */}
                             <div>
                               <h4 className="detail-section-title">Upphämtning</h4>
-                              <div
-                                className="text-base"
-                                style={{ display: 'grid', gap: '0.5rem' }}
-                              >
+                              <div className="text-base" style={{ display: 'grid', gap: '0.5rem' }}>
                                 <div>
                                   <span className="detail-label">Adress: </span>
                                   <span className="detail-value">
@@ -479,10 +463,7 @@ function BookingTableSection({
                             {/* Lämning */}
                             <div>
                               <h4 className="detail-section-title">Lämning</h4>
-                              <div
-                                className="text-base"
-                                style={{ display: 'grid', gap: '0.5rem' }}
-                              >
+                              <div className="text-base" style={{ display: 'grid', gap: '0.5rem' }}>
                                 <div>
                                   <span className="detail-label">Adress: </span>
                                   <span className="detail-value">

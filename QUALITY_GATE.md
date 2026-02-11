@@ -190,12 +190,16 @@ Add to your VS Code settings (`.vscode/settings.json`):
 
 ## Current Status
 
-✅ **Lint**: Passing (48 warnings, 0 errors)  
+✅ **Lint**: Passing (47 warnings, 0 errors)  
 ✅ **Format**: Passing (all files formatted)  
 ✅ **Build**: Passing  
 ✅ **CI**: Configured and ready
 
-**Note on Warnings**: The current baseline is set to 48 warnings (see `package.json` and CI config). This baseline was established to avoid blocking development while gradually improving code quality. As we refactor code, we will lower this threshold over time. The goal is to eventually reach zero warnings.
+**Note on Warnings**: The current baseline is set to 47 warnings (see `package.json` and CI config). This baseline was established to avoid blocking development while gradually improving code quality. As we refactor code, we will lower this threshold over time. The goal is to eventually reach zero warnings.
+
+**Baseline History**:
+- Initial baseline: 48 warnings (Quality Gate v1.1)
+- **Updated to 47 warnings** (2026-02-11) - after Phase 5.1 component splitting refactor
 
 ## Future Improvements
 
