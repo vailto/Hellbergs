@@ -39,8 +39,8 @@ async function update(id, { templateBooking, startDate, repeatWeeks, weeksAhead 
     { $set: updateFields },
     { returnDocument: 'after' }
   );
-  // FIX A: return result.value (the updated document) instead of result
-  return result.value;
+  // Driver 6+ returns the document directly; return it (not result.value).
+  return result;
 }
 
 async function getById(id) {
