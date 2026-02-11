@@ -16,6 +16,14 @@ async function connect() {
     await client.connect();
     db = client.db('truckPlanner');
     console.log('✅ Connected to MongoDB Atlas');
+
+    // Create indexes for recurring bookings
+    await db.collection('bookings').createIndex(
+      { recurringKey: 1 },
+      { unique: true, sparse: true }
+    );
+    console.log('✅ Created unique sparse index on recurringKey');
+
     return db;
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
