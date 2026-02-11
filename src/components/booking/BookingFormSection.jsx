@@ -1,4 +1,3 @@
-import React from 'react';
 import { BOOKING_STATUSES } from '../../utils/constants';
 import TimeInput24 from '../TimeInput24';
 

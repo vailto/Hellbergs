@@ -2,13 +2,11 @@ import React, { useEffect } from 'react';
 import {
   generateId,
   generateBookingNumber,
-  formatNumber,
   parseNumber,
   formatTime24,
   getCurrentTime24,
   getCustomerShort,
 } from '../../utils/formatters';
-import { BOOKING_STATUSES } from '../../utils/constants';
 import { validateBooking } from '../../utils/validation';
 import BookingTabs from './BookingTabs';
 import BookingModals from './BookingModals';
