@@ -109,7 +109,7 @@ function BookingTableSection({
               </tr>
             </thead>
             <tbody>
-              {rowsToRender.map((item, idx) => {
+              {rowsToRender.map((item, _idx) => {
                 if (item.type === 'block') {
                   const { block, bookings } = item;
                   const first = bookings[0];

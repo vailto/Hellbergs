@@ -3,9 +3,7 @@ import {
   generateId,
   generateBookingNumber,
   parseNumber,
-  formatTime24,
   getCurrentTime24,
-  getCustomerShort,
 } from '../../utils/formatters';
 import { validateBooking } from '../../utils/validation';
 import BookingModals from './BookingModals';
