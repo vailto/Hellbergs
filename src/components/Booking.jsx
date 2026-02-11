@@ -1,82 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTime24, getCurrentTime24, getCustomerShort } from '../utils/formatters';
-import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
 import { BOOKING_STATUSES } from '../utils/constants';
 import { validateBooking } from '../utils/validation';
-import { compareBookings, sortBookings } from '../utils/bookingSorters';
-import { filterByTab, getBookingsByTab } from '../utils/bookingFilters';
-import { getDisplayRows, getRowsToRender } from '../utils/bookingGrouping';
 import CostEntryModal from './CostEntryModal';
 import TimeInput24 from './TimeInput24';
 import BookingTabs from './booking/BookingTabs';
+import useBookingState from '../hooks/useBookingState';
 
 function Booking({ data, updateData, setCurrentSection, editingBookingId, setEditingBookingId, returnToSection, setReturnToSection }) {
-  const [currentTab, setCurrentTab] = useState('bokad');
-  const [costEntryBookingId, setCostEntryBookingId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [errors, setErrors] = useState({});
-  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
-  const [showSaveLocationModal, setShowSaveLocationModal] = useState(false);
-  const [pickupMode, setPickupMode] = useState('customer'); // 'customer', 'browse', 'freetext'
-  const [deliveryMode, setDeliveryMode] = useState('customer'); // 'customer', 'browse', 'freetext'
-  const [selectedPickupLocationId, setSelectedPickupLocationId] = useState('');
-  const [selectedDeliveryLocationId, setSelectedDeliveryLocationId] = useState('');
-  const [tempLocationName, setTempLocationName] = useState('');
-  const [tempLocationCustomerId, setTempLocationCustomerId] = useState('');
-  const [pendingBookingData, setPendingBookingData] = useState(null);
-  const [expandedBookingId, setExpandedBookingId] = useState(null);
-  const [expandedBlockId, setExpandedBlockId] = useState(null);
-  const [editingBlockId, setEditingBlockId] = useState(null);
-  const [editingBlockNameValue, setEditingBlockNameValue] = useState('');
-  const [sortField, setSortField] = useState('pickupDate');
-  const [sortDirection, setSortDirection] = useState('desc');
-  
-  const [tempCustomerData, setTempCustomerData] = useState({
-    name: '',
-    address: '',
-    postalCode: '',
-    city: '',
-    phone: '',
-    mobile: '',
-    customerNumber: '',
-    contactPerson: '',
-    active: true
-  });
-
-  const [formData, setFormData] = useState({
-    customerId: '',
-    vehicleId: '',
-    driverId: '',
-    hasContainer: false,
-    hasTrailer: false,
-    containerNr: '',
-    trailerNr: '',
-    marking: '',
-    pickupAddress: '',
-    pickupPostalCode: '',
-    pickupCity: '',
-    pickupDate: new Date().toISOString().split('T')[0],
-    pickupTime: getCurrentTime24(),
-    pickupContactName: '',
-    pickupContactPhone: '',
-    deliveryAddress: '',
-    deliveryPostalCode: '',
-    deliveryCity: '',
-    deliveryDate: new Date().toISOString().split('T')[0],
-    deliveryTime: getCurrentTime24(),
-    deliveryContactName: '',
-    deliveryContactPhone: '',
-    km: '',
-    amountSek: '',
-    costStops: '',
-    costWaitHours: '',
-    costDriveHours: '',
-    costUseFixed: false,
-    costFixedAmount: '',
-    status: 'Bokad',
-    note: ''
-  });
+  // Use custom hook for all state management
+  const {
+    currentTab,
+    setCurrentTab,
+    sortField,
+    setSortField,
+    sortDirection,
+    setSortDirection,
+    costEntryBookingId,
+    setCostEntryBookingId,
+    showNewCustomerModal,
+    setShowNewCustomerModal,
+    showSaveLocationModal,
+    setShowSaveLocationModal,
+    editingBlockId,
+    setEditingBlockId,
+    editingBlockNameValue,
+    setEditingBlockNameValue,
+    showForm,
+    setShowForm,
+    editingId,
+    setEditingId,
+    errors,
+    setErrors,
+    formData,
+    setFormData,
+    pickupMode,
+    setPickupMode,
+    deliveryMode,
+    setDeliveryMode,
+    selectedPickupLocationId,
+    setSelectedPickupLocationId,
+    selectedDeliveryLocationId,
+    setSelectedDeliveryLocationId,
+    tempLocationName,
+    setTempLocationName,
+    tempLocationCustomerId,
+    setTempLocationCustomerId,
+    pendingBookingData,
+    setPendingBookingData,
+    tempCustomerData,
+    setTempCustomerData,
+    expandedBookingId,
+    setExpandedBookingId,
+    expandedBlockId,
+    setExpandedBlockId,
+    activeCustomers,
+    activeVehicles,
+    activeDrivers,
+    formVehicleId,
+    formDriverId,
+    driversForSelectedVehicle,
+    customerPickupLocations,
+    allPickupLocations,
+    rowsToRender,
+    resetForm,
+    vehicleOccupied,
+    driverOccupied
+  } = useBookingState(data, editingBookingId);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -294,47 +284,6 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     setTempLocationCustomerId('');
   };
 
-  const resetForm = () => {
-    setFormData({
-      customerId: '',
-      vehicleId: '',
-      driverId: '',
-      hasContainer: false,
-      hasTrailer: false,
-      containerNr: '',
-      trailerNr: '',
-      marking: '',
-      pickupAddress: '',
-      pickupPostalCode: '',
-      pickupCity: '',
-      pickupDate: new Date().toISOString().split('T')[0],
-      pickupTime: getCurrentTime24(),
-      pickupContactName: '',
-      pickupContactPhone: '',
-      deliveryAddress: '',
-      deliveryPostalCode: '',
-      deliveryCity: '',
-      deliveryDate: new Date().toISOString().split('T')[0],
-      deliveryTime: getCurrentTime24(),
-      deliveryContactName: '',
-      deliveryContactPhone: '',
-    km: '',
-    amountSek: '',
-    costStops: '',
-    costWaitHours: '',
-    costDriveHours: '',
-    costUseFixed: false,
-    costFixedAmount: '',
-    status: 'Bokad',
-    note: ''
-  });
-  setEditingId(null);
-    setErrors({});
-    setPickupMode('customer');
-    setDeliveryMode('customer');
-    setSelectedPickupLocationId('');
-    setSelectedDeliveryLocationId('');
-  };
 
   const handleCancelForm = () => {
     resetForm();
@@ -447,18 +396,6 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     });
   };
 
-  const activeCustomers = data.customers.filter(c => c.active);
-  const activeVehicles = data.vehicles.filter(v => v.active);
-  const activeDrivers = data.drivers.filter(d => d.active);
-  const formVehicleId = formData.vehicleId || null;
-  const formDriverId = formData.driverId || null;
-  const driversForSelectedVehicle = formVehicleId
-    ? activeDrivers.filter(d => (d.vehicleIds || []).includes(formVehicleId) || d.id === formDriverId)
-    : activeDrivers;
-
-  const vehicleOccupied = (vehicleId, booking) => isVehicleOccupied(vehicleId, booking, data.bookings || []);
-  const driverOccupied = (driverId, booking) => isDriverOccupied(driverId, booking, data.bookings || []);
-
   const handleVehicleAssign = (bookingId, vehicleId) => {
     const booking = data.bookings.find(b => b.id === bookingId);
     const authorizedDrivers = vehicleId ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
@@ -509,29 +446,6 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       setSortDirection('asc');
     }
   };
-
-  // Use utility functions for filtering, sorting, and grouping
-  const rowsToRender = getRowsToRender(
-    data.bookings || [],
-    data.bookingBlocks || [],
-    currentTab,
-    sortField,
-    sortDirection,
-    expandedBlockId,
-    data
-  );
-  
-  // Get pickup locations for selected customer
-  const customerPickupLocations = formData.customerId 
-    ? (data.pickupLocations || []).filter(loc => {
-        // Handle both old format (customerId) and new format (customerIds)
-        const customerIds = loc.customerIds || (loc.customerId ? [loc.customerId] : []);
-        return customerIds.includes(formData.customerId) || customerIds.length === 0;
-      })
-    : [];
-  
-  // Get all pickup locations for browse mode
-  const allPickupLocations = data.pickupLocations || [];
 
   return (
     <div>
