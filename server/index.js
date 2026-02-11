@@ -6,7 +6,7 @@ const bookingsRouter = require('./routes/bookings');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -30,7 +30,7 @@ async function start() {
     await connect();
     
     // Start Express server
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📦 Frontend: http://localhost:${PORT}`);
       console.log(`🔌 API: http://localhost:${PORT}/api/bookings`);
