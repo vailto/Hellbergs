@@ -1,43 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { formatTime24, getCustomerShort } from '../utils/formatters';
 import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
-
-function getMondayOfWeek(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d);
-  monday.setDate(diff);
-  return monday.toISOString().split('T')[0];
-}
-
-function getWeekNumber(d) {
-  const oneJan = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
-}
-
-const SEGMENTS_PER_DAY = 24; // 30 min var: 06:00–06:30, 06:30–07:00, …, 17:30–18:00 (bara 06–18)
-const SEGMENT_START_HOUR = 6; // första segmentet börjar 06:00
-
-function timeToSegmentIndex(timeStr) {
-  if (!timeStr) return 0;
-  const parts = String(timeStr).trim().split(':');
-  const h = parseInt(parts[0], 10) || 0;
-  const m = parseInt(parts[1], 10) || 0;
-  const hour = h + m / 60;
-  const seg = Math.floor((hour - SEGMENT_START_HOUR) * 2); // 30-min intervall
-  return Math.max(0, Math.min(SEGMENTS_PER_DAY - 1, seg));
-}
-
-const STATUS_COLORS = {
-  Bokad: { bg: 'rgba(239, 68, 68, 0.25)', border: '#ef4444' },
-  Planerad: { bg: 'rgba(234, 179, 8, 0.25)', border: '#eab308' },
-  Genomförd: { bg: 'rgba(34, 197, 94, 0.25)', border: '#22c55e' },
-  Prissatt: { bg: 'rgba(168, 85, 247, 0.25)', border: '#a78bfa' },
-  Fakturerad: { bg: 'rgba(59, 130, 246, 0.25)', border: '#3b82f6' }
-};
-
-const DRAG_BOOKING_KEY = 'application/x-booking-id';
+import { 
+  getMondayOfWeek, 
+  getWeekNumber, 
+  timeToSegmentIndex, 
+  STATUS_COLORS, 
+  DRAG_BOOKING_KEY,
+  SEGMENTS_PER_DAY,
+  SEGMENT_START_HOUR
+} from '../utils/schemaHelpers';
 
 function Schema({ data, updateData, setCurrentSection, setEditingBookingId, setReturnToSection }) {
   const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(new Date().toISOString().split('T')[0]));
