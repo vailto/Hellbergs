@@ -679,6 +679,61 @@ function BookingFormSection({
           </div>
         </div>
 
+        {/* Återkommande bokning (endast vid ny bokning) */}
+        {!editingId && (
+          <div className="form-section">
+            <div className="form-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  name="recurringEnabled"
+                  checked={formData.recurringEnabled}
+                  onChange={handleChange}
+                />
+                <span>Återkommande bokning</span>
+              </label>
+            </div>
+
+            {formData.recurringEnabled && (
+              <div className="form-row" style={{ gap: '1rem' }}>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="text-muted-2 label-sm">Upprepa varje</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="number"
+                      name="repeatWeeks"
+                      value={formData.repeatWeeks}
+                      onChange={handleChange}
+                      className="form-input"
+                      min="1"
+                      max="52"
+                      style={{ width: '80px' }}
+                    />
+                    <span>vecka/veckor</span>
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="text-muted-2 label-sm">Skapa bokningar för</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="number"
+                      name="weeksAhead"
+                      value={formData.weeksAhead}
+                      onChange={handleChange}
+                      className="form-input"
+                      min="1"
+                      max="104"
+                      style={{ width: '80px' }}
+                    />
+                    <span>veckor framåt</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="form-actions">
           {editingId && (
             <>
