@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { getCurrentTime24 } from '../utils/formatters';
 import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
 import { getRowsToRender } from '../utils/bookingGrouping';
@@ -10,7 +10,7 @@ import { getRowsToRender } from '../utils/bookingGrouping';
  * @param {string|null} editingBookingId - Booking ID to edit (from parent/App)
  * @returns {Object} All state, setters, derived data, and helper functions
  */
-function useBookingState(data, editingBookingId) {
+function useBookingState(data, _editingBookingId) {
   // ============================================================================
   // 1. TAB & SORTING STATE (3 hooks)
   // ============================================================================

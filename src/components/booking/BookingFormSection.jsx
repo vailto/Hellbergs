@@ -689,11 +689,7 @@ function BookingFormSection({
               >
                 Ta bort
               </button>
-              <button
-                type="button"
-                onClick={handleDuplicateBooking}
-                className="btn btn-secondary"
-              >
+              <button type="button" onClick={handleDuplicateBooking} className="btn btn-secondary">
                 Duplicera
               </button>
             </>
