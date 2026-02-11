@@ -70,9 +70,9 @@ router.post('/', async (req, res) => {
       repeatWeeks,
       weeksAhead,
     });
-    await recurringBookingService.generateRecurringBookings(rule._id);
+    const generated = await recurringBookingService.generateRecurringBookings(rule._id);
     const updated = await recurringRulesRepo.getById(rule._id);
-    res.status(201).json(updated ?? rule);
+    res.status(201).json({ rule: updated ?? rule, generated });
   } catch (error) {
     console.error('Error creating recurring rule:', error);
     res.status(500).json({ error: 'Failed to create recurring rule' });
@@ -102,9 +102,9 @@ router.put('/:id', async (req, res) => {
     }
 
     // After update: run generator using the updated rule
-    await recurringBookingService.generateRecurringBookings(id);
+    const generated = await recurringBookingService.generateRecurringBookings(id);
     const rule = await recurringRulesRepo.getById(id);
-    res.json(rule ?? updated);
+    res.json({ rule: rule ?? updated, generated });
   } catch (error) {
     console.error('Error updating recurring rule:', error);
     res.status(500).json({ error: 'Failed to update recurring rule' });

@@ -22,7 +22,6 @@ async function connect() {
       { recurringKey: 1 },
       { unique: true, sparse: true }
     );
-    console.log('✅ Created unique sparse index on recurringKey');
 
     return db;
   } catch (error) {
