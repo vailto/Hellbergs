@@ -24,7 +24,7 @@ export function getMondayOfWeek(dateStr) {
  */
 export function getWeekNumber(d) {
   const oneJan = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
+  return Math.ceil(((d - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
 }
 
 /**
@@ -36,7 +36,7 @@ export function getWeekNumber(d) {
 export function timeToSegmentIndex(timeStr) {
   const SEGMENT_START_HOUR = 6;
   const SEGMENTS_PER_DAY = 24;
-  
+
   if (!timeStr) return 0;
   const parts = String(timeStr).trim().split(':');
   const h = parseInt(parts[0], 10) || 0;
@@ -54,7 +54,7 @@ export const STATUS_COLORS = {
   Planerad: { bg: 'rgba(234, 179, 8, 0.25)', border: '#eab308' },
   Genomförd: { bg: 'rgba(34, 197, 94, 0.25)', border: '#22c55e' },
   Prissatt: { bg: 'rgba(168, 85, 247, 0.25)', border: '#a78bfa' },
-  Fakturerad: { bg: 'rgba(59, 130, 246, 0.25)', border: '#3b82f6' }
+  Fakturerad: { bg: 'rgba(59, 130, 246, 0.25)', border: '#3b82f6' },
 };
 
 /**

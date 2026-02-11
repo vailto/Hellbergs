@@ -10,12 +10,13 @@ function BookingTabs({ currentTab, onTabChange, bookings }) {
     { id: 'planerad', label: 'Planerad' },
     { id: 'genomford', label: 'Genomförd' },
     { id: 'prissatt', label: 'Prissatt' },
-    { id: 'fakturerad', label: 'Fakturerad' }
+    { id: 'fakturerad', label: 'Fakturerad' },
   ];
 
-  const getTabCount = (tabId) => {
+  const getTabCount = tabId => {
     if (tabId === 'bokad') {
-      return bookings.filter(b => b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId)).length;
+      return bookings.filter(b => b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId))
+        .length;
     }
     if (tabId === 'planerad') {
       return bookings.filter(b => b.status === 'Planerad' && b.vehicleId).length;
@@ -33,14 +34,16 @@ function BookingTabs({ currentTab, onTabChange, bookings }) {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      gap: '0.5rem',
-      marginTop: '1.5rem',
-      marginBottom: '1.5rem',
-      borderBottom: '2px solid var(--color-border)',
-      paddingBottom: '0'
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: '0.5rem',
+        marginTop: '1.5rem',
+        marginBottom: '1.5rem',
+        borderBottom: '2px solid var(--color-border)',
+        paddingBottom: '0',
+      }}
+    >
       {tabs.map(tab => {
         const count = getTabCount(tab.id);
         const isActive = currentTab === tab.id;
@@ -56,7 +59,7 @@ function BookingTabs({ currentTab, onTabChange, bookings }) {
               backgroundColor: isActive ? 'var(--color-primary-glow)' : 'transparent',
               color: isActive ? 'var(--color-text)' : 'var(--color-text-muted)',
               fontWeight: isActive ? '700' : '600',
-              padding: '0.5rem 0.75rem'
+              padding: '0.5rem 0.75rem',
             }}
           >
             {tab.label} ({count})

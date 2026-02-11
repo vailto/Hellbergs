@@ -14,7 +14,7 @@
  */
 export function compareBookings(a, b, sortField, sortDirection, data) {
   let aVal, bVal;
-  
+
   switch (sortField) {
     case 'bookingNo':
       aVal = a.bookingNo || '';
@@ -67,7 +67,7 @@ export function compareBookings(a, b, sortField, sortDirection, data) {
     default:
       return 0;
   }
-  
+
   if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
   if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
   return 0;
@@ -82,7 +82,5 @@ export function compareBookings(a, b, sortField, sortDirection, data) {
  * @returns {array} Sorted bookings (new array)
  */
 export function sortBookings(bookings, sortField, sortDirection, data) {
-  return [...bookings].sort((a, b) => 
-    compareBookings(a, b, sortField, sortDirection, data)
-  );
+  return [...bookings].sort((a, b) => compareBookings(a, b, sortField, sortDirection, data));
 }

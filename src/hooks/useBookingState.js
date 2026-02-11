@@ -5,7 +5,7 @@ import { getRowsToRender } from '../utils/bookingGrouping';
 
 /**
  * Custom hook for managing all Booking component state
- * 
+ *
  * @param {Object} data - App data object (customers, vehicles, drivers, bookings, etc.)
  * @param {string|null} editingBookingId - Booking ID to edit (from parent/App)
  * @returns {Object} All state, setters, derived data, and helper functions
@@ -64,7 +64,7 @@ function useBookingState(data, editingBookingId) {
     costUseFixed: false,
     costFixedAmount: '',
     status: 'Bokad',
-    note: ''
+    note: '',
   });
 
   // ============================================================================
@@ -90,7 +90,7 @@ function useBookingState(data, editingBookingId) {
     mobile: '',
     customerNumber: '',
     contactPerson: '',
-    active: true
+    active: true,
   });
 
   // ============================================================================
@@ -102,22 +102,13 @@ function useBookingState(data, editingBookingId) {
   // ============================================================================
   // 7. DERIVED DATA (memoized for performance)
   // ============================================================================
-  
+
   // Active entities filtered by active flag
-  const activeCustomers = useMemo(() => 
-    data.customers.filter(c => c.active),
-    [data.customers]
-  );
+  const activeCustomers = useMemo(() => data.customers.filter(c => c.active), [data.customers]);
 
-  const activeVehicles = useMemo(() => 
-    data.vehicles.filter(v => v.active),
-    [data.vehicles]
-  );
+  const activeVehicles = useMemo(() => data.vehicles.filter(v => v.active), [data.vehicles]);
 
-  const activeDrivers = useMemo(() => 
-    data.drivers.filter(d => d.active),
-    [data.drivers]
-  );
+  const activeDrivers = useMemo(() => data.drivers.filter(d => d.active), [data.drivers]);
 
   // Form vehicle and driver IDs (extracted for convenience)
   const formVehicleId = formData.vehicleId || null;
@@ -126,8 +117,8 @@ function useBookingState(data, editingBookingId) {
   // Drivers authorized for the selected vehicle
   const driversForSelectedVehicle = useMemo(() => {
     if (!formVehicleId) return activeDrivers;
-    return activeDrivers.filter(d => 
-      (d.vehicleIds || []).includes(formVehicleId) || d.id === formDriverId
+    return activeDrivers.filter(
+      d => (d.vehicleIds || []).includes(formVehicleId) || d.id === formDriverId
     );
   }, [formVehicleId, formDriverId, activeDrivers]);
 
@@ -142,22 +133,20 @@ function useBookingState(data, editingBookingId) {
   }, [formData.customerId, data.pickupLocations]);
 
   // All pickup locations for browse mode
-  const allPickupLocations = useMemo(() => 
-    data.pickupLocations || [],
-    [data.pickupLocations]
-  );
+  const allPickupLocations = useMemo(() => data.pickupLocations || [], [data.pickupLocations]);
 
   // Filtered, sorted, and grouped bookings for display
-  const rowsToRender = useMemo(() => 
-    getRowsToRender(
-      data.bookings || [],
-      data.bookingBlocks || [],
-      currentTab,
-      sortField,
-      sortDirection,
-      expandedBlockId,
-      data
-    ),
+  const rowsToRender = useMemo(
+    () =>
+      getRowsToRender(
+        data.bookings || [],
+        data.bookingBlocks || [],
+        currentTab,
+        sortField,
+        sortDirection,
+        expandedBlockId,
+        data
+      ),
     [data.bookings, data.bookingBlocks, currentTab, sortField, sortDirection, expandedBlockId, data]
   );
 
@@ -200,7 +189,7 @@ function useBookingState(data, editingBookingId) {
       costUseFixed: false,
       costFixedAmount: '',
       status: 'Bokad',
-      note: ''
+      note: '',
     });
     setEditingId(null);
     setErrors({});
@@ -298,7 +287,7 @@ function useBookingState(data, editingBookingId) {
     // Helper Functions
     resetForm,
     vehicleOccupied,
-    driverOccupied
+    driverOccupied,
   };
 }
 

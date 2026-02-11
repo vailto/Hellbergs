@@ -21,8 +21,8 @@ const getMockData = () => {
       active: true,
       pricesByVehicleType: {
         Skåpbil: { km: '45', stop: '350', wait: '450', hour: '550', fixed: '' },
-        Släp: { km: '65', stop: '500', wait: '650', hour: '750', fixed: '' }
-      }
+        Släp: { km: '65', stop: '500', wait: '650', hour: '750', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_2',
@@ -38,8 +38,8 @@ const getMockData = () => {
       active: true,
       pricesByVehicleType: {
         Skåpbil: { km: '50', stop: '400', wait: '500', hour: '600', fixed: '' },
-        Släp: { km: '70', stop: '550', wait: '700', hour: '800', fixed: '' }
-      }
+        Släp: { km: '70', stop: '550', wait: '700', hour: '800', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_3',
@@ -54,8 +54,8 @@ const getMockData = () => {
       mobile: '070-777 88 99',
       active: true,
       pricesByVehicleType: {
-        Skåpbil: { km: '42', stop: '320', wait: '420', hour: '520', fixed: '' }
-      }
+        Skåpbil: { km: '42', stop: '320', wait: '420', hour: '520', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_4',
@@ -71,8 +71,8 @@ const getMockData = () => {
       active: true,
       pricesByVehicleType: {
         Skåpbil: { km: '48', stop: '380', wait: '480', hour: '580', fixed: '' },
-        Släp: { km: '68', stop: '530', wait: '680', hour: '780', fixed: '' }
-      }
+        Släp: { km: '68', stop: '530', wait: '680', hour: '780', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_5',
@@ -87,8 +87,8 @@ const getMockData = () => {
       mobile: '070-333 22 11',
       active: true,
       pricesByVehicleType: {
-        Släp: { km: '75', stop: '600', wait: '750', hour: '850', fixed: '' }
-      }
+        Släp: { km: '75', stop: '600', wait: '750', hour: '850', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_6',
@@ -104,8 +104,8 @@ const getMockData = () => {
       active: true,
       pricesByVehicleType: {
         Skåpbil: { km: '46', stop: '360', wait: '460', hour: '560', fixed: '' },
-        Släp: { km: '66', stop: '510', wait: '660', hour: '760', fixed: '' }
-      }
+        Släp: { km: '66', stop: '510', wait: '660', hour: '760', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_7',
@@ -120,8 +120,8 @@ const getMockData = () => {
       mobile: '070-111 22 33',
       active: true,
       pricesByVehicleType: {
-        Skåpbil: { km: '44', stop: '340', wait: '440', hour: '540', fixed: '' }
-      }
+        Skåpbil: { km: '44', stop: '340', wait: '440', hour: '540', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_8',
@@ -137,8 +137,8 @@ const getMockData = () => {
       active: true,
       pricesByVehicleType: {
         Skåpbil: { km: '52', stop: '420', wait: '520', hour: '620', fixed: '' },
-        Släp: { km: '72', stop: '560', wait: '720', hour: '820', fixed: '' }
-      }
+        Släp: { km: '72', stop: '560', wait: '720', hour: '820', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_9',
@@ -153,8 +153,8 @@ const getMockData = () => {
       mobile: '070-999 00 11',
       active: true,
       pricesByVehicleType: {
-        Skåpbil: { km: '48', stop: '390', wait: '490', hour: '590', fixed: '' }
-      }
+        Skåpbil: { km: '48', stop: '390', wait: '490', hour: '590', fixed: '' },
+      },
     },
     {
       id: 'cust_mock_10',
@@ -170,9 +170,9 @@ const getMockData = () => {
       active: true,
       pricesByVehicleType: {
         Skåpbil: { km: '45', stop: '350', wait: '450', hour: '550', fixed: '' },
-        Släp: { km: '65', stop: '500', wait: '650', hour: '750', fixed: '' }
-      }
-    }
+        Släp: { km: '65', stop: '500', wait: '650', hour: '750', fixed: '' },
+      },
+    },
   ];
 
   const vehicles = [
@@ -182,28 +182,133 @@ const getMockData = () => {
     { id: 'veh_mock_4', regNo: 'GHI012', type: 'Skåpbil', driverIds: ['drv_mock_3'], active: true },
     { id: 'veh_mock_5', regNo: 'JKL345', type: 'Skåpbil', driverIds: ['drv_mock_4'], active: true },
     { id: 'veh_mock_6', regNo: 'SLP456', type: 'Släp', driverIds: ['drv_mock_5'], active: true },
-    { id: 'veh_mock_7', regNo: 'MNO678', type: 'Skåpbil', driverIds: ['drv_mock_6'], active: true }
+    { id: 'veh_mock_7', regNo: 'MNO678', type: 'Skåpbil', driverIds: ['drv_mock_6'], active: true },
   ];
 
   const drivers = [
-    { id: 'drv_mock_1', name: 'Kalle Karlsson', phone: '070-111 11 11', active: true, code: 'KAKA', vehicleIds: ['veh_mock_1'] },
-    { id: 'drv_mock_2', name: 'Lisa Lind', phone: '070-222 22 22', active: true, code: 'LILI', vehicleIds: ['veh_mock_3'] },
-    { id: 'drv_mock_3', name: 'Olof Olsson', phone: '070-333 33 33', active: true, code: 'OLOL', vehicleIds: ['veh_mock_4'] },
-    { id: 'drv_mock_4', name: 'Sara Svensson', phone: '070-444 44 44', active: true, code: 'SASV', vehicleIds: ['veh_mock_5'] },
-    { id: 'drv_mock_5', name: 'Peter Pettersson', phone: '070-555 55 55', active: true, code: 'PEPE', vehicleIds: ['veh_mock_6'] },
-    { id: 'drv_mock_6', name: 'Emma Eriksson', phone: '070-666 66 66', active: true, code: 'EMER', vehicleIds: ['veh_mock_7'] },
-    { id: 'drv_mock_7', name: 'Johan Johansson', phone: '070-777 77 77', active: true, code: 'JOJO', vehicleIds: [] }
+    {
+      id: 'drv_mock_1',
+      name: 'Kalle Karlsson',
+      phone: '070-111 11 11',
+      active: true,
+      code: 'KAKA',
+      vehicleIds: ['veh_mock_1'],
+    },
+    {
+      id: 'drv_mock_2',
+      name: 'Lisa Lind',
+      phone: '070-222 22 22',
+      active: true,
+      code: 'LILI',
+      vehicleIds: ['veh_mock_3'],
+    },
+    {
+      id: 'drv_mock_3',
+      name: 'Olof Olsson',
+      phone: '070-333 33 33',
+      active: true,
+      code: 'OLOL',
+      vehicleIds: ['veh_mock_4'],
+    },
+    {
+      id: 'drv_mock_4',
+      name: 'Sara Svensson',
+      phone: '070-444 44 44',
+      active: true,
+      code: 'SASV',
+      vehicleIds: ['veh_mock_5'],
+    },
+    {
+      id: 'drv_mock_5',
+      name: 'Peter Pettersson',
+      phone: '070-555 55 55',
+      active: true,
+      code: 'PEPE',
+      vehicleIds: ['veh_mock_6'],
+    },
+    {
+      id: 'drv_mock_6',
+      name: 'Emma Eriksson',
+      phone: '070-666 66 66',
+      active: true,
+      code: 'EMER',
+      vehicleIds: ['veh_mock_7'],
+    },
+    {
+      id: 'drv_mock_7',
+      name: 'Johan Johansson',
+      phone: '070-777 77 77',
+      active: true,
+      code: 'JOJO',
+      vehicleIds: [],
+    },
   ];
 
   const pickupLocations = [
-    { id: 'loc_mock_1', name: 'Hamnen Terminal A', address: 'Hamnkajen 3, Terminal A', postalCode: '123 88', city: 'Ankeborg', customerIds: ['cust_mock_4'] },
-    { id: 'loc_mock_2', name: 'Hamnen Terminal B', address: 'Hamnkajen 3, Terminal B', postalCode: '123 88', city: 'Ankeborg', customerIds: ['cust_mock_4'] },
-    { id: 'loc_mock_3', name: 'Von Ankas förråd', address: 'Penningfallet 1', postalCode: '123 99', city: 'Ankeborg', customerIds: ['cust_mock_2'] },
-    { id: 'loc_mock_4', name: 'Stål & Metall Lager Nord', address: 'Paradisäppelvägen 13, Lager 1', postalCode: '123 45', city: 'Ankeborg', customerIds: ['cust_mock_1'] },
-    { id: 'loc_mock_5', name: 'Stål & Metall Lager Syd', address: 'Paradisäppelvägen 13, Lager 2', postalCode: '123 45', city: 'Ankeborg', customerIds: ['cust_mock_1'] },
-    { id: 'loc_mock_6', name: 'Dagbladets Tryckeri', address: 'Tidningsvägen 7', postalCode: '123 50', city: 'Ankeborg', customerIds: ['cust_mock_3'] },
-    { id: 'loc_mock_7', name: 'Skrotgården', address: 'Skrotgatan 15', postalCode: '123 77', city: 'Ankeborg', customerIds: ['cust_mock_5'] },
-    { id: 'loc_mock_8', name: 'Ankeborg Centrum', address: 'Centrumgatan 1', postalCode: '123 00', city: 'Ankeborg', customerIds: [] }
+    {
+      id: 'loc_mock_1',
+      name: 'Hamnen Terminal A',
+      address: 'Hamnkajen 3, Terminal A',
+      postalCode: '123 88',
+      city: 'Ankeborg',
+      customerIds: ['cust_mock_4'],
+    },
+    {
+      id: 'loc_mock_2',
+      name: 'Hamnen Terminal B',
+      address: 'Hamnkajen 3, Terminal B',
+      postalCode: '123 88',
+      city: 'Ankeborg',
+      customerIds: ['cust_mock_4'],
+    },
+    {
+      id: 'loc_mock_3',
+      name: 'Von Ankas förråd',
+      address: 'Penningfallet 1',
+      postalCode: '123 99',
+      city: 'Ankeborg',
+      customerIds: ['cust_mock_2'],
+    },
+    {
+      id: 'loc_mock_4',
+      name: 'Stål & Metall Lager Nord',
+      address: 'Paradisäppelvägen 13, Lager 1',
+      postalCode: '123 45',
+      city: 'Ankeborg',
+      customerIds: ['cust_mock_1'],
+    },
+    {
+      id: 'loc_mock_5',
+      name: 'Stål & Metall Lager Syd',
+      address: 'Paradisäppelvägen 13, Lager 2',
+      postalCode: '123 45',
+      city: 'Ankeborg',
+      customerIds: ['cust_mock_1'],
+    },
+    {
+      id: 'loc_mock_6',
+      name: 'Dagbladets Tryckeri',
+      address: 'Tidningsvägen 7',
+      postalCode: '123 50',
+      city: 'Ankeborg',
+      customerIds: ['cust_mock_3'],
+    },
+    {
+      id: 'loc_mock_7',
+      name: 'Skrotgården',
+      address: 'Skrotgatan 15',
+      postalCode: '123 77',
+      city: 'Ankeborg',
+      customerIds: ['cust_mock_5'],
+    },
+    {
+      id: 'loc_mock_8',
+      name: 'Ankeborg Centrum',
+      address: 'Centrumgatan 1',
+      postalCode: '123 00',
+      city: 'Ankeborg',
+      customerIds: [],
+    },
   ];
 
   const bookings = [
@@ -237,7 +342,7 @@ const getMockData = () => {
       status: 'Bokad',
       note: 'Bokad utan fordon – tilldela bil/förare i Planering.',
       date: todayStr,
-      time: '08:00'
+      time: '08:00',
     },
     {
       id: 'bk_mock_2',
@@ -269,7 +374,7 @@ const getMockData = () => {
       status: 'Planerad',
       note: 'Redan planerad med bil och förare.',
       date: todayStr,
-      time: '10:00'
+      time: '10:00',
     },
     {
       id: 'bk_mock_3',
@@ -301,7 +406,7 @@ const getMockData = () => {
       status: 'Genomförd',
       note: 'Testa "Ange kostnad" för denna körning.',
       date: todayStr,
-      time: '13:00'
+      time: '13:00',
     },
     {
       id: 'bk_mock_4',
@@ -334,8 +439,8 @@ const getMockData = () => {
       note: 'Exempel på fakturerad körning.',
       date: tomorrowStr,
       time: '06:30',
-      costDetails: { km: 35, stops: 1, waitHours: 0.5, driveHours: 1 }
-    }
+      costDetails: { km: 35, stops: 1, waitHours: 0.5, driveHours: 1 },
+    },
   ];
 
   return {
@@ -344,7 +449,7 @@ const getMockData = () => {
     vehicles,
     pickupLocations,
     bookings,
-    lastBookingNumber: { year, number: 4 }
+    lastBookingNumber: { year, number: 4 },
   };
 };
 
