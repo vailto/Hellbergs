@@ -195,6 +195,8 @@ Add to your VS Code settings (`.vscode/settings.json`):
 ✅ **Build**: Passing  
 ✅ **CI**: Configured and ready
 
+**Note on Warnings**: The current baseline is set to 48 warnings (see `package.json` and CI config). This baseline was established to avoid blocking development while gradually improving code quality. As we refactor code, we will lower this threshold over time. The goal is to eventually reach zero warnings.
+
 ## Future Improvements
 
 Potential enhancements for the quality gate:
