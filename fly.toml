@@ -1,19 +1,23 @@
-# Fly.io configuration for Truck Route Planner
-# Generated with `fly launch`
+# fly.toml app configuration file generated for hellbergs-truck-planner on 2026-02-11T11:02:29+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "hellbergs-truck-planner"
-primary_region = "arn"
+app = 'hellbergs-truck-planner'
+primary_region = 'arn'
 
 [build]
 
 [http_service]
-  internal_port = 3000
-  force_https = true
-  auto_stop_machines = true
-  auto_start_machines = true
-  min_machines_running = 0
+internal_port = 3000
+force_https = true
+auto_stop_machines = true
+auto_start_machines = true
+min_machines_running = 0
+processes = ["app"]
+
 
 [[vm]]
-  cpu_kind = "shared"
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 256
