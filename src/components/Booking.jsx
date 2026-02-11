@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
-import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTime24, getCurrentTime24, getCustomerShort } from '../utils/formatters';
+import {
+  generateId,
+  generateBookingNumber,
+  formatNumber,
+  parseNumber,
+  formatTime24,
+  getCurrentTime24,
+  getCustomerShort,
+} from '../utils/formatters';
 import { BOOKING_STATUSES } from '../utils/constants';
 import { validateBooking } from '../utils/validation';
 import CostEntryModal from './CostEntryModal';
@@ -7,7 +15,15 @@ import TimeInput24 from './TimeInput24';
 import BookingTabs from './booking/BookingTabs';
 import useBookingState from '../hooks/useBookingState';
 
-function Booking({ data, updateData, setCurrentSection, editingBookingId, setEditingBookingId, returnToSection, setReturnToSection }) {
+function Booking({
+  data,
+  updateData,
+  setCurrentSection,
+  editingBookingId,
+  setEditingBookingId,
+  returnToSection,
+  setReturnToSection,
+}) {
   // Use custom hook for all state management
   const {
     currentTab,
@@ -65,14 +81,14 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     rowsToRender,
     resetForm,
     vehicleOccupied,
-    driverOccupied
+    driverOccupied,
   } = useBookingState(data, editingBookingId);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
 
     // Reset pickup mode when customer changes
@@ -90,7 +106,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       setFormData(prev => ({
         ...prev,
         vehicleId: vehicleId || '',
-        driverId: driverId || ''
+        driverId: driverId || '',
       }));
     }
 
@@ -99,10 +115,10 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     }
   };
 
-  const handlePickupLocationSelect = (e) => {
+  const handlePickupLocationSelect = e => {
     const locationId = e.target.value;
     setSelectedPickupLocationId(locationId);
-    
+
     if (locationId) {
       const location = data.pickupLocations.find(l => l.id === locationId);
       if (location) {
@@ -110,16 +126,16 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
           ...prev,
           pickupAddress: location.address,
           pickupPostalCode: location.postalCode || '',
-          pickupCity: location.city || ''
+          pickupCity: location.city || '',
         }));
       }
     }
   };
 
-  const handleDeliveryLocationSelect = (e) => {
+  const handleDeliveryLocationSelect = e => {
     const locationId = e.target.value;
     setSelectedDeliveryLocationId(locationId);
-    
+
     if (locationId) {
       const location = data.pickupLocations.find(l => l.id === locationId);
       if (location) {
@@ -127,7 +143,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
           ...prev,
           deliveryAddress: location.address,
           deliveryPostalCode: location.postalCode || '',
-          deliveryCity: location.city || ''
+          deliveryCity: location.city || '',
         }));
       }
     }
@@ -139,7 +155,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     resetForm();
   };
 
-  const handleEdit = (booking) => {
+  const handleEdit = booking => {
     const cd = booking.costDetails || {};
     setFormData({
       ...booking,
@@ -149,7 +165,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       costWaitHours: cd.waitHours != null ? String(cd.waitHours) : '',
       costDriveHours: cd.driveHours != null ? String(cd.driveHours) : '',
       costUseFixed: cd.fixed != null && cd.fixed !== 0,
-      costFixedAmount: cd.fixed != null ? String(cd.fixed) : ''
+      costFixedAmount: cd.fixed != null ? String(cd.fixed) : '',
     });
     setEditingId(booking.id);
     setShowForm(true);
@@ -163,16 +179,16 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     setEditingBookingId(null);
   }, [editingBookingId]);
 
-  const handleDelete = (bookingId) => {
+  const handleDelete = bookingId => {
     if (window.confirm('Är du säker på att du vill ta bort denna bokning?')) {
       const updatedBookings = data.bookings.filter(b => b.id !== bookingId);
       updateData({ bookings: updatedBookings });
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
-    
+
     // Validate
     const validationErrors = validateBooking(formData);
     if (validationErrors) {
@@ -182,41 +198,48 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
 
     const existing = editingId ? data.bookings.find(b => b.id === editingId) : null;
     const kmVal = formData.km !== '' && formData.km != null ? parseNumber(formData.km) : null;
-    const amountVal = formData.amountSek !== '' && formData.amountSek != null ? parseNumber(formData.amountSek) : null;
-    const num = (v) => parseNumber(v) ?? 0;
+    const amountVal =
+      formData.amountSek !== '' && formData.amountSek != null
+        ? parseNumber(formData.amountSek)
+        : null;
+    const num = v => parseNumber(v) ?? 0;
     const costDetails = {
       km: num(formData.km) || undefined,
       stops: num(formData.costStops) || undefined,
       waitHours: num(formData.costWaitHours) || undefined,
       driveHours: num(formData.costDriveHours) || undefined,
-      fixed: formData.costUseFixed ? (num(formData.costFixedAmount) ?? undefined) : undefined
+      fixed: formData.costUseFixed ? (num(formData.costFixedAmount) ?? undefined) : undefined,
     };
-    const hasCostDetails = costDetails.km || costDetails.stops || costDetails.waitHours || costDetails.driveHours || (formData.costUseFixed && costDetails.fixed != null);
-    const bookingData = editingId && existing
-      ? {
-          ...formData,
-          id: editingId,
-          bookingNo: existing.bookingNo,
-          vehicleId: formData.vehicleId || null,
-          driverId: formData.driverId || null,
-          km: kmVal,
-          amountSek: amountVal,
-          costDetails: hasCostDetails ? costDetails : (existing.costDetails ?? undefined)
-        }
-      : {
-          ...formData,
-          vehicleId: formData.vehicleId || null,
-          driverId: formData.driverId || null,
-          status: formData.vehicleId ? 'Planerad' : formData.status,
-          km: kmVal,
-          amountSek: amountVal,
-          costDetails: hasCostDetails ? costDetails : undefined
-        };
+    const hasCostDetails =
+      costDetails.km ||
+      costDetails.stops ||
+      costDetails.waitHours ||
+      costDetails.driveHours ||
+      (formData.costUseFixed && costDetails.fixed != null);
+    const bookingData =
+      editingId && existing
+        ? {
+            ...formData,
+            id: editingId,
+            bookingNo: existing.bookingNo,
+            vehicleId: formData.vehicleId || null,
+            driverId: formData.driverId || null,
+            km: kmVal,
+            amountSek: amountVal,
+            costDetails: hasCostDetails ? costDetails : (existing.costDetails ?? undefined),
+          }
+        : {
+            ...formData,
+            vehicleId: formData.vehicleId || null,
+            driverId: formData.driverId || null,
+            status: formData.vehicleId ? 'Planerad' : formData.status,
+            km: kmVal,
+            amountSek: amountVal,
+            costDetails: hasCostDetails ? costDetails : undefined,
+          };
 
     if (editingId) {
-      const updatedBookings = data.bookings.map(b =>
-        b.id === editingId ? bookingData : b
-      );
+      const updatedBookings = data.bookings.map(b => (b.id === editingId ? bookingData : b));
       updateData({ bookings: updatedBookings });
       resetForm();
       setShowForm(false);
@@ -229,7 +252,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       const pickupAddressExists = data.pickupLocations.some(
         loc => loc.address.toLowerCase() === formData.pickupAddress.toLowerCase()
       );
-      
+
       if (pickupMode === 'freetext' && formData.pickupAddress && !pickupAddressExists) {
         // Ask to save location
         setPendingBookingData(bookingData);
@@ -243,22 +266,22 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     }
   };
 
-  const saveBooking = (bookingData) => {
+  const saveBooking = bookingData => {
     const { bookingNo, lastBookingNumber } = generateBookingNumber(data.lastBookingNumber);
     const newBooking = {
       ...bookingData,
       id: generateId('bk'),
-      bookingNo
+      bookingNo,
     };
     updateData({
       bookings: [...data.bookings, newBooking],
-      lastBookingNumber
+      lastBookingNumber,
     });
     resetForm();
     setShowForm(false);
   };
 
-  const handleSaveLocation = (shouldSave) => {
+  const handleSaveLocation = shouldSave => {
     if (shouldSave && tempLocationName.trim()) {
       const newLocation = {
         id: generateId('loc'),
@@ -266,24 +289,23 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
         address: pendingBookingData.pickupAddress,
         postalCode: pendingBookingData.pickupPostalCode || '',
         city: pendingBookingData.pickupCity || '',
-        customerIds: tempLocationCustomerId ? [tempLocationCustomerId] : []
+        customerIds: tempLocationCustomerId ? [tempLocationCustomerId] : [],
       };
       updateData({
-        pickupLocations: [...data.pickupLocations, newLocation]
+        pickupLocations: [...data.pickupLocations, newLocation],
       });
     }
-    
+
     // Save the booking
     if (pendingBookingData) {
       saveBooking(pendingBookingData);
       setPendingBookingData(null);
     }
-    
+
     setShowSaveLocationModal(false);
     setTempLocationName('');
     setTempLocationCustomerId('');
   };
-
 
   const handleCancelForm = () => {
     resetForm();
@@ -328,7 +350,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       costUseFixed: false,
       costFixedAmount: '',
       status: 'Bokad',
-      note: formData.note || ''
+      note: formData.note || '',
     };
     const { bookingNo, lastBookingNumber } = generateBookingNumber(data.lastBookingNumber);
     const newBooking = {
@@ -336,11 +358,11 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       id: generateId('bk'),
       bookingNo,
       date: todayStr,
-      time: defaultTime
+      time: defaultTime,
     };
     updateData({
       bookings: [...data.bookings, newBooking],
-      lastBookingNumber
+      lastBookingNumber,
     });
     setFormData(duplicateData);
     setEditingId(null);
@@ -352,15 +374,15 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
   };
 
   // New customer modal handlers
-  const handleTempCustomerChange = (e) => {
+  const handleTempCustomerChange = e => {
     const { name, value } = e.target;
     setTempCustomerData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSaveTempCustomer = (e) => {
+  const handleSaveTempCustomer = e => {
     e.preventDefault();
     if (!tempCustomerData.name.trim()) {
       alert('Namn krävs');
@@ -370,17 +392,17 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     const newCustomer = {
       ...tempCustomerData,
       id: generateId('cust'),
-      pricesByVehicleType: {}
+      pricesByVehicleType: {},
     };
-    
+
     updateData({ customers: [...data.customers, newCustomer] });
-    
+
     // Set the new customer as selected
     setFormData(prev => ({
       ...prev,
-      customerId: newCustomer.id
+      customerId: newCustomer.id,
     }));
-    
+
     // Close modal and reset temp data
     setShowNewCustomerModal(false);
     setTempCustomerData({
@@ -392,19 +414,23 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       mobile: '',
       customerNumber: '',
       contactPerson: '',
-      active: true
+      active: true,
     });
   };
 
   const handleVehicleAssign = (bookingId, vehicleId) => {
     const booking = data.bookings.find(b => b.id === bookingId);
-    const authorizedDrivers = vehicleId ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
-    const keepDriver = vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
+    const authorizedDrivers = vehicleId
+      ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId))
+      : [];
+    const keepDriver =
+      vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
     const driverId = keepDriver ? booking.driverId : null;
     const updatedBookings = data.bookings.map(b => {
       if (b.id !== bookingId) return b;
       const next = { ...b, vehicleId: vehicleId || null, driverId };
-      if (vehicleId && (b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId))) next.status = 'Planerad';
+      if (vehicleId && (b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId)))
+        next.status = 'Planerad';
       if (!vehicleId && b.status === 'Planerad') next.status = 'Bokad';
       return next;
     });
@@ -429,7 +455,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     updateData({ bookings: updatedBookings });
   };
 
-  const handleCostSave = (updatedBooking) => {
+  const handleCostSave = updatedBooking => {
     const updatedBookings = data.bookings.map(b =>
       b.id === updatedBooking.id ? { ...updatedBooking, status: 'Prissatt' } : b
     );
@@ -438,7 +464,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
   };
 
   // Sorting function
-  const handleSort = (field) => {
+  const handleSort = field => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -466,9 +492,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
             <div className="alert alert-error mb-2">
               <strong>Fel i formuläret:</strong>
               <ul style={{ marginTop: '0.5rem', marginLeft: '1.5rem' }}>
-                {Object.values(errors).map((error, idx) => error && (
-                  <li key={idx}>{error}</li>
-                ))}
+                {Object.values(errors).map((error, idx) => error && <li key={idx}>{error}</li>)}
               </ul>
             </div>
           )}
@@ -476,166 +500,164 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
           <form onSubmit={handleSubmit}>
             {/* Grunduppgifter + Fordon och förare (side by side) */}
             <div className="form-row form-row--two-cols">
-            <div className="form-section" style={{ flex: 1, marginBottom: 0 }}>
-              <div className="form-section-title">Grunduppgifter</div>
-              
-              <div className="form-row form-row--customer-priority">
-                <div className="form-group">
-                  <label className="text-muted-2 label-sm">
-                    Kund *
-                  </label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <select
-                      name="customerId"
-                      value={formData.customerId}
-                      onChange={handleChange}
-                      className={`form-select ${errors.customerId ? 'error' : ''}`}
-                      style={{ flex: 1 }}
-                    >
-                      <option value="">Välj kund</option>
-                      {activeCustomers.map(customer => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setShowNewCustomerModal(true)}
-                      className="btn btn-secondary"
-                    >
-                      + Ny
-                    </button>
+              <div className="form-section" style={{ flex: 1, marginBottom: 0 }}>
+                <div className="form-section-title">Grunduppgifter</div>
+
+                <div className="form-row form-row--customer-priority">
+                  <div className="form-group">
+                    <label className="text-muted-2 label-sm">Kund *</label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <select
+                        name="customerId"
+                        value={formData.customerId}
+                        onChange={handleChange}
+                        className={`form-select ${errors.customerId ? 'error' : ''}`}
+                        style={{ flex: 1 }}
+                      >
+                        <option value="">Välj kund</option>
+                        {activeCustomers.map(customer => (
+                          <option key={customer.id} value={customer.id}>
+                            {customer.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowNewCustomerModal(true)}
+                        className="btn btn-secondary"
+                      >
+                        + Ny
+                      </button>
+                    </div>
+                    {errors.customerId && <div className="form-error">{errors.customerId}</div>}
                   </div>
-                  {errors.customerId && <div className="form-error">{errors.customerId}</div>}
+
+                  {editingId && (
+                    <div className="form-group" style={{ maxWidth: '120px' }}>
+                      <label className="text-muted-2 label-sm">Status</label>
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleChange}
+                        className="form-select"
+                      >
+                        {BOOKING_STATUSES.map(s => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
-                {editingId && (
-                  <div className="form-group" style={{ maxWidth: '120px' }}>
-                    <label className="text-muted-2 label-sm">
-                      Status
-                    </label>
+                <div className="form-row">
+                  <div className="form-group">
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="hasContainer"
+                          checked={formData.hasContainer}
+                          onChange={handleChange}
+                        />
+                        Container
+                      </label>
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="hasTrailer"
+                          checked={formData.hasTrailer}
+                          onChange={handleChange}
+                        />
+                        Trailer
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {(formData.hasContainer || formData.hasTrailer) && (
+                  <div className="form-row">
+                    {formData.hasContainer && (
+                      <div className="form-group">
+                        <input
+                          type="text"
+                          name="containerNr"
+                          value={formData.containerNr}
+                          onChange={handleChange}
+                          className="form-input"
+                          placeholder="ContainerNr:"
+                        />
+                      </div>
+                    )}
+                    {formData.hasTrailer && (
+                      <div className="form-group">
+                        <input
+                          type="text"
+                          name="trailerNr"
+                          value={formData.trailerNr}
+                          onChange={handleChange}
+                          className="form-input"
+                          placeholder="TrailerNr:"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <input
+                    type="text"
+                    name="marking"
+                    value={formData.marking}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="Märkning"
+                  />
+                </div>
+              </div>
+
+              {/* Fordon och förare */}
+              <div className="form-section" style={{ flex: 1, marginBottom: 0, minWidth: 200 }}>
+                <div className="form-section-title">Fordon och förare</div>
+                <div className="form-row" style={{ gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="text-muted-2 label-sm">Fordon</label>
                     <select
-                      name="status"
-                      value={formData.status}
+                      name="vehicleId"
+                      value={formData.vehicleId || ''}
                       onChange={handleChange}
                       className="form-select"
                     >
-                      {BOOKING_STATUSES.map(s => (
-                        <option key={s} value={s}>{s}</option>
+                      <option value="">Välj fordon</option>
+                      {activeVehicles.map(v => (
+                        <option key={v.id} value={v.id}>
+                          {v.regNo} ({v.type})
+                        </option>
                       ))}
                     </select>
                   </div>
-                )}
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        name="hasContainer"
-                        checked={formData.hasContainer}
-                        onChange={handleChange}
-                      />
-                      Container
-                    </label>
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        name="hasTrailer"
-                        checked={formData.hasTrailer}
-                        onChange={handleChange}
-                      />
-                      Trailer
-                    </label>
+                  <div className="form-group">
+                    <label className="text-muted-2 label-sm">Förare</label>
+                    <select
+                      name="driverId"
+                      value={formData.driverId || ''}
+                      onChange={handleChange}
+                      className="form-select"
+                    >
+                      <option value="">Välj förare</option>
+                      {formVehicleId && driversForSelectedVehicle.length === 0 && (
+                        <option disabled>Inga behöriga förare för valt fordon</option>
+                      )}
+                      {driversForSelectedVehicle.map(d => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
-
-              {(formData.hasContainer || formData.hasTrailer) && (
-                <div className="form-row">
-                  {formData.hasContainer && (
-                    <div className="form-group">
-                      <input
-                        type="text"
-                        name="containerNr"
-                        value={formData.containerNr}
-                        onChange={handleChange}
-                        className="form-input"
-                        placeholder="ContainerNr:"
-                      />
-                    </div>
-                  )}
-                  {formData.hasTrailer && (
-                    <div className="form-group">
-                      <input
-                        type="text"
-                        name="trailerNr"
-                        value={formData.trailerNr}
-                        onChange={handleChange}
-                        className="form-input"
-                        placeholder="TrailerNr:"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="marking"
-                  value={formData.marking}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Märkning"
-                />
-              </div>
-            </div>
-
-            {/* Fordon och förare */}
-            <div className="form-section" style={{ flex: 1, marginBottom: 0, minWidth: 200 }}>
-              <div className="form-section-title">Fordon och förare</div>
-              <div className="form-row" style={{ gap: '0.75rem' }}>
-                <div className="form-group">
-                  <label className="text-muted-2 label-sm">Fordon</label>
-                  <select
-                    name="vehicleId"
-                    value={formData.vehicleId || ''}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    <option value="">Välj fordon</option>
-                    {activeVehicles.map(v => (
-                      <option key={v.id} value={v.id}>
-                        {v.regNo} ({v.type})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="text-muted-2 label-sm">Förare</label>
-                  <select
-                    name="driverId"
-                    value={formData.driverId || ''}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    <option value="">Välj förare</option>
-                    {formVehicleId && driversForSelectedVehicle.length === 0 && (
-                      <option disabled>Inga behöriga förare för valt fordon</option>
-                    )}
-                    {driversForSelectedVehicle.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
             </div>
 
             {/* Upphämtning och Lämning */}
@@ -643,7 +665,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
               {/* Upphämtning */}
               <div className="form-section" style={{ flex: 1, marginBottom: 0 }}>
                 <div className="form-section-title">Upphämtning</div>
-                
+
                 {/* Pickup mode selector */}
                 <div className="form-group">
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -715,12 +737,14 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                       <option value="">Välj plats</option>
                       {allPickupLocations.map(location => {
                         // Handle both old and new format
-                        const customerIds = location.customerIds || (location.customerId ? [location.customerId] : []);
+                        const customerIds =
+                          location.customerIds ||
+                          (location.customerId ? [location.customerId] : []);
                         const customers = customerIds
                           .map(id => data.customers.find(c => c.id === id))
                           .filter(Boolean);
                         const customerNames = customers.map(c => c.name).join(', ');
-                        
+
                         return (
                           <option key={location.id} value={location.id}>
                             {location.name} {customerNames ? `(${customerNames})` : ''}
@@ -819,7 +843,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
               {/* Lämning */}
               <div className="form-section" style={{ flex: 1, marginBottom: 0 }}>
                 <div className="form-section-title">Lämning</div>
-                
+
                 {/* Delivery mode selector */}
                 <div className="form-group">
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -891,12 +915,14 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                       <option value="">Välj plats</option>
                       {allPickupLocations.map(location => {
                         // Handle both old and new format
-                        const customerIds = location.customerIds || (location.customerId ? [location.customerId] : []);
+                        const customerIds =
+                          location.customerIds ||
+                          (location.customerId ? [location.customerId] : []);
                         const customers = customerIds
                           .map(id => data.customers.find(c => c.id === id))
                           .filter(Boolean);
                         const customerNames = customers.map(c => c.name).join(', ');
-                        
+
                         return (
                           <option key={location.id} value={location.id}>
                             {location.name} {customerNames ? `(${customerNames})` : ''}
@@ -906,7 +932,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                     </select>
                   </div>
                 )}
-                
+
                 <div className="form-group">
                   <input
                     type="text"
@@ -917,7 +943,9 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                     placeholder="Adress *"
                     readOnly={deliveryMode !== 'freetext' && selectedDeliveryLocationId !== ''}
                   />
-                  {errors.deliveryAddress && <div className="form-error">{errors.deliveryAddress}</div>}
+                  {errors.deliveryAddress && (
+                    <div className="form-error">{errors.deliveryAddress}</div>
+                  )}
                 </div>
 
                 <div className="form-row">
@@ -996,7 +1024,13 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
             {/* Prissättning */}
             <div className="form-section" style={{ marginTop: '0.75rem' }}>
               <div className="form-section-title">Prissättning</div>
-              <div className="form-row" style={{ gap: '0.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))' }}>
+              <div
+                className="form-row"
+                style={{
+                  gap: '0.5rem',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+                }}
+              >
                 <div className="form-group">
                   <label className="text-muted-2 label-sm">Km</label>
                   <input
@@ -1113,7 +1147,12 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                   </button>
                 </>
               )}
-              <button type="button" onClick={handleCancelForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
+              <button
+                type="button"
+                onClick={handleCancelForm}
+                className="btn btn-secondary"
+                style={{ marginLeft: 'auto' }}
+              >
                 Avbryt
               </button>
               <button type="submit" className="btn btn-primary">
@@ -1126,26 +1165,30 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
 
       {/* Save Location Modal */}
       {showSaveLocationModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--color-bg-elevated)',
-            padding: '2rem',
-            borderRadius: '8px',
-            width: '90%',
-            maxWidth: '500px',
-            border: '1px solid var(--color-border)'
-          }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--color-bg-elevated)',
+              padding: '2rem',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '500px',
+              border: '1px solid var(--color-border)',
+            }}
+          >
             <h2 style={{ marginBottom: '1rem' }}>Spara plats?</h2>
             <p className="text-muted mb-2" style={{ marginBottom: '1.5rem' }}>
               Vill du spara <strong>{pendingBookingData?.pickupAddress}</strong> som en ny plats?
@@ -1155,7 +1198,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
               <input
                 type="text"
                 value={tempLocationName}
-                onChange={(e) => setTempLocationName(e.target.value)}
+                onChange={e => setTempLocationName(e.target.value)}
                 className="form-input"
                 placeholder="Namn på platsen (t.ex. Huvudlager, Hamnen...)"
               />
@@ -1164,7 +1207,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
             <div className="form-group">
               <select
                 value={tempLocationCustomerId}
-                onChange={(e) => setTempLocationCustomerId(e.target.value)}
+                onChange={e => setTempLocationCustomerId(e.target.value)}
                 className="form-select"
               >
                 <option value="">Ingen kund (allmän plats)</option>
@@ -1180,17 +1223,14 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
             </div>
 
             <div className="form-actions">
-              <button 
-                onClick={() => handleSaveLocation(true)} 
+              <button
+                onClick={() => handleSaveLocation(true)}
                 className="btn btn-primary"
                 disabled={!tempLocationName.trim()}
               >
                 Spara plats
               </button>
-              <button 
-                onClick={() => handleSaveLocation(false)} 
-                className="btn btn-secondary"
-              >
+              <button onClick={() => handleSaveLocation(false)} className="btn btn-secondary">
                 Nej tack
               </button>
             </div>
@@ -1199,96 +1239,121 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       )}
 
       {/* Redigera blocknamn – modal (ersätter prompt så att det fungerar överallt) */}
-      {editingBlockId && (() => {
-        const block = (data.bookingBlocks || []).find(bl => bl.id === editingBlockId);
-        const handleSaveBlockName = () => {
-          const name = editingBlockNameValue.trim();
-          if (!name || !block) return;
-          const updatedBlocks = (data.bookingBlocks || []).map(bl =>
-            bl.id === editingBlockId ? { ...bl, name } : bl
-          );
-          updateData({ bookingBlocks: updatedBlocks });
-          setEditingBlockId(null);
-          setEditingBlockNameValue('');
-        };
-        return (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000
-            }}
-            onClick={() => { setEditingBlockId(null); setEditingBlockNameValue(''); }}
-          >
+      {editingBlockId &&
+        (() => {
+          const block = (data.bookingBlocks || []).find(bl => bl.id === editingBlockId);
+          const handleSaveBlockName = () => {
+            const name = editingBlockNameValue.trim();
+            if (!name || !block) return;
+            const updatedBlocks = (data.bookingBlocks || []).map(bl =>
+              bl.id === editingBlockId ? { ...bl, name } : bl
+            );
+            updateData({ bookingBlocks: updatedBlocks });
+            setEditingBlockId(null);
+            setEditingBlockNameValue('');
+          };
+          return (
             <div
               style={{
-                backgroundColor: 'var(--color-bg-elevated)',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                width: '90%',
-                maxWidth: '400px',
-                border: '1px solid var(--color-border)'
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
               }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={() => {
+                setEditingBlockId(null);
+                setEditingBlockNameValue('');
+              }}
             >
-              <h2 className="text-subtitle" style={{ margin: '0 0 1rem 0' }}>Blocknamn</h2>
-              <input
-                type="text"
-                value={editingBlockNameValue}
-                onChange={(e) => setEditingBlockNameValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveBlockName();
-                  if (e.key === 'Escape') { setEditingBlockId(null); setEditingBlockNameValue(''); }
+              <div
+                style={{
+                  backgroundColor: 'var(--color-bg-elevated)',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  width: '90%',
+                  maxWidth: '400px',
+                  border: '1px solid var(--color-border)',
                 }}
-                className="form-input"
-                placeholder="t.ex. City-turen"
-                style={{ marginBottom: '1rem' }}
-                autoFocus
-              />
-              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => { setEditingBlockId(null); setEditingBlockNameValue(''); }} className="btn btn-secondary">
-                  Avbryt
-                </button>
-                <button type="button" onClick={handleSaveBlockName} className="btn btn-primary" disabled={!editingBlockNameValue.trim()}>
-                  Spara
-                </button>
+                onClick={e => e.stopPropagation()}
+              >
+                <h2 className="text-subtitle" style={{ margin: '0 0 1rem 0' }}>
+                  Blocknamn
+                </h2>
+                <input
+                  type="text"
+                  value={editingBlockNameValue}
+                  onChange={e => setEditingBlockNameValue(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleSaveBlockName();
+                    if (e.key === 'Escape') {
+                      setEditingBlockId(null);
+                      setEditingBlockNameValue('');
+                    }
+                  }}
+                  className="form-input"
+                  placeholder="t.ex. City-turen"
+                  style={{ marginBottom: '1rem' }}
+                  autoFocus
+                />
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingBlockId(null);
+                      setEditingBlockNameValue('');
+                    }}
+                    className="btn btn-secondary"
+                  >
+                    Avbryt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveBlockName}
+                    className="btn btn-primary"
+                    disabled={!editingBlockNameValue.trim()}
+                  >
+                    Spara
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* New Customer Modal */}
       {showNewCustomerModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--color-bg-elevated)',
-            padding: '2rem',
-            borderRadius: '8px',
-            width: '90%',
-            maxWidth: '600px',
-            maxHeight: '90vh',
-            overflow: 'auto',
-            border: '1px solid var(--color-border)'
-          }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--color-bg-elevated)',
+              padding: '2rem',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '600px',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              border: '1px solid var(--color-border)',
+            }}
+          >
             <h2 style={{ marginBottom: '1.5rem' }}>Ny kund</h2>
             <form onSubmit={handleSaveTempCustomer}>
               <div className="form-row">
@@ -1390,8 +1455,8 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                 <button type="submit" className="btn btn-primary">
                   Spara
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => {
                     setShowNewCustomerModal(false);
                     setTempCustomerData({
@@ -1403,7 +1468,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                       mobile: '',
                       customerNumber: '',
                       contactPerson: '',
-                      active: true
+                      active: true,
                     });
                   }}
                   className="btn btn-secondary"
@@ -1420,7 +1485,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       {!showForm && (
         <>
           {/* Tab Navigation */}
-          <BookingTabs 
+          <BookingTabs
             currentTab={currentTab}
             onTabChange={setCurrentTab}
             bookings={data.bookings || []}
@@ -1485,7 +1550,9 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                         {sortField === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
                       </span>
                     </th>
-                    <th title="Åtgärder" style={{ width: '1%', whiteSpace: 'nowrap' }}>Åtg.</th>
+                    <th title="Åtgärder" style={{ width: '1%', whiteSpace: 'nowrap' }}>
+                      Åtg.
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1500,7 +1567,10 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                         <tr
                           key={`block-${block.id}`}
                           onClick={() => setExpandedBlockId(isBlockExpanded ? null : block.id)}
-                          style={{ cursor: 'pointer', background: isBlockExpanded ? 'rgba(42, 54, 71, 0.3)' : undefined }}
+                          style={{
+                            cursor: 'pointer',
+                            background: isBlockExpanded ? 'rgba(42, 54, 71, 0.3)' : undefined,
+                          }}
                         >
                           <td style={{ whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1508,8 +1578,12 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                 {isBlockExpanded ? '▼' : '▶'}
                               </span>
                               <strong
-                                style={{ cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px' }}
-                                onClick={(e) => {
+                                style={{
+                                  cursor: 'pointer',
+                                  textDecoration: 'underline',
+                                  textUnderlineOffset: '2px',
+                                }}
+                                onClick={e => {
                                   e.stopPropagation();
                                   setEditingBlockId(block.id);
                                   setEditingBlockNameValue(block.name || '');
@@ -1520,25 +1594,29 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                               </strong>
                             </div>
                           </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>{first?.pickupDate || first?.date || '–'}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            {first?.pickupDate || first?.date || '–'}
+                          </td>
                           <td style={{ whiteSpace: 'nowrap' }}>{bookings.length} körningar</td>
-                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                          <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                             {vehicle ? vehicle.regNo : '–'}
                           </td>
-                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                          <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                             {driver ? driver.name : '–'}
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>–</td>
                           <td style={{ whiteSpace: 'nowrap' }}>–</td>
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            <span className={`status-badge status-${(first?.status || 'planerad').toLowerCase()}`}>
+                            <span
+                              className={`status-badge status-${(first?.status || 'planerad').toLowerCase()}`}
+                            >
                               {first?.status || 'Planerad'}
                             </span>
                           </td>
-                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                          <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                             <button
                               type="button"
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 e.preventDefault();
                                 setEditingBlockId(block.id);
@@ -1569,14 +1647,16 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                       loc => loc.address.toLowerCase() === booking.deliveryAddress?.toLowerCase()
                     );
 
-                    const pickupLocation = pickupLocationData?.name
-                      || booking.pickupCity
-                      || booking.pickupAddress
-                      || '-';
-                    const deliveryLocation = deliveryLocationData?.name
-                      || booking.deliveryCity
-                      || booking.deliveryAddress
-                      || '-';
+                    const pickupLocation =
+                      pickupLocationData?.name ||
+                      booking.pickupCity ||
+                      booking.pickupAddress ||
+                      '-';
+                    const deliveryLocation =
+                      deliveryLocationData?.name ||
+                      booking.deliveryCity ||
+                      booking.deliveryAddress ||
+                      '-';
 
                     return (
                       <React.Fragment key={booking.id}>
@@ -1584,14 +1664,17 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                           onClick={() => setExpandedBookingId(isExpanded ? null : booking.id)}
                           style={{
                             cursor: 'pointer',
-                            ...(item.isInBlock ? { background: 'rgba(15, 20, 25, 0.6)' } : {})
+                            ...(item.isInBlock ? { background: 'rgba(15, 20, 25, 0.6)' } : {}),
                           }}
                         >
-                          <td style={{ whiteSpace: 'nowrap', paddingLeft: item.isInBlock ? '2rem' : undefined }}>
+                          <td
+                            style={{
+                              whiteSpace: 'nowrap',
+                              paddingLeft: item.isInBlock ? '2rem' : undefined,
+                            }}
+                          >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span className="text-2xs text-muted">
-                                {isExpanded ? '▼' : '▶'}
-                              </span>
+                              <span className="text-2xs text-muted">{isExpanded ? '▼' : '▶'}</span>
                               <strong>{booking.bookingNo}</strong>
                             </div>
                           </td>
@@ -1599,11 +1682,13 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                             {booking.pickupDate || booking.date}
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>{getCustomerShort(customer)}</td>
-                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
-                            {(currentTab === 'bokad' || currentTab === 'planerad') ? (
+                          <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                            {currentTab === 'bokad' || currentTab === 'planerad' ? (
                               <select
                                 value={booking.vehicleId || ''}
-                                onChange={(e) => handleVehicleAssign(booking.id, e.target.value || null)}
+                                onChange={e =>
+                                  handleVehicleAssign(booking.id, e.target.value || null)
+                                }
                                 className="form-select table-select-inline"
                                 style={{
                                   minWidth: '58px',
@@ -1612,29 +1697,39 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                   fontSize: '0.75rem',
                                   appearance: 'none',
                                   WebkitAppearance: 'none',
-                                  background: booking.vehicleId ? 'var(--color-bg-elevated)' : 'var(--color-bg)',
+                                  background: booking.vehicleId
+                                    ? 'var(--color-bg-elevated)'
+                                    : 'var(--color-bg)',
                                   color: 'var(--color-text)',
                                   border: '1px solid var(--color-border)',
-                                  borderRadius: '4px'
+                                  borderRadius: '4px',
                                 }}
                               >
                                 <option value="">Ej tilldelad</option>
                                 {(() => {
-                                  const available = activeVehicles.filter(v => !vehicleOccupied(v.id, booking));
-                                  const occupied = activeVehicles.filter(v => vehicleOccupied(v.id, booking));
+                                  const available = activeVehicles.filter(
+                                    v => !vehicleOccupied(v.id, booking)
+                                  );
+                                  const occupied = activeVehicles.filter(v =>
+                                    vehicleOccupied(v.id, booking)
+                                  );
                                   return (
                                     <>
                                       {available.length > 0 && (
                                         <optgroup label="Tillgängliga">
                                           {available.map(v => (
-                                            <option key={v.id} value={v.id}>{v.regNo}</option>
+                                            <option key={v.id} value={v.id}>
+                                              {v.regNo}
+                                            </option>
                                           ))}
                                         </optgroup>
                                       )}
                                       {occupied.length > 0 && (
                                         <optgroup label="Upptagna">
                                           {occupied.map(v => (
-                                            <option key={v.id} value={v.id}>{v.regNo}</option>
+                                            <option key={v.id} value={v.id}>
+                                              {v.regNo}
+                                            </option>
                                           ))}
                                         </optgroup>
                                       )}
@@ -1642,15 +1737,19 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                   );
                                 })()}
                               </select>
+                            ) : vehicle ? (
+                              vehicle.regNo
                             ) : (
-                              (vehicle ? vehicle.regNo : '-')
+                              '-'
                             )}
                           </td>
-                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
-                            {(currentTab === 'bokad' || currentTab === 'planerad') ? (
+                          <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                            {currentTab === 'bokad' || currentTab === 'planerad' ? (
                               <select
                                 value={booking.driverId || ''}
-                                onChange={(e) => handleDriverAssign(booking.id, e.target.value || null)}
+                                onChange={e =>
+                                  handleDriverAssign(booking.id, e.target.value || null)
+                                }
                                 className="form-select table-select-inline"
                                 style={{
                                   minWidth: '70px',
@@ -1659,19 +1758,29 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                   fontSize: '0.75rem',
                                   appearance: 'none',
                                   WebkitAppearance: 'none',
-                                  background: booking.driverId ? 'var(--color-bg-elevated)' : 'var(--color-bg)',
+                                  background: booking.driverId
+                                    ? 'var(--color-bg-elevated)'
+                                    : 'var(--color-bg)',
                                   color: 'var(--color-text)',
                                   border: '1px solid var(--color-border)',
-                                  borderRadius: '4px'
+                                  borderRadius: '4px',
                                 }}
                               >
                                 <option value="">Ej tilldelad</option>
                                 {(() => {
                                   const eligible = booking.vehicleId
-                                    ? activeDrivers.filter(d => (d.vehicleIds || []).includes(booking.vehicleId) || d.id === booking.driverId)
+                                    ? activeDrivers.filter(
+                                        d =>
+                                          (d.vehicleIds || []).includes(booking.vehicleId) ||
+                                          d.id === booking.driverId
+                                      )
                                     : activeDrivers;
-                                  const available = eligible.filter(d => !driverOccupied(d.id, booking));
-                                  const occupied = eligible.filter(d => driverOccupied(d.id, booking));
+                                  const available = eligible.filter(
+                                    d => !driverOccupied(d.id, booking)
+                                  );
+                                  const occupied = eligible.filter(d =>
+                                    driverOccupied(d.id, booking)
+                                  );
                                   return (
                                     <>
                                       {booking.vehicleId && eligible.length === 0 && (
@@ -1680,14 +1789,18 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                       {available.length > 0 && (
                                         <optgroup label="Tillgängliga">
                                           {available.map(d => (
-                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                            <option key={d.id} value={d.id}>
+                                              {d.name}
+                                            </option>
                                           ))}
                                         </optgroup>
                                       )}
                                       {occupied.length > 0 && (
                                         <optgroup label="Upptagna">
                                           {occupied.map(d => (
-                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                            <option key={d.id} value={d.id}>
+                                              {d.name}
+                                            </option>
                                           ))}
                                         </optgroup>
                                       )}
@@ -1695,22 +1808,24 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                                   );
                                 })()}
                               </select>
+                            ) : driver ? (
+                              driver.name
                             ) : (
-                              (driver ? driver.name : '-')
+                              '-'
                             )}
                           </td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{pickupLocation}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{deliveryLocation}</td>
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            {pickupLocation}
-                          </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>
-                            {deliveryLocation}
-                          </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>
-                            <span className={`status-badge status-${(booking.status === 'Planerad' && !booking.vehicleId ? 'Bokad' : booking.status).toLowerCase()}`}>
-                              {booking.status === 'Planerad' && !booking.vehicleId ? 'Bokad' : booking.status}
+                            <span
+                              className={`status-badge status-${(booking.status === 'Planerad' && !booking.vehicleId ? 'Bokad' : booking.status).toLowerCase()}`}
+                            >
+                              {booking.status === 'Planerad' && !booking.vehicleId
+                                ? 'Bokad'
+                                : booking.status}
                             </span>
                           </td>
-                          <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                          <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                             <div className="table-actions" style={{ flexWrap: 'nowrap' }}>
                               <button
                                 type="button"
@@ -1747,50 +1862,162 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                             </div>
                           </td>
                         </tr>
-                        
+
                         {isExpanded && (
                           <tr>
-                            <td colSpan="9" style={{ backgroundColor: 'var(--color-bg)', padding: '1rem' }}>
+                            <td
+                              colSpan="9"
+                              style={{ backgroundColor: 'var(--color-bg)', padding: '1rem' }}
+                            >
                               <div className="text-base mb-1" style={{ fontWeight: 600 }}>
                                 {customer?.name || 'Okänd'}
                               </div>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '1fr 1fr',
+                                  gap: '1.5rem',
+                                }}
+                              >
                                 {/* Upphämtning */}
                                 <div>
                                   <h4 className="detail-section-title">Upphämtning</h4>
-                                  <div className="text-base" style={{ display: 'grid', gap: '0.5rem' }}>
-                                    <div><span className="detail-label">Adress: </span><span className="detail-value">{booking.pickupAddress || '-'}</span></div>
-                                    <div><span className="detail-label">Datum: </span><span className="detail-value">{booking.pickupDate || booking.date || '-'}</span></div>
-                                    <div><span className="detail-label">Tid: </span><span className="detail-value">{formatTime24(booking.pickupTime || booking.time)}</span></div>
-                                    {booking.pickupContactName && (<div><span className="detail-label">Kontakt: </span><span className="detail-value">{booking.pickupContactName}</span></div>)}
-                                    {booking.pickupContactPhone && (<div><span className="detail-label">Telefon: </span><span className="detail-value">{booking.pickupContactPhone}</span></div>)}
+                                  <div
+                                    className="text-base"
+                                    style={{ display: 'grid', gap: '0.5rem' }}
+                                  >
+                                    <div>
+                                      <span className="detail-label">Adress: </span>
+                                      <span className="detail-value">
+                                        {booking.pickupAddress || '-'}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="detail-label">Datum: </span>
+                                      <span className="detail-value">
+                                        {booking.pickupDate || booking.date || '-'}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="detail-label">Tid: </span>
+                                      <span className="detail-value">
+                                        {formatTime24(booking.pickupTime || booking.time)}
+                                      </span>
+                                    </div>
+                                    {booking.pickupContactName && (
+                                      <div>
+                                        <span className="detail-label">Kontakt: </span>
+                                        <span className="detail-value">
+                                          {booking.pickupContactName}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {booking.pickupContactPhone && (
+                                      <div>
+                                        <span className="detail-label">Telefon: </span>
+                                        <span className="detail-value">
+                                          {booking.pickupContactPhone}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 
                                 {/* Lämning */}
                                 <div>
                                   <h4 className="detail-section-title">Lämning</h4>
-                                  <div className="text-base" style={{ display: 'grid', gap: '0.5rem' }}>
-                                    <div><span className="detail-label">Adress: </span><span className="detail-value">{booking.deliveryAddress || '-'}</span></div>
-                                    <div><span className="detail-label">Datum: </span><span className="detail-value">{booking.deliveryDate || '-'}</span></div>
-                                    <div><span className="detail-label">Tid: </span><span className="detail-value">{formatTime24(booking.deliveryTime)}</span></div>
-                                    {booking.deliveryContactName && (<div><span className="detail-label">Kontakt: </span><span className="detail-value">{booking.deliveryContactName}</span></div>)}
-                                    {booking.deliveryContactPhone && (<div><span className="detail-label">Telefon: </span><span className="detail-value">{booking.deliveryContactPhone}</span></div>)}
+                                  <div
+                                    className="text-base"
+                                    style={{ display: 'grid', gap: '0.5rem' }}
+                                  >
+                                    <div>
+                                      <span className="detail-label">Adress: </span>
+                                      <span className="detail-value">
+                                        {booking.deliveryAddress || '-'}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="detail-label">Datum: </span>
+                                      <span className="detail-value">
+                                        {booking.deliveryDate || '-'}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="detail-label">Tid: </span>
+                                      <span className="detail-value">
+                                        {formatTime24(booking.deliveryTime)}
+                                      </span>
+                                    </div>
+                                    {booking.deliveryContactName && (
+                                      <div>
+                                        <span className="detail-label">Kontakt: </span>
+                                        <span className="detail-value">
+                                          {booking.deliveryContactName}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {booking.deliveryContactPhone && (
+                                      <div>
+                                        <span className="detail-label">Telefon: </span>
+                                        <span className="detail-value">
+                                          {booking.deliveryContactPhone}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
 
                               {/* Övrig info */}
-                              <div className="mt-1" style={{ paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
-                                <div className="text-base" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                                  <div><span className="detail-label">Bokningsnr: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.bookingNo}</span></div>
-                                  {booking.marking && (<div><span className="detail-label">Märkning: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.marking}</span></div>)}
-                                  <div><span className="detail-label">Förare: </span><span className="detail-value" style={{ fontWeight: 600 }}>{driver?.name || '-'}</span></div>
-                                  {booking.km && (<div><span className="detail-label">Sträcka: </span><span className="detail-value" style={{ fontWeight: 600 }}>{booking.km} km</span></div>)}
+                              <div
+                                className="mt-1"
+                                style={{
+                                  paddingTop: '1rem',
+                                  borderTop: '1px solid var(--color-border)',
+                                }}
+                              >
+                                <div
+                                  className="text-base"
+                                  style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                    gap: '0.75rem',
+                                  }}
+                                >
+                                  <div>
+                                    <span className="detail-label">Bokningsnr: </span>
+                                    <span className="detail-value" style={{ fontWeight: 600 }}>
+                                      {booking.bookingNo}
+                                    </span>
+                                  </div>
+                                  {booking.marking && (
+                                    <div>
+                                      <span className="detail-label">Märkning: </span>
+                                      <span className="detail-value" style={{ fontWeight: 600 }}>
+                                        {booking.marking}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <span className="detail-label">Förare: </span>
+                                    <span className="detail-value" style={{ fontWeight: 600 }}>
+                                      {driver?.name || '-'}
+                                    </span>
+                                  </div>
+                                  {booking.km && (
+                                    <div>
+                                      <span className="detail-label">Sträcka: </span>
+                                      <span className="detail-value" style={{ fontWeight: 600 }}>
+                                        {booking.km} km
+                                      </span>
+                                    </div>
+                                  )}
                                   {booking.amountSek && (
                                     <div>
                                       <span className="detail-label">Pris: </span>
-                                      <span className="detail-value" style={{ fontWeight: 600 }}>{booking.amountSek} SEK</span>
+                                      <span className="detail-value" style={{ fontWeight: 600 }}>
+                                        {booking.amountSek} SEK
+                                      </span>
                                     </div>
                                   )}
                                 </div>
@@ -1814,17 +2041,18 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
         </>
       )}
 
-      {costEntryBookingId && (() => {
-        const booking = data.bookings.find(b => b.id === costEntryBookingId);
-        return booking ? (
-          <CostEntryModal
-            booking={booking}
-            data={data}
-            onSave={handleCostSave}
-            onClose={() => setCostEntryBookingId(null)}
-          />
-        ) : null;
-      })()}
+      {costEntryBookingId &&
+        (() => {
+          const booking = data.bookings.find(b => b.id === costEntryBookingId);
+          return booking ? (
+            <CostEntryModal
+              booking={booking}
+              data={data}
+              onSave={handleCostSave}
+              onClose={() => setCostEntryBookingId(null)}
+            />
+          ) : null;
+        })()}
     </div>
   );
 }

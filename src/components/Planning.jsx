@@ -16,7 +16,9 @@ function getMondayOfWeek(dateStr) {
 function Planning({ data, updateData, setCurrentSection }) {
   const [planningTab, setPlanningTab] = useState('list'); // 'list' | 'week'
   const [costEntryBookingId, setCostEntryBookingId] = useState(null);
-  const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(new Date().toISOString().split('T')[0]));
+  const [weekStart, setWeekStart] = useState(() =>
+    getMondayOfWeek(new Date().toISOString().split('T')[0])
+  );
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
@@ -25,25 +27,25 @@ function Planning({ data, updateData, setCurrentSection }) {
     selectedStatuses: [],
     includeUnplanned: false,
     vehicleId: '',
-    driverId: ''
+    driverId: '',
   });
   const [deleteId, setDeleteId] = useState(null);
   const [sortField, setSortField] = useState('pickupDate');
   const [sortDirection, setSortDirection] = useState('asc');
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = e => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
-  const toggleStatusFilter = (status) => {
+  const toggleStatusFilter = status => {
     setFilters(prev => {
       const current = prev.selectedStatuses || [];
       return {
         ...prev,
         selectedStatuses: current.includes(status)
           ? current.filter(s => s !== status)
-          : [...current, status]
+          : [...current, status],
       };
     });
   };
@@ -51,11 +53,11 @@ function Planning({ data, updateData, setCurrentSection }) {
   const toggleUnplannedFilter = () => {
     setFilters(prev => ({
       ...prev,
-      includeUnplanned: !prev.includeUnplanned
+      includeUnplanned: !prev.includeUnplanned,
     }));
   };
 
-  const handleSort = (field) => {
+  const handleSort = field => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -177,20 +179,22 @@ function Planning({ data, updateData, setCurrentSection }) {
     updateData({ bookings: updatedBookings });
   };
 
-  const handleDuplicate = (booking) => {
+  const handleDuplicate = booking => {
     const { id, bookingNo, ...bookingData } = booking;
-    const { bookingNo: newBookingNo, lastBookingNumber } = generateBookingNumber(data.lastBookingNumber);
+    const { bookingNo: newBookingNo, lastBookingNumber } = generateBookingNumber(
+      data.lastBookingNumber
+    );
     const newBooking = {
       ...bookingData,
       id: generateId('bk'),
       bookingNo: newBookingNo,
       status: 'Bokad',
       pickupDate: new Date().toISOString().split('T')[0],
-      date: new Date().toISOString().split('T')[0] // Keep for backwards compatibility
+      date: new Date().toISOString().split('T')[0], // Keep for backwards compatibility
     };
     updateData({
       bookings: [...data.bookings, newBooking],
-      lastBookingNumber
+      lastBookingNumber,
     });
   };
 
@@ -200,14 +204,17 @@ function Planning({ data, updateData, setCurrentSection }) {
     setDeleteId(null);
   };
 
-  const handleEdit = (booking) => {
+  const handleEdit = booking => {
     setCurrentSection('booking');
   };
 
   const handleVehicleAssign = (bookingId, vehicleId) => {
     const booking = data.bookings.find(b => b.id === bookingId);
-    const authorizedDrivers = vehicleId ? data.drivers.filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
-    const keepDriver = vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
+    const authorizedDrivers = vehicleId
+      ? data.drivers.filter(d => (d.vehicleIds || []).includes(vehicleId))
+      : [];
+    const keepDriver =
+      vehicleId && booking?.driverId && authorizedDrivers.some(d => d.id === booking.driverId);
     const driverId = keepDriver ? booking.driverId : null;
     const updatedBookings = data.bookings.map(b => {
       if (b.id !== bookingId) return b;
@@ -226,7 +233,7 @@ function Planning({ data, updateData, setCurrentSection }) {
     updateData({ bookings: updatedBookings });
   };
 
-  const handleCostSave = (updatedBooking) => {
+  const handleCostSave = updatedBooking => {
     const updatedBookings = data.bookings.map(b =>
       b.id === updatedBooking.id ? updatedBooking : b
     );
@@ -254,19 +261,27 @@ function Planning({ data, updateData, setCurrentSection }) {
     const m = new Date(weekStart + 'T12:00:00');
     const f = new Date(m);
     f.setDate(f.getDate() + 4);
-    const fmt = (d) => d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
+    const fmt = d => d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
     return `Vecka ${getWeekNumber(m)}, ${fmt(m)} – ${fmt(f)} ${m.getFullYear()}`;
   })();
   function getWeekNumber(d) {
     const oneJan = new Date(d.getFullYear(), 0, 1);
-    return Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
+    return Math.ceil(((d - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
   }
 
   return (
     <div>
       <h1>Planering</h1>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '2px solid #2a3647', paddingBottom: 0 }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          marginBottom: '1.5rem',
+          borderBottom: '2px solid #2a3647',
+          paddingBottom: 0,
+        }}
+      >
         <button
           type="button"
           onClick={() => setPlanningTab('list')}
@@ -274,7 +289,7 @@ function Planning({ data, updateData, setCurrentSection }) {
           style={{
             borderRadius: '6px 6px 0 0',
             borderBottom: planningTab === 'list' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px'
+            marginBottom: '-2px',
           }}
         >
           Lista
@@ -286,7 +301,7 @@ function Planning({ data, updateData, setCurrentSection }) {
           style={{
             borderRadius: '6px 6px 0 0',
             borderBottom: planningTab === 'week' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px'
+            marginBottom: '-2px',
           }}
         >
           Veckoschema
@@ -336,10 +351,23 @@ function Planning({ data, updateData, setCurrentSection }) {
           </div>
 
           <div className="form-group">
-            <span className="form-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Status / typ</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1rem', alignItems: 'center' }}>
+            <span className="form-label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+              Status / typ
+            </span>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.75rem 1rem',
+                alignItems: 'center',
+              }}
+            >
               {['Bokad', 'Planerad', 'Genomförd', 'Fakturerad'].map(status => (
-                <label key={status} className="checkbox-label" style={{ marginBottom: 0, cursor: 'pointer' }}>
+                <label
+                  key={status}
+                  className="checkbox-label"
+                  style={{ marginBottom: 0, cursor: 'pointer' }}
+                >
                   <input
                     type="checkbox"
                     checked={(filters.selectedStatuses || []).includes(status)}
@@ -396,178 +424,201 @@ function Planning({ data, updateData, setCurrentSection }) {
       </div>
 
       {planningTab === 'list' && (
-      <>
-      {filteredBookings.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon"></div>
-          <p>Inga bookingar matchar filtren</p>
-        </div>
-      ) : (
-        <div className="table-container">
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="sortable" onClick={() => handleSort('pickupDate')}>
-                  Datum
-                  <span className="sort-indicator">
-                    {sortField === 'pickupDate' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
-                </th>
-                <th>Tid</th>
-                <th className="sortable" onClick={() => handleSort('customer')}>
-                  Kund
-                  <span className="sort-indicator">
-                    {sortField === 'customer' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
-                </th>
-                <th className="sortable" onClick={() => handleSort('bookingNo')}>
-                  Bokningsnr
-                  <span className="sort-indicator">
-                    {sortField === 'bookingNo' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
-                </th>
-                <th className="sortable" onClick={() => handleSort('vehicle')}>
-                  Fordon
-                  <span className="sort-indicator">
-                    {sortField === 'vehicle' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
-                </th>
-                <th className="sortable" onClick={() => handleSort('driver')}>
-                  Förare
-                  <span className="sort-indicator">
-                    {sortField === 'driver' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
-                </th>
-                <th className="sortable" onClick={() => handleSort('status')}>
-                  Status
-                  <span className="sort-indicator">
-                    {sortField === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                  </span>
-                </th>
-                <th>Km</th>
-                <th>Belopp</th>
-                <th>Anteckning</th>
-                <th>Åtgärder</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBookings.map(booking => {
-                const customer = data.customers.find(c => c.id === booking.customerId);
-                const vehicle = data.vehicles.find(v => v.id === booking.vehicleId);
-                const driver = data.drivers.find(d => d.id === booking.driverId);
-
-                return (
-                  <tr key={booking.id}>
-                    <td>{booking.pickupDate || booking.date || '-'}</td>
-                    <td>{formatTime24(booking.pickupTime || booking.time)}</td>
-                    <td>{customer?.name || 'Okänd'}</td>
-                    <td>{booking.bookingNo}</td>
-                    <td>
-                      <select
-                        value={booking.vehicleId || ''}
-                        onChange={(e) => handleVehicleAssign(booking.id, e.target.value || null)}
-                        className="form-select"
-                        style={{ minWidth: '100px' }}
-                      >
-                        <option value="">Ej tilldelad</option>
-                        {activeVehicles.map(v => (
-                          <option key={v.id} value={v.id}>{v.regNo}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <select
-                        value={booking.driverId || ''}
-                        onChange={(e) => handleDriverAssign(booking.id, e.target.value || null)}
-                        className="form-select"
-                        style={{ minWidth: '120px' }}
-                      >
-                        <option value="">Ej tilldelad</option>
-                        {(() => {
-                          const eligible = booking.vehicleId
-                            ? activeDrivers.filter(d => (d.vehicleIds || []).includes(booking.vehicleId) || d.id === booking.driverId)
-                            : activeDrivers;
-                          return eligible.map(d => (
-                            <option key={d.id} value={d.id}>{d.name}</option>
-                          ));
-                        })()}
-                      </select>
-                    </td>
-                    <td>
-                      <span className={`status-badge status-${booking.status.toLowerCase()}`}>
-                        {booking.status}
+        <>
+          {filteredBookings.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon"></div>
+              <p>Inga bookingar matchar filtren</p>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th className="sortable" onClick={() => handleSort('pickupDate')}>
+                      Datum
+                      <span className="sort-indicator">
+                        {sortField === 'pickupDate' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
                       </span>
-                    </td>
-                    <td>{booking.km != null ? formatNumber(booking.km) : '-'}</td>
-                    <td>{booking.amountSek != null ? formatNumber(booking.amountSek) : '-'}</td>
-                    <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {booking.note || '-'}
-                    </td>
-                    <td>
-                      <div className="table-actions">
-                        <button
-                          onClick={() => handleEdit(booking)}
-                          className="btn btn-small btn-primary"
-                          title="Redigera"
-                        >
-                          Redigera
-                        </button>
-                        <button
-                          onClick={() => handleDuplicate(booking)}
-                          className="btn btn-small btn-secondary"
-                          title="Duplicera"
-                        >
-                          Duplicera
-                        </button>
-                        {(booking.status === 'Bokad' || booking.status === 'Planerad') && (
-                          <button
-                            onClick={() => handleStatusChange(booking.id, 'Genomförd')}
-                            className="btn btn-small btn-success"
-                            title="Markera som genomförd"
-                          >
-                            Genomförd
-                          </button>
-                        )}
-                        {booking.status === 'Genomförd' && (
-                          <>
-                            <button
-                              onClick={() => setCostEntryBookingId(booking.id)}
-                              className="btn btn-small btn-secondary"
-                              title="Ange kostnad"
-                            >
-                              Ange kostnad
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(booking.id, 'Fakturerad')}
-                              className="btn btn-small btn-success"
-                              title="Markera som fakturerad"
-                            >
-                              Fakturera
-                            </button>
-                          </>
-                        )}
-                        <button
-                          onClick={() => setDeleteId(booking.id)}
-                          className="btn btn-small btn-danger"
-                          title="Ta bort"
-                        >
-                          Ta bort
-                        </button>
-                      </div>
-                    </td>
+                    </th>
+                    <th>Tid</th>
+                    <th className="sortable" onClick={() => handleSort('customer')}>
+                      Kund
+                      <span className="sort-indicator">
+                        {sortField === 'customer' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                      </span>
+                    </th>
+                    <th className="sortable" onClick={() => handleSort('bookingNo')}>
+                      Bokningsnr
+                      <span className="sort-indicator">
+                        {sortField === 'bookingNo' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                      </span>
+                    </th>
+                    <th className="sortable" onClick={() => handleSort('vehicle')}>
+                      Fordon
+                      <span className="sort-indicator">
+                        {sortField === 'vehicle' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                      </span>
+                    </th>
+                    <th className="sortable" onClick={() => handleSort('driver')}>
+                      Förare
+                      <span className="sort-indicator">
+                        {sortField === 'driver' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                      </span>
+                    </th>
+                    <th className="sortable" onClick={() => handleSort('status')}>
+                      Status
+                      <span className="sort-indicator">
+                        {sortField === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                      </span>
+                    </th>
+                    <th>Km</th>
+                    <th>Belopp</th>
+                    <th>Anteckning</th>
+                    <th>Åtgärder</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-      </>
+                </thead>
+                <tbody>
+                  {filteredBookings.map(booking => {
+                    const customer = data.customers.find(c => c.id === booking.customerId);
+                    const vehicle = data.vehicles.find(v => v.id === booking.vehicleId);
+                    const driver = data.drivers.find(d => d.id === booking.driverId);
+
+                    return (
+                      <tr key={booking.id}>
+                        <td>{booking.pickupDate || booking.date || '-'}</td>
+                        <td>{formatTime24(booking.pickupTime || booking.time)}</td>
+                        <td>{customer?.name || 'Okänd'}</td>
+                        <td>{booking.bookingNo}</td>
+                        <td>
+                          <select
+                            value={booking.vehicleId || ''}
+                            onChange={e => handleVehicleAssign(booking.id, e.target.value || null)}
+                            className="form-select"
+                            style={{ minWidth: '100px' }}
+                          >
+                            <option value="">Ej tilldelad</option>
+                            {activeVehicles.map(v => (
+                              <option key={v.id} value={v.id}>
+                                {v.regNo}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <select
+                            value={booking.driverId || ''}
+                            onChange={e => handleDriverAssign(booking.id, e.target.value || null)}
+                            className="form-select"
+                            style={{ minWidth: '120px' }}
+                          >
+                            <option value="">Ej tilldelad</option>
+                            {(() => {
+                              const eligible = booking.vehicleId
+                                ? activeDrivers.filter(
+                                    d =>
+                                      (d.vehicleIds || []).includes(booking.vehicleId) ||
+                                      d.id === booking.driverId
+                                  )
+                                : activeDrivers;
+                              return eligible.map(d => (
+                                <option key={d.id} value={d.id}>
+                                  {d.name}
+                                </option>
+                              ));
+                            })()}
+                          </select>
+                        </td>
+                        <td>
+                          <span className={`status-badge status-${booking.status.toLowerCase()}`}>
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td>{booking.km != null ? formatNumber(booking.km) : '-'}</td>
+                        <td>{booking.amountSek != null ? formatNumber(booking.amountSek) : '-'}</td>
+                        <td
+                          style={{
+                            maxWidth: '150px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {booking.note || '-'}
+                        </td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              onClick={() => handleEdit(booking)}
+                              className="btn btn-small btn-primary"
+                              title="Redigera"
+                            >
+                              Redigera
+                            </button>
+                            <button
+                              onClick={() => handleDuplicate(booking)}
+                              className="btn btn-small btn-secondary"
+                              title="Duplicera"
+                            >
+                              Duplicera
+                            </button>
+                            {(booking.status === 'Bokad' || booking.status === 'Planerad') && (
+                              <button
+                                onClick={() => handleStatusChange(booking.id, 'Genomförd')}
+                                className="btn btn-small btn-success"
+                                title="Markera som genomförd"
+                              >
+                                Genomförd
+                              </button>
+                            )}
+                            {booking.status === 'Genomförd' && (
+                              <>
+                                <button
+                                  onClick={() => setCostEntryBookingId(booking.id)}
+                                  className="btn btn-small btn-secondary"
+                                  title="Ange kostnad"
+                                >
+                                  Ange kostnad
+                                </button>
+                                <button
+                                  onClick={() => handleStatusChange(booking.id, 'Fakturerad')}
+                                  className="btn btn-small btn-success"
+                                  title="Markera som fakturerad"
+                                >
+                                  Fakturera
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => setDeleteId(booking.id)}
+                              className="btn btn-small btn-danger"
+                              title="Ta bort"
+                            >
+                              Ta bort
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
 
       {planningTab === 'week' && (
         <div className="planning-week-view">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              marginBottom: '1rem',
+              flexWrap: 'wrap',
+            }}
+          >
             <button
               type="button"
               className="btn btn-secondary btn-small"
@@ -579,7 +630,9 @@ function Planning({ data, updateData, setCurrentSection }) {
             >
               ← Föregående vecka
             </button>
-            <span style={{ fontWeight: 600, color: '#e1e8ed', minWidth: '220px' }}>{weekLabel}</span>
+            <span style={{ fontWeight: 600, color: '#e1e8ed', minWidth: '220px' }}>
+              {weekLabel}
+            </span>
             <button
               type="button"
               className="btn btn-secondary btn-small"
@@ -592,12 +645,14 @@ function Planning({ data, updateData, setCurrentSection }) {
               Nästa vecka →
             </button>
           </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
-            gap: '0.75rem',
-            minHeight: '200px'
-          }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: '0.75rem',
+              minHeight: '200px',
+            }}
+          >
             {weekDays.map((dayStr, i) => {
               const d = new Date(dayStr + 'T12:00:00');
               const dayName = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre'][i];
@@ -613,10 +668,19 @@ function Planning({ data, updateData, setCurrentSection }) {
                     padding: '0.5rem',
                     display: 'flex',
                     flexDirection: 'column',
-                    minHeight: '120px'
+                    minHeight: '120px',
                   }}
                 >
-                  <div style={{ borderBottom: '1px solid #2a3647', paddingBottom: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: '#e1e8ed' }}>
+                  <div
+                    style={{
+                      borderBottom: '1px solid #2a3647',
+                      paddingBottom: '0.5rem',
+                      marginBottom: '0.5rem',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: '#e1e8ed',
+                    }}
+                  >
                     {dayName} {dateLabel}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
@@ -631,7 +695,7 @@ function Planning({ data, updateData, setCurrentSection }) {
                           Bokad: { bg: 'rgba(239, 68, 68, 0.2)', border: '#ef4444' },
                           Planerad: { bg: 'rgba(234, 179, 8, 0.2)', border: '#eab308' },
                           Genomförd: { bg: 'rgba(34, 197, 94, 0.2)', border: '#22c55e' },
-                          Fakturerad: { bg: 'rgba(59, 130, 246, 0.2)', border: '#3b82f6' }
+                          Fakturerad: { bg: 'rgba(59, 130, 246, 0.2)', border: '#3b82f6' },
                         };
                         const colors = statusColors[status] || statusColors.Bokad;
                         return (
@@ -642,10 +706,12 @@ function Planning({ data, updateData, setCurrentSection }) {
                               border: `1px solid ${colors.border}`,
                               borderRadius: '6px',
                               padding: '0.5rem',
-                              fontSize: '0.8rem'
+                              fontSize: '0.8rem',
                             }}
                           >
-                            <div style={{ fontWeight: 600, color: '#e1e8ed', marginBottom: '0.25rem' }}>
+                            <div
+                              style={{ fontWeight: 600, color: '#e1e8ed', marginBottom: '0.25rem' }}
+                            >
                               {formatTime24(booking.pickupTime || booking.time)}
                             </div>
                             <div style={{ color: '#cbd5e1', marginBottom: '0.15rem' }}>
@@ -675,21 +741,20 @@ function Planning({ data, updateData, setCurrentSection }) {
         />
       )}
 
-      {costEntryBookingId && (() => {
-        const booking = data.bookings.find(b => b.id === costEntryBookingId);
-        return booking ? (
-          <CostEntryModal
-            booking={booking}
-            data={data}
-            onSave={handleCostSave}
-            onClose={() => setCostEntryBookingId(null)}
-          />
-        ) : null;
-      })()}
+      {costEntryBookingId &&
+        (() => {
+          const booking = data.bookings.find(b => b.id === costEntryBookingId);
+          return booking ? (
+            <CostEntryModal
+              booking={booking}
+              data={data}
+              onSave={handleCostSave}
+              onClose={() => setCostEntryBookingId(null)}
+            />
+          ) : null;
+        })()}
     </div>
   );
 }
 
 export default Planning;
-
-

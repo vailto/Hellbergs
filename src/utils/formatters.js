@@ -3,30 +3,32 @@
  * Single source for number/date/time formatting and customer display name (short).
  */
 
-export const formatNumber = (value) => {
+export const formatNumber = value => {
   if (value === null || value === undefined || value === '') return '';
   const num = parseFloat(value);
   if (isNaN(num)) return '';
-  
+
   // Format with space as thousand separator and comma as decimal separator
   return num.toLocaleString('sv-SE', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   });
 };
 
-export const formatCurrency = (value) => {
+export const formatCurrency = value => {
   if (value === null || value === undefined || value === '') return '';
   const num = parseFloat(value);
   if (isNaN(num)) return '';
-  
-  return num.toLocaleString('sv-SE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }) + ' SEK';
+
+  return (
+    num.toLocaleString('sv-SE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) + ' SEK'
+  );
 };
 
-export const parseNumber = (strValue) => {
+export const parseNumber = strValue => {
   if (!strValue) return null;
   // Replace comma with dot and remove spaces
   const normalized = strValue.replace(/,/g, '.').replace(/\s/g, '');
@@ -34,12 +36,12 @@ export const parseNumber = (strValue) => {
   return isNaN(num) ? null : num;
 };
 
-export const formatDate = (dateStr) => {
+export const formatDate = dateStr => {
   // Input/output format: yyyy-mm-dd
   return dateStr;
 };
 
-export const formatTime = (timeStr) => {
+export const formatTime = timeStr => {
   // Input/output format: hh:mm
   return timeStr;
 };
@@ -51,7 +53,7 @@ export const getCurrentTime24 = () => {
 };
 
 /** Tidssträng till 24h-format HH:MM (t.ex. "8:00" → "08:00", visning överallt) */
-export const formatTime24 = (timeStr) => {
+export const formatTime24 = timeStr => {
   if (!timeStr) return '–';
   const parts = String(timeStr).trim().split(':');
   const h = parseInt(parts[0], 10) || 0;
@@ -60,14 +62,14 @@ export const formatTime24 = (timeStr) => {
   return `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 };
 
-export const generateBookingNumber = (lastBookingNumber) => {
+export const generateBookingNumber = lastBookingNumber => {
   const currentYear = new Date().getFullYear();
-  
+
   if (lastBookingNumber.year !== currentYear) {
     // New year, reset counter
     return {
       bookingNo: `${currentYear}-0001`,
-      lastBookingNumber: { year: currentYear, number: 1 }
+      lastBookingNumber: { year: currentYear, number: 1 },
     };
   } else {
     // Same year, increment
@@ -75,29 +77,19 @@ export const generateBookingNumber = (lastBookingNumber) => {
     const paddedNumber = String(newNumber).padStart(4, '0');
     return {
       bookingNo: `${currentYear}-${paddedNumber}`,
-      lastBookingNumber: { year: currentYear, number: newNumber }
+      lastBookingNumber: { year: currentYear, number: newNumber },
     };
   }
 };
 
-export const generateId = (prefix) => {
+export const generateId = prefix => {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
 /** Kundförkortning för tabeller: shortName om satt, annars första 6 tecken av namn. Används i Booking, Schema m.fl. */
-export const getCustomerShort = (customer) => {
+export const getCustomerShort = customer => {
   if (!customer) return '–';
   const s = (customer.shortName || '').trim();
   if (s) return s;
   return (customer.name || '').slice(0, 6) || '–';
 };
-
-
-
-
-
-
-
-
-
-

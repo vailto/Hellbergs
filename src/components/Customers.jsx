@@ -14,7 +14,7 @@ function Customers({ data, updateData }) {
     customerNumber: '',
     contactPerson: '',
     active: true,
-    pricesByVehicleType: {}
+    pricesByVehicleType: {},
   });
   const [editingId, setEditingId] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
@@ -34,11 +34,11 @@ function Customers({ data, updateData }) {
     return prices;
   };
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -49,15 +49,15 @@ function Customers({ data, updateData }) {
         ...prev.pricesByVehicleType,
         [vehicleType]: {
           ...prev.pricesByVehicleType[vehicleType],
-          [field]: value
-        }
-      }
+          [field]: value,
+        },
+      },
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       alert('Namn krävs');
       return;
@@ -65,7 +65,7 @@ function Customers({ data, updateData }) {
 
     const customerData = {
       ...formData,
-      pricesByVehicleType: formData.pricesByVehicleType
+      pricesByVehicleType: formData.pricesByVehicleType,
     };
 
     if (editingId) {
@@ -76,7 +76,7 @@ function Customers({ data, updateData }) {
     } else {
       const newCustomer = {
         ...customerData,
-        id: generateId('cust')
+        id: generateId('cust'),
       };
       updateData({ customers: [...data.customers, newCustomer] });
     }
@@ -96,7 +96,7 @@ function Customers({ data, updateData }) {
       customerNumber: '',
       contactPerson: '',
       active: true,
-      pricesByVehicleType: {}
+      pricesByVehicleType: {},
     });
     setEditingId(null);
     setShowForm(false);
@@ -104,10 +104,10 @@ function Customers({ data, updateData }) {
     setSelectedVehicleType('');
   };
 
-  const handleEdit = (customer) => {
+  const handleEdit = customer => {
     setFormData({
       ...customer,
-      pricesByVehicleType: customer.pricesByVehicleType || {}
+      pricesByVehicleType: customer.pricesByVehicleType || {},
     });
     setEditingId(customer.id);
     setShowForm(true);
@@ -116,14 +116,14 @@ function Customers({ data, updateData }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDeactivate = (customerId) => {
+  const handleDeactivate = customerId => {
     const updatedCustomers = data.customers.map(c =>
       c.id === customerId ? { ...c, active: false } : c
     );
     updateData({ customers: updatedCustomers });
   };
 
-  const handleActivate = (customerId) => {
+  const handleActivate = customerId => {
     const updatedCustomers = data.customers.map(c =>
       c.id === customerId ? { ...c, active: true } : c
     );
@@ -148,7 +148,7 @@ function Customers({ data, updateData }) {
       customerNumber: '',
       contactPerson: '',
       active: true,
-      pricesByVehicleType: {}
+      pricesByVehicleType: {},
     });
     setEditingId(null);
     setShowForm(true);
@@ -160,7 +160,7 @@ function Customers({ data, updateData }) {
     setShowPriceForm(true);
   };
 
-  const handleVehicleTypeSelect = (e) => {
+  const handleVehicleTypeSelect = e => {
     const type = e.target.value;
     setSelectedVehicleType(type);
     if (type && !formData.pricesByVehicleType[type]) {
@@ -168,30 +168,30 @@ function Customers({ data, updateData }) {
         ...prev,
         pricesByVehicleType: {
           ...prev.pricesByVehicleType,
-          [type]: { km: '', stop: '', wait: '', hour: '', fixed: '' }
-        }
+          [type]: { km: '', stop: '', wait: '', hour: '', fixed: '' },
+        },
       }));
     }
   };
 
-  const handleRemovePriceTemplate = (vehicleType) => {
+  const handleRemovePriceTemplate = vehicleType => {
     const updatedPrices = { ...formData.pricesByVehicleType };
     delete updatedPrices[vehicleType];
     setFormData(prev => ({
       ...prev,
-      pricesByVehicleType: updatedPrices
+      pricesByVehicleType: updatedPrices,
     }));
     if (selectedVehicleType === vehicleType) {
       setSelectedVehicleType('');
     }
   };
 
-  const toggleCustomerExpand = (customerId) => {
+  const toggleCustomerExpand = customerId => {
     setExpandedCustomerId(expandedCustomerId === customerId ? null : customerId);
   };
 
   // Sorting function
-  const handleSort = (field) => {
+  const handleSort = field => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -200,7 +200,7 @@ function Customers({ data, updateData }) {
     }
   };
 
-  const sortCustomers = (customers) => {
+  const sortCustomers = customers => {
     return [...customers].sort((a, b) => {
       let aVal, bVal;
 
@@ -372,13 +372,27 @@ function Customers({ data, updateData }) {
             </label>
           </div>
 
-          <div style={{ marginTop: '2rem', marginBottom: '1rem', paddingTop: '1rem', borderTop: '1px solid #2a3647' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div
+            style={{
+              marginTop: '2rem',
+              marginBottom: '1rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid #2a3647',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem',
+              }}
+            >
               <h3 style={{ margin: 0 }}>Prismallar</h3>
               {!showPriceForm && (
-                <button 
+                <button
                   type="button"
-                  onClick={handleCreateTemplate} 
+                  onClick={handleCreateTemplate}
                   className="btn btn-secondary btn-small"
                 >
                   + Skapa mall
@@ -398,9 +412,10 @@ function Customers({ data, updateData }) {
                     {data.vehicleTypes
                       .filter(type => !formData.pricesByVehicleType[type])
                       .map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))
-                    }
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>
@@ -411,9 +426,22 @@ function Customers({ data, updateData }) {
                 {Object.keys(formData.pricesByVehicleType).map(vehicleType => {
                   const prices = formData.pricesByVehicleType[vehicleType];
                   return (
-                    <div key={vehicleType} className="form-section" style={{ marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h4 className="form-section-title" style={{ margin: 0 }}>{vehicleType}</h4>
+                    <div
+                      key={vehicleType}
+                      className="form-section"
+                      style={{ marginBottom: '1rem' }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '1rem',
+                        }}
+                      >
+                        <h4 className="form-section-title" style={{ margin: 0 }}>
+                          {vehicleType}
+                        </h4>
                         <button
                           type="button"
                           onClick={() => handleRemovePriceTemplate(vehicleType)}
@@ -427,7 +455,7 @@ function Customers({ data, updateData }) {
                           <input
                             type="text"
                             value={prices.km}
-                            onChange={(e) => handlePriceChange(vehicleType, 'km', e.target.value)}
+                            onChange={e => handlePriceChange(vehicleType, 'km', e.target.value)}
                             className="form-input"
                             placeholder="Pris per km (SEK)"
                           />
@@ -436,7 +464,7 @@ function Customers({ data, updateData }) {
                           <input
                             type="text"
                             value={prices.stop}
-                            onChange={(e) => handlePriceChange(vehicleType, 'stop', e.target.value)}
+                            onChange={e => handlePriceChange(vehicleType, 'stop', e.target.value)}
                             className="form-input"
                             placeholder="Pris per stopp (SEK)"
                           />
@@ -445,7 +473,7 @@ function Customers({ data, updateData }) {
                           <input
                             type="text"
                             value={prices.wait}
-                            onChange={(e) => handlePriceChange(vehicleType, 'wait', e.target.value)}
+                            onChange={e => handlePriceChange(vehicleType, 'wait', e.target.value)}
                             className="form-input"
                             placeholder="Pris per väntetimme (SEK)"
                           />
@@ -454,7 +482,7 @@ function Customers({ data, updateData }) {
                           <input
                             type="text"
                             value={prices.hour}
-                            onChange={(e) => handlePriceChange(vehicleType, 'hour', e.target.value)}
+                            onChange={e => handlePriceChange(vehicleType, 'hour', e.target.value)}
                             className="form-input"
                             placeholder="Pris per timme (SEK)"
                           />
@@ -463,7 +491,7 @@ function Customers({ data, updateData }) {
                           <input
                             type="text"
                             value={prices.fixed}
-                            onChange={(e) => handlePriceChange(vehicleType, 'fixed', e.target.value)}
+                            onChange={e => handlePriceChange(vehicleType, 'fixed', e.target.value)}
                             className="form-input"
                             placeholder="Fast pris (SEK)"
                           />
@@ -482,7 +510,9 @@ function Customers({ data, updateData }) {
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm('Är du säker på att du vill ta bort denna kund permanent?')) {
+                    if (
+                      window.confirm('Är du säker på att du vill ta bort denna kund permanent?')
+                    ) {
                       const updatedCustomers = data.customers.filter(c => c.id !== editingId);
                       updateData({ customers: updatedCustomers });
                       resetForm();
@@ -509,7 +539,12 @@ function Customers({ data, updateData }) {
                 </button>
               </>
             )}
-            <button type="button" onClick={resetForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="btn btn-secondary"
+              style={{ marginLeft: 'auto' }}
+            >
               Avbryt
             </button>
             <button type="submit" className="btn btn-primary">
@@ -572,7 +607,9 @@ function Customers({ data, updateData }) {
             <tbody>
               {sortCustomers(data.customers).map(customer => {
                 const isExpanded = expandedCustomerId === customer.id;
-                const hasPrices = customer.pricesByVehicleType && Object.keys(customer.pricesByVehicleType).length > 0;
+                const hasPrices =
+                  customer.pricesByVehicleType &&
+                  Object.keys(customer.pricesByVehicleType).length > 0;
 
                 return (
                   <React.Fragment key={customer.id}>
@@ -580,7 +617,7 @@ function Customers({ data, updateData }) {
                       onClick={() => toggleCustomerExpand(customer.id)}
                       style={{
                         opacity: customer.active ? 1 : 0.5,
-                        cursor: 'pointer'
+                        cursor: 'pointer',
                       }}
                     >
                       <td style={{ whiteSpace: 'nowrap' }}>
@@ -596,11 +633,13 @@ function Customers({ data, updateData }) {
                       <td style={{ whiteSpace: 'nowrap' }}>{customer.mobile || '-'}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>{customer.city || '-'}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
-                        <span className={`status-badge ${customer.active ? 'status-completed' : 'status-cancelled'}`}>
+                        <span
+                          className={`status-badge ${customer.active ? 'status-completed' : 'status-cancelled'}`}
+                        >
                           {customer.active ? 'Aktiv' : 'Inaktiv'}
                         </span>
                       </td>
-                      <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                      <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                         <button
                           onClick={() => handleEdit(customer)}
                           className="btn btn-small btn-primary"
@@ -613,10 +652,25 @@ function Customers({ data, updateData }) {
                     {isExpanded && (
                       <tr>
                         <td colSpan="7" style={{ backgroundColor: '#0f1419', padding: '1rem' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr',
+                              gap: '1.5rem',
+                              marginBottom: '1rem',
+                            }}
+                          >
                             {/* Kontaktinformation */}
                             <div>
-                              <h4 style={{ margin: '0 0 0.75rem 0', color: '#e1e8ed', fontSize: '0.9rem', borderBottom: '1px solid #2a3647', paddingBottom: '0.5rem' }}>
+                              <h4
+                                style={{
+                                  margin: '0 0 0.75rem 0',
+                                  color: '#e1e8ed',
+                                  fontSize: '0.9rem',
+                                  borderBottom: '1px solid #2a3647',
+                                  paddingBottom: '0.5rem',
+                                }}
+                              >
                                 Kontaktinformation
                               </h4>
                               <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.85rem' }}>
@@ -655,23 +709,37 @@ function Customers({ data, updateData }) {
 
                             {/* Kunduppgifter */}
                             <div>
-                              <h4 style={{ margin: '0 0 0.75rem 0', color: '#e1e8ed', fontSize: '0.9rem', borderBottom: '1px solid #2a3647', paddingBottom: '0.5rem' }}>
+                              <h4
+                                style={{
+                                  margin: '0 0 0.75rem 0',
+                                  color: '#e1e8ed',
+                                  fontSize: '0.9rem',
+                                  borderBottom: '1px solid #2a3647',
+                                  paddingBottom: '0.5rem',
+                                }}
+                              >
                                 Kunduppgifter
                               </h4>
                               <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.85rem' }}>
                                 <div>
                                   <span style={{ color: '#8899a6' }}>Kundnummer: </span>
-                                  <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{customer.customerNumber || '-'}</span>
+                                  <span style={{ color: '#e1e8ed', fontWeight: 600 }}>
+                                    {customer.customerNumber || '-'}
+                                  </span>
                                 </div>
                                 {customer.contactPerson && (
                                   <div>
                                     <span style={{ color: '#8899a6' }}>Kontaktperson: </span>
-                                    <span style={{ color: '#e1e8ed' }}>{customer.contactPerson}</span>
+                                    <span style={{ color: '#e1e8ed' }}>
+                                      {customer.contactPerson}
+                                    </span>
                                   </div>
                                 )}
                                 <div>
                                   <span style={{ color: '#8899a6' }}>Status: </span>
-                                  <span style={{ color: '#e1e8ed' }}>{customer.active ? 'Aktiv' : 'Inaktiv'}</span>
+                                  <span style={{ color: '#e1e8ed' }}>
+                                    {customer.active ? 'Aktiv' : 'Inaktiv'}
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -679,45 +747,74 @@ function Customers({ data, updateData }) {
 
                           {/* Prismallar */}
                           {hasPrices && (
-                            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #2a3647' }}>
+                            <div
+                              style={{
+                                marginTop: '1rem',
+                                paddingTop: '1rem',
+                                borderTop: '1px solid #2a3647',
+                              }}
+                            >
                               <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.85rem' }}>
-                                {Object.entries(customer.pricesByVehicleType).map(([vehicleType, prices]) => (
-                                  <div key={vehicleType} style={{ display: 'grid', gridTemplateColumns: '120px repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', alignItems: 'center' }}>
-                                    <div>
-                                      <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{vehicleType}:</span>
+                                {Object.entries(customer.pricesByVehicleType).map(
+                                  ([vehicleType, prices]) => (
+                                    <div
+                                      key={vehicleType}
+                                      style={{
+                                        display: 'grid',
+                                        gridTemplateColumns:
+                                          '120px repeat(auto-fit, minmax(150px, 1fr))',
+                                        gap: '1rem',
+                                        alignItems: 'center',
+                                      }}
+                                    >
+                                      <div>
+                                        <span style={{ color: '#e1e8ed', fontWeight: 600 }}>
+                                          {vehicleType}:
+                                        </span>
+                                      </div>
+                                      {prices.km && (
+                                        <div>
+                                          <span style={{ color: '#8899a6' }}>Per km: </span>
+                                          <span style={{ color: '#e1e8ed', fontWeight: 600 }}>
+                                            {prices.km} SEK
+                                          </span>
+                                        </div>
+                                      )}
+                                      {prices.stop && (
+                                        <div>
+                                          <span style={{ color: '#8899a6' }}>Per stopp: </span>
+                                          <span style={{ color: '#e1e8ed', fontWeight: 600 }}>
+                                            {prices.stop} SEK
+                                          </span>
+                                        </div>
+                                      )}
+                                      {prices.wait && (
+                                        <div>
+                                          <span style={{ color: '#8899a6' }}>Per väntetimme: </span>
+                                          <span style={{ color: '#e1e8ed', fontWeight: 600 }}>
+                                            {prices.wait} SEK
+                                          </span>
+                                        </div>
+                                      )}
+                                      {prices.hour && (
+                                        <div>
+                                          <span style={{ color: '#8899a6' }}>Per timme: </span>
+                                          <span style={{ color: '#e1e8ed', fontWeight: 600 }}>
+                                            {prices.hour} SEK
+                                          </span>
+                                        </div>
+                                      )}
+                                      {prices.fixed && (
+                                        <div>
+                                          <span style={{ color: '#8899a6' }}>Fast pris: </span>
+                                          <span style={{ color: '#e1e8ed', fontWeight: 600 }}>
+                                            {prices.fixed} SEK
+                                          </span>
+                                        </div>
+                                      )}
                                     </div>
-                                    {prices.km && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Per km: </span>
-                                        <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{prices.km} SEK</span>
-                                      </div>
-                                    )}
-                                    {prices.stop && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Per stopp: </span>
-                                        <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{prices.stop} SEK</span>
-                                      </div>
-                                    )}
-                                    {prices.wait && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Per väntetimme: </span>
-                                        <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{prices.wait} SEK</span>
-                                      </div>
-                                    )}
-                                    {prices.hour && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Per timme: </span>
-                                        <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{prices.hour} SEK</span>
-                                      </div>
-                                    )}
-                                    {prices.fixed && (
-                                      <div>
-                                        <span style={{ color: '#8899a6' }}>Fast pris: </span>
-                                        <span style={{ color: '#e1e8ed', fontWeight: 600 }}>{prices.fixed} SEK</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
+                                  )
+                                )}
                               </div>
                             </div>
                           )}
@@ -745,5 +842,3 @@ function Customers({ data, updateData }) {
 }
 
 export default Customers;
-
-

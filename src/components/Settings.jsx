@@ -16,13 +16,26 @@ function Settings({ data, updateData }) {
   const [deleteType, setDeleteType] = useState(null);
 
   // Drivers State
-  const [driverForm, setDriverForm] = useState({ name: '', phone: '', address: '', postalCode: '', city: '', active: true, vehicleIds: [] });
+  const [driverForm, setDriverForm] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    postalCode: '',
+    city: '',
+    active: true,
+    vehicleIds: [],
+  });
   const [editingDriverId, setEditingDriverId] = useState(null);
   const [deleteDriverId, setDeleteDriverId] = useState(null);
   const [showDriverForm, setShowDriverForm] = useState(false);
 
   // Vehicles State
-  const [vehicleForm, setVehicleForm] = useState({ regNo: '', type: '', driverIds: [], active: true });
+  const [vehicleForm, setVehicleForm] = useState({
+    regNo: '',
+    type: '',
+    driverIds: [],
+    active: true,
+  });
   const [editingVehicleId, setEditingVehicleId] = useState(null);
   const [deleteVehicleId, setDeleteVehicleId] = useState(null);
   const [showVehicleForm, setShowVehicleForm] = useState(false);
@@ -32,7 +45,13 @@ function Settings({ data, updateData }) {
   const [showImportConfirm, setShowImportConfirm] = useState(false);
 
   // Pickup Locations State
-  const [locationForm, setLocationForm] = useState({ name: '', address: '', postalCode: '', city: '', customerIds: [] });
+  const [locationForm, setLocationForm] = useState({
+    name: '',
+    address: '',
+    postalCode: '',
+    city: '',
+    customerIds: [],
+  });
   const [editingLocationId, setEditingLocationId] = useState(null);
   const [deleteLocationId, setDeleteLocationId] = useState(null);
   const [showLocationForm, setShowLocationForm] = useState(false);
@@ -49,7 +68,7 @@ function Settings({ data, updateData }) {
     customerNumber: '',
     contactPerson: '',
     active: true,
-    pricesByVehicleType: {}
+    pricesByVehicleType: {},
   });
   const [editingCustomerId, setEditingCustomerId] = useState(null);
   const [deleteCustomerId, setDeleteCustomerId] = useState(null);
@@ -79,9 +98,9 @@ function Settings({ data, updateData }) {
   const [showLoadTestDataConfirm, setShowLoadTestDataConfirm] = useState(false);
 
   // Vehicle Types Handlers
-  const handleAddType = (e) => {
+  const handleAddType = e => {
     e.preventDefault();
-    
+
     if (!vehicleTypeForm.trim()) {
       alert('Fordonstyp krävs');
       return;
@@ -93,7 +112,7 @@ function Settings({ data, updateData }) {
     }
 
     updateData({
-      vehicleTypes: [...data.vehicleTypes, vehicleTypeForm.trim()]
+      vehicleTypes: [...data.vehicleTypes, vehicleTypeForm.trim()],
     });
     setVehicleTypeForm('');
     setShowVehicleTypeForm(false);
@@ -110,13 +129,13 @@ function Settings({ data, updateData }) {
     }
 
     updateData({
-      vehicleTypes: data.vehicleTypes.filter(t => t !== deleteType)
+      vehicleTypes: data.vehicleTypes.filter(t => t !== deleteType),
     });
     setDeleteType(null);
   };
 
   // Generate driver code from name (e.g., "Martin Vailto" -> "MAVA")
-  const generateDriverCode = (name) => {
+  const generateDriverCode = name => {
     const parts = name.trim().split(' ');
     if (parts.length < 2) {
       // If only one name, take first 4 letters
@@ -128,9 +147,9 @@ function Settings({ data, updateData }) {
   };
 
   // Driver Handlers
-  const handleDriverSubmit = (e) => {
+  const handleDriverSubmit = e => {
     e.preventDefault();
-    
+
     if (!driverForm.name.trim()) {
       alert('Namn krävs');
       return;
@@ -139,7 +158,7 @@ function Settings({ data, updateData }) {
     const code = generateDriverCode(driverForm.name);
     const driverData = {
       ...driverForm,
-      vehicleIds: Array.isArray(driverForm.vehicleIds) ? driverForm.vehicleIds : []
+      vehicleIds: Array.isArray(driverForm.vehicleIds) ? driverForm.vehicleIds : [],
     };
 
     let updatedDrivers;
@@ -157,26 +176,34 @@ function Settings({ data, updateData }) {
   };
 
   const resetDriverForm = () => {
-    setDriverForm({ name: '', phone: '', address: '', postalCode: '', city: '', active: true, vehicleIds: [] });
+    setDriverForm({
+      name: '',
+      phone: '',
+      address: '',
+      postalCode: '',
+      city: '',
+      active: true,
+      vehicleIds: [],
+    });
     setEditingDriverId(null);
     setShowDriverForm(false);
   };
 
-  const handleEditDriver = (driver) => {
+  const handleEditDriver = driver => {
     const vehicleIds = Array.isArray(driver.vehicleIds) ? driver.vehicleIds : [];
     setDriverForm({
       ...driver,
       address: driver.address || '',
       postalCode: driver.postalCode || '',
       city: driver.city || '',
-      vehicleIds
+      vehicleIds,
     });
     setEditingDriverId(driver.id);
     setShowDriverForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDriverVehicleToggle = (vehicleId) => {
+  const handleDriverVehicleToggle = vehicleId => {
     const ids = driverForm.vehicleIds || [];
     const next = ids.includes(vehicleId) ? ids.filter(id => id !== vehicleId) : [...ids, vehicleId];
     setDriverForm({ ...driverForm, vehicleIds: next });
@@ -196,9 +223,9 @@ function Settings({ data, updateData }) {
   };
 
   // Vehicle Handlers
-  const handleVehicleSubmit = (e) => {
+  const handleVehicleSubmit = e => {
     e.preventDefault();
-    
+
     if (!vehicleForm.regNo.trim()) {
       alert('Registreringsnummer krävs');
       return;
@@ -210,7 +237,7 @@ function Settings({ data, updateData }) {
 
     const vehicleData = {
       ...vehicleForm,
-      driverIds: Array.isArray(vehicleForm.driverIds) ? vehicleForm.driverIds : []
+      driverIds: Array.isArray(vehicleForm.driverIds) ? vehicleForm.driverIds : [],
     };
 
     let updatedVehicles;
@@ -222,7 +249,10 @@ function Settings({ data, updateData }) {
       updatedVehicles = [...data.vehicles, { ...vehicleData, id: generateId('veh') }];
     }
 
-    const { vehicles: syncedVehicles, drivers: syncedDrivers } = syncVehicleDriverRelation(updatedVehicles, data.drivers);
+    const { vehicles: syncedVehicles, drivers: syncedDrivers } = syncVehicleDriverRelation(
+      updatedVehicles,
+      data.drivers
+    );
     updateData({ vehicles: syncedVehicles, drivers: syncedDrivers });
     resetVehicleForm();
   };
@@ -233,15 +263,19 @@ function Settings({ data, updateData }) {
     setShowVehicleForm(false);
   };
 
-  const handleEditVehicle = (vehicle) => {
-    const driverIds = Array.isArray(vehicle.driverIds) ? vehicle.driverIds : (vehicle.driverId ? [vehicle.driverId] : []);
+  const handleEditVehicle = vehicle => {
+    const driverIds = Array.isArray(vehicle.driverIds)
+      ? vehicle.driverIds
+      : vehicle.driverId
+        ? [vehicle.driverId]
+        : [];
     setVehicleForm({ ...vehicle, driverIds });
     setEditingVehicleId(vehicle.id);
     setShowVehicleForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleVehicleDriverToggle = (driverId) => {
+  const handleVehicleDriverToggle = driverId => {
     const ids = vehicleForm.driverIds || [];
     const next = ids.includes(driverId) ? ids.filter(id => id !== driverId) : [...ids, driverId];
     setVehicleForm({ ...vehicleForm, driverIds: next });
@@ -261,9 +295,9 @@ function Settings({ data, updateData }) {
   };
 
   // Pickup Location Handlers
-  const handleLocationSubmit = (e) => {
+  const handleLocationSubmit = e => {
     e.preventDefault();
-    
+
     if (!locationForm.name.trim()) {
       alert('Namn krävs');
       return;
@@ -292,13 +326,13 @@ function Settings({ data, updateData }) {
     setShowLocationForm(false);
   };
 
-  const handleEditLocation = (location) => {
+  const handleEditLocation = location => {
     // Handle both old format (customerId) and new format (customerIds)
     const formattedLocation = {
       ...location,
       postalCode: location.postalCode || '',
       city: location.city || '',
-      customerIds: location.customerIds || (location.customerId ? [location.customerId] : [])
+      customerIds: location.customerIds || (location.customerId ? [location.customerId] : []),
     };
     setLocationForm(formattedLocation);
     setEditingLocationId(location.id);
@@ -313,11 +347,11 @@ function Settings({ data, updateData }) {
   };
 
   // Customer Handlers
-  const handleCustomerChange = (e) => {
+  const handleCustomerChange = e => {
     const { name, value, type, checked } = e.target;
     setCustomerForm(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -328,13 +362,13 @@ function Settings({ data, updateData }) {
         ...prev.pricesByVehicleType,
         [vehicleType]: {
           ...prev.pricesByVehicleType[vehicleType],
-          [field]: value
-        }
-      }
+          [field]: value,
+        },
+      },
     }));
   };
 
-  const handleCustomerSubmit = (e) => {
+  const handleCustomerSubmit = e => {
     e.preventDefault();
 
     if (!customerForm.name.trim()) {
@@ -344,7 +378,7 @@ function Settings({ data, updateData }) {
 
     const customerData = {
       ...customerForm,
-      pricesByVehicleType: customerForm.pricesByVehicleType
+      pricesByVehicleType: customerForm.pricesByVehicleType,
     };
 
     if (editingCustomerId) {
@@ -355,7 +389,7 @@ function Settings({ data, updateData }) {
     } else {
       const newCustomer = {
         ...customerData,
-        id: generateId('cust')
+        id: generateId('cust'),
       };
       updateData({ customers: [...data.customers, newCustomer] });
     }
@@ -375,7 +409,7 @@ function Settings({ data, updateData }) {
       customerNumber: '',
       contactPerson: '',
       active: true,
-      pricesByVehicleType: {}
+      pricesByVehicleType: {},
     });
     setEditingCustomerId(null);
     setShowCustomerForm(false);
@@ -383,10 +417,10 @@ function Settings({ data, updateData }) {
     setSelectedCustomerVehicleType('');
   };
 
-  const handleEditCustomer = (customer) => {
+  const handleEditCustomer = customer => {
     setCustomerForm({
       ...customer,
-      pricesByVehicleType: customer.pricesByVehicleType || {}
+      pricesByVehicleType: customer.pricesByVehicleType || {},
     });
     setEditingCustomerId(customer.id);
     setExpandedCustomerId(null);
@@ -409,7 +443,7 @@ function Settings({ data, updateData }) {
     updateData({ customers: updatedCustomers });
   };
 
-  const handleCustomerVehicleTypeSelect = (e) => {
+  const handleCustomerVehicleTypeSelect = e => {
     const type = e.target.value;
     setSelectedCustomerVehicleType(type);
     if (type && !customerForm.pricesByVehicleType[type]) {
@@ -417,25 +451,25 @@ function Settings({ data, updateData }) {
         ...prev,
         pricesByVehicleType: {
           ...prev.pricesByVehicleType,
-          [type]: { km: '', stop: '', wait: '', hour: '', fixed: '' }
-        }
+          [type]: { km: '', stop: '', wait: '', hour: '', fixed: '' },
+        },
       }));
     }
   };
 
-  const handleRemoveCustomerPriceTemplate = (vehicleType) => {
+  const handleRemoveCustomerPriceTemplate = vehicleType => {
     const updatedPrices = { ...customerForm.pricesByVehicleType };
     delete updatedPrices[vehicleType];
     setCustomerForm(prev => ({
       ...prev,
-      pricesByVehicleType: updatedPrices
+      pricesByVehicleType: updatedPrices,
     }));
     if (selectedCustomerVehicleType === vehicleType) {
       setSelectedCustomerVehicleType('');
     }
   };
 
-  const toggleCustomerExpand = (customerId) => {
+  const toggleCustomerExpand = customerId => {
     setExpandedCustomerId(expandedCustomerId === customerId ? null : customerId);
   };
 
@@ -448,7 +482,7 @@ function Settings({ data, updateData }) {
         vehicles: mock.vehicles,
         pickupLocations: mock.pickupLocations,
         bookings: mock.bookings,
-        lastBookingNumber: mock.lastBookingNumber
+        lastBookingNumber: mock.lastBookingNumber,
       });
       setTestDataLoaded(true);
       setShowLoadTestDataConfirm(false);
@@ -458,7 +492,7 @@ function Settings({ data, updateData }) {
     }
   };
 
-  const handleCustomerSort = (field) => {
+  const handleCustomerSort = field => {
     if (customerSortField === field) {
       setCustomerSortDirection(customerSortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -467,7 +501,7 @@ function Settings({ data, updateData }) {
     }
   };
 
-  const sortCustomers = (customers) => {
+  const sortCustomers = customers => {
     return [...customers].sort((a, b) => {
       let aVal, bVal;
 
@@ -511,7 +545,7 @@ function Settings({ data, updateData }) {
     exportToJSON(data);
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = e => {
     const file = e.target.files?.[0];
     if (file) {
       setImportFile(file);
@@ -524,8 +558,13 @@ function Settings({ data, updateData }) {
 
     try {
       const importedData = await importFromJSON(importFile);
-      
-      if (!importedData.customers || !importedData.drivers || !importedData.vehicles || !importedData.bookings) {
+
+      if (
+        !importedData.customers ||
+        !importedData.drivers ||
+        !importedData.vehicles ||
+        !importedData.bookings
+      ) {
         alert('Ogiltigt backup-format');
         return;
       }
@@ -533,7 +572,7 @@ function Settings({ data, updateData }) {
       migrateVehicleDriverData(importedData);
       updateData(importedData);
       saveData(importedData);
-      
+
       alert('Data importerad framgångsrikt!');
       setShowImportConfirm(false);
       setImportFile(null);
@@ -543,7 +582,7 @@ function Settings({ data, updateData }) {
   };
 
   // Sorting functions
-  const handleVehicleSort = (field) => {
+  const handleVehicleSort = field => {
     if (vehicleSortField === field) {
       setVehicleSortDirection(vehicleSortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -552,7 +591,7 @@ function Settings({ data, updateData }) {
     }
   };
 
-  const handleDriverSort = (field) => {
+  const handleDriverSort = field => {
     if (driverSortField === field) {
       setDriverSortDirection(driverSortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -561,24 +600,24 @@ function Settings({ data, updateData }) {
     }
   };
 
-  const sortVehicles = (vehicles) => {
+  const sortVehicles = vehicles => {
     return [...vehicles].sort((a, b) => {
       let aVal = a[vehicleSortField];
       let bVal = b[vehicleSortField];
-      
+
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
       if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-      
+
       if (aVal < bVal) return vehicleSortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return vehicleSortDirection === 'asc' ? 1 : -1;
       return 0;
     });
   };
 
-  const sortDrivers = (drivers) => {
+  const sortDrivers = drivers => {
     return [...drivers].sort((a, b) => {
       let aVal, bVal;
-      
+
       if (driverSortField === 'code') {
         aVal = (a.code || generateDriverCode(a.name)).toLowerCase();
         bVal = (b.code || generateDriverCode(b.name)).toLowerCase();
@@ -588,7 +627,7 @@ function Settings({ data, updateData }) {
         if (typeof aVal === 'string') aVal = aVal.toLowerCase();
         if (typeof bVal === 'string') bVal = bVal.toLowerCase();
       }
-      
+
       if (aVal < bVal) return driverSortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return driverSortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -603,35 +642,44 @@ function Settings({ data, updateData }) {
   const inactiveCustomers = sortCustomers(data.customers.filter(c => !c.active));
 
   // Sort vehicle types
-  const sortedVehicleTypes = vehicleTypeSortDirection === 'asc'
-    ? [...data.vehicleTypes].sort()
-    : [...data.vehicleTypes].sort().reverse();
+  const sortedVehicleTypes =
+    vehicleTypeSortDirection === 'asc'
+      ? [...data.vehicleTypes].sort()
+      : [...data.vehicleTypes].sort().reverse();
 
   // Display limits
-  const displayedActiveVehicles = showAllActiveVehicles ? activeVehicles : activeVehicles.slice(0, 5);
-  const displayedInactiveVehicles = showAllInactiveVehicles ? inactiveVehicles : inactiveVehicles.slice(0, 5);
+  const displayedActiveVehicles = showAllActiveVehicles
+    ? activeVehicles
+    : activeVehicles.slice(0, 5);
+  const displayedInactiveVehicles = showAllInactiveVehicles
+    ? inactiveVehicles
+    : inactiveVehicles.slice(0, 5);
   const displayedActiveDrivers = showAllActiveDrivers ? activeDrivers : activeDrivers.slice(0, 5);
-  const displayedInactiveDrivers = showAllInactiveDrivers ? inactiveDrivers : inactiveDrivers.slice(0, 5);
+  const displayedInactiveDrivers = showAllInactiveDrivers
+    ? inactiveDrivers
+    : inactiveDrivers.slice(0, 5);
 
   return (
     <div>
       <h1>Inställningar</h1>
 
       {/* Tab Navigation */}
-      <div style={{
-        display: 'flex',
-        gap: '0.5rem',
-        marginBottom: '1.5rem',
-        borderBottom: '2px solid var(--color-border)',
-        paddingBottom: '0'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          marginBottom: '1.5rem',
+          borderBottom: '2px solid var(--color-border)',
+          paddingBottom: '0',
+        }}
+      >
         <button
           onClick={() => setCurrentTab('fordon')}
           className={`btn btn-small ${currentTab === 'fordon' ? 'btn-primary' : 'btn-secondary'}`}
           style={{
             borderRadius: '6px 6px 0 0',
             borderBottom: currentTab === 'fordon' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px'
+            marginBottom: '-2px',
           }}
         >
           Fordon
@@ -642,7 +690,7 @@ function Settings({ data, updateData }) {
           style={{
             borderRadius: '6px 6px 0 0',
             borderBottom: currentTab === 'forare' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px'
+            marginBottom: '-2px',
           }}
         >
           Förare
@@ -653,7 +701,7 @@ function Settings({ data, updateData }) {
           style={{
             borderRadius: '6px 6px 0 0',
             borderBottom: currentTab === 'kunder' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px'
+            marginBottom: '-2px',
           }}
         >
           Kunder
@@ -664,7 +712,7 @@ function Settings({ data, updateData }) {
           style={{
             borderRadius: '6px 6px 0 0',
             borderBottom: currentTab === 'platser' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px'
+            marginBottom: '-2px',
           }}
         >
           Platser
@@ -675,7 +723,7 @@ function Settings({ data, updateData }) {
           style={{
             borderRadius: '6px 6px 0 0',
             borderBottom: currentTab === 'backup' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px'
+            marginBottom: '-2px',
           }}
         >
           Backup
@@ -686,7 +734,7 @@ function Settings({ data, updateData }) {
           style={{
             borderRadius: '6px 6px 0 0',
             borderBottom: currentTab === 'testdata' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px'
+            marginBottom: '-2px',
           }}
         >
           Testdata
@@ -696,384 +744,520 @@ function Settings({ data, updateData }) {
       {/* Tab Content */}
       {currentTab === 'fordon' && (
         <div>
-        {showVehicleForm ? (
-          <div className="form">
-            <h2>{editingVehicleId ? 'Redigera fordon' : 'Nytt fordon'}</h2>
-            <form onSubmit={handleVehicleSubmit}>
-              <div className="form-section">
-                <div className="form-section-title">Grunduppgifter</div>
-                <div className="form-row">
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="text-muted-2 label-sm">Reg.nr *</label>
-                    <input
-                      type="text"
-                      value={vehicleForm.regNo}
-                      onChange={(e) => setVehicleForm({ ...vehicleForm, regNo: e.target.value })}
-                      className="form-input"
-                      placeholder="ABC123"
-                      required
-                    />
+          {showVehicleForm ? (
+            <div className="form">
+              <h2>{editingVehicleId ? 'Redigera fordon' : 'Nytt fordon'}</h2>
+              <form onSubmit={handleVehicleSubmit}>
+                <div className="form-section">
+                  <div className="form-section-title">Grunduppgifter</div>
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="text-muted-2 label-sm">Reg.nr *</label>
+                      <input
+                        type="text"
+                        value={vehicleForm.regNo}
+                        onChange={e => setVehicleForm({ ...vehicleForm, regNo: e.target.value })}
+                        className="form-input"
+                        placeholder="ABC123"
+                        required
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="text-muted-2 label-sm">Fordonstyp *</label>
+                      <select
+                        value={vehicleForm.type}
+                        onChange={e => setVehicleForm({ ...vehicleForm, type: e.target.value })}
+                        className="form-select"
+                        required
+                      >
+                        <option value="">Välj typ</option>
+                        {data.vehicleTypes.map(type => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="text-muted-2 label-sm">Fordonstyp *</label>
-                    <select
-                      value={vehicleForm.type}
-                      onChange={(e) => setVehicleForm({ ...vehicleForm, type: e.target.value })}
-                      className="form-select"
-                      required
+                  <div className="form-group">
+                    <label className="text-muted-2 label-sm">
+                      Förare som får framföra fordonet
+                    </label>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.35rem',
+                        marginTop: '0.25rem',
+                      }}
                     >
-                      <option value="">Välj typ</option>
-                      {data.vehicleTypes.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
+                      {data.drivers
+                        .filter(d => d.active)
+                        .map(driver => (
+                          <label key={driver.id} className="checkbox-label" style={{ margin: 0 }}>
+                            <input
+                              type="checkbox"
+                              checked={(vehicleForm.driverIds || []).includes(driver.id)}
+                              onChange={() => handleVehicleDriverToggle(driver.id)}
+                            />
+                            {driver.code || generateDriverCode(driver.name)} – {driver.name}
+                          </label>
+                        ))}
+                      {data.drivers.filter(d => d.active).length === 0 && (
+                        <span className="text-muted text-sm">Inga aktiva förare</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={vehicleForm.active}
+                        onChange={e => setVehicleForm({ ...vehicleForm, active: e.target.checked })}
+                      />
+                      Aktiv
+                    </label>
                   </div>
                 </div>
-                <div className="form-group">
-                  <label className="text-muted-2 label-sm">Förare som får framföra fordonet</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
-                    {data.drivers.filter(d => d.active).map(driver => (
-                      <label key={driver.id} className="checkbox-label" style={{ margin: 0 }}>
-                        <input
-                          type="checkbox"
-                          checked={(vehicleForm.driverIds || []).includes(driver.id)}
-                          onChange={() => handleVehicleDriverToggle(driver.id)}
-                        />
-                        {driver.code || generateDriverCode(driver.name)} – {driver.name}
-                      </label>
-                    ))}
-                    {data.drivers.filter(d => d.active).length === 0 && (
-                      <span className="text-muted text-sm">Inga aktiva förare</span>
+                <div className="form-actions">
+                  {editingVehicleId && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => toggleVehicleActive(editingVehicleId, vehicleForm.active)}
+                        className="btn btn-secondary btn-small"
+                      >
+                        {vehicleForm.active ? 'Inaktivera' : 'Aktivera'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteVehicleId(editingVehicleId)}
+                        className="btn btn-danger btn-small"
+                      >
+                        Ta bort
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={resetVehicleForm}
+                    className="btn btn-secondary"
+                    style={{ marginLeft: 'auto' }}
+                  >
+                    Avbryt
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    {editingVehicleId ? 'Uppdatera' : 'Spara'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <>
+              {/* SAMMANFATTNING */}
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div className="stat-card" style={{ flex: 1 }}>
+                  <div className="stat-label">Aktiva fordon</div>
+                  <div className="stat-value">{activeVehicles.length}</div>
+                </div>
+                <div className="stat-card" style={{ flex: 1 }}>
+                  <div className="stat-label">Fordon med förare</div>
+                  <div className="stat-value">
+                    {activeVehicles.filter(v => (v.driverIds || []).length > 0).length}
+                  </div>
+                </div>
+                <div className="stat-card" style={{ flex: 1 }}>
+                  <div className="stat-label">Fordon utan förare</div>
+                  <div className="stat-value">
+                    {activeVehicles.filter(v => !(v.driverIds || []).length).length}
+                  </div>
+                </div>
+                <div className="stat-card" style={{ flex: 1 }}>
+                  <div className="stat-label">Aktiva förare</div>
+                  <div className="stat-value">{activeDrivers.length}</div>
+                </div>
+              </div>
+
+              {/* TWO COLUMN LAYOUT */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+                {/* LEFT COLUMN - AKTIVA FORDON OCH INAKTIVA FORDON */}
+                <div>
+                  {/* AKTIVA FORDON */}
+                  <div className="form" style={{ marginBottom: '1.5rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '1rem',
+                      }}
+                    >
+                      <h2 style={{ margin: 0 }}>Aktiva fordon ({activeVehicles.length})</h2>
+                      <button
+                        onClick={() => setShowVehicleForm(true)}
+                        className="btn btn-primary btn-small"
+                      >
+                        + Nytt
+                      </button>
+                    </div>
+
+                    {activeVehicles.length === 0 ? (
+                      <div className="empty-state">
+                        <p>Inga aktiva fordon</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="table-container">
+                          <table className="table">
+                            <thead>
+                              <tr>
+                                <th
+                                  onClick={() => handleVehicleSort('regNo')}
+                                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                                >
+                                  Reg.nr
+                                  <SortIcon
+                                    field="regNo"
+                                    currentField={vehicleSortField}
+                                    direction={vehicleSortDirection}
+                                  />
+                                </th>
+                                <th
+                                  onClick={() => handleVehicleSort('type')}
+                                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                                >
+                                  Typ
+                                  <SortIcon
+                                    field="type"
+                                    currentField={vehicleSortField}
+                                    direction={vehicleSortDirection}
+                                  />
+                                </th>
+                                <th>Förare</th>
+                                <th style={{ width: '100px' }}>Åtgärder</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {displayedActiveVehicles.map(vehicle => {
+                                const driverIds =
+                                  vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
+                                const assignedDrivers = driverIds
+                                  .map(id => data.drivers.find(d => d.id === id))
+                                  .filter(Boolean);
+                                return (
+                                  <tr key={vehicle.id}>
+                                    <td>
+                                      <strong>{vehicle.regNo}</strong>
+                                    </td>
+                                    <td>{vehicle.type}</td>
+                                    <td>
+                                      {assignedDrivers.length > 0 ? (
+                                        <div
+                                          style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            flexWrap: 'wrap',
+                                          }}
+                                        >
+                                          {assignedDrivers.map((d, i) => (
+                                            <span
+                                              key={d.id}
+                                              style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.25rem',
+                                              }}
+                                            >
+                                              {i > 0 && <span className="text-muted">,</span>}
+                                              <span
+                                                style={{
+                                                  background: '#667eea',
+                                                  color: 'white',
+                                                  padding: '0.2rem 0.4rem',
+                                                  borderRadius: '3px',
+                                                  fontWeight: 'bold',
+                                                  fontSize: '0.7rem',
+                                                  minWidth: '45px',
+                                                  textAlign: 'center',
+                                                }}
+                                              >
+                                                {d.code || generateDriverCode(d.name)}
+                                              </span>
+                                            </span>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <span className="text-sm text-muted">-</span>
+                                      )}
+                                    </td>
+                                    <td>
+                                      <button
+                                        onClick={() => handleEditVehicle(vehicle)}
+                                        className="btn btn-small btn-primary text-sm"
+                                        style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                                      >
+                                        Redigera
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                        {activeVehicles.length > 5 && (
+                          <button
+                            onClick={() => setShowAllActiveVehicles(!showAllActiveVehicles)}
+                            className="btn btn-secondary btn-small"
+                            style={{ marginTop: '0.5rem', width: '100%' }}
+                          >
+                            {showAllActiveVehicles
+                              ? `Visa mindre`
+                              : `Visa alla (${activeVehicles.length})`}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* INAKTIVA FORDON */}
+                  {inactiveVehicles.length > 0 && (
+                    <div className="form">
+                      <h2 style={{ marginBottom: '1rem' }}>
+                        Inaktiva fordon ({inactiveVehicles.length})
+                      </h2>
+                      <div className="table-container">
+                        <table className="table">
+                          <thead>
+                            <tr>
+                              <th
+                                onClick={() => handleVehicleSort('regNo')}
+                                style={{ cursor: 'pointer', userSelect: 'none' }}
+                              >
+                                Reg.nr
+                                <SortIcon
+                                  field="regNo"
+                                  currentField={vehicleSortField}
+                                  direction={vehicleSortDirection}
+                                />
+                              </th>
+                              <th
+                                onClick={() => handleVehicleSort('type')}
+                                style={{ cursor: 'pointer', userSelect: 'none' }}
+                              >
+                                Typ
+                                <SortIcon
+                                  field="type"
+                                  currentField={vehicleSortField}
+                                  direction={vehicleSortDirection}
+                                />
+                              </th>
+                              <th>Förare</th>
+                              <th style={{ width: '100px' }}>Åtgärder</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {displayedInactiveVehicles.map(vehicle => {
+                              const driverIds =
+                                vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
+                              const assignedDrivers = driverIds
+                                .map(id => data.drivers.find(d => d.id === id))
+                                .filter(Boolean);
+                              return (
+                                <tr key={vehicle.id} style={{ opacity: 0.6 }}>
+                                  <td>{vehicle.regNo}</td>
+                                  <td>{vehicle.type}</td>
+                                  <td>
+                                    {assignedDrivers.length > 0 ? (
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '0.5rem',
+                                          flexWrap: 'wrap',
+                                        }}
+                                      >
+                                        {assignedDrivers.map((d, i) => (
+                                          <span
+                                            key={d.id}
+                                            style={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: '0.25rem',
+                                            }}
+                                          >
+                                            {i > 0 && <span className="text-muted">,</span>}
+                                            <span
+                                              style={{
+                                                background: '#95a5a6',
+                                                color: 'white',
+                                                padding: '0.2rem 0.4rem',
+                                                borderRadius: '3px',
+                                                fontWeight: 'bold',
+                                                fontSize: '0.7rem',
+                                                minWidth: '45px',
+                                                textAlign: 'center',
+                                              }}
+                                            >
+                                              {d.code || generateDriverCode(d.name)}
+                                            </span>
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-sm text-muted">-</span>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <button
+                                      onClick={() => handleEditVehicle(vehicle)}
+                                      className="btn btn-small btn-primary text-sm"
+                                      style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                                    >
+                                      Redigera
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      {inactiveVehicles.length > 5 && (
+                        <button
+                          onClick={() => setShowAllInactiveVehicles(!showAllInactiveVehicles)}
+                          className="btn btn-secondary btn-small"
+                          style={{ marginTop: '0.5rem', width: '100%' }}
+                        >
+                          {showAllInactiveVehicles
+                            ? `Visa mindre`
+                            : `Visa alla (${inactiveVehicles.length})`}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* RIGHT COLUMN - FORDONSTYPER */}
+                <div>
+                  <div className="form">
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '1rem',
+                      }}
+                    >
+                      <h2 style={{ margin: 0 }}>Fordonstyper ({data.vehicleTypes.length})</h2>
+                      {!showVehicleTypeForm && (
+                        <button
+                          onClick={() => setShowVehicleTypeForm(true)}
+                          className="btn btn-primary btn-small"
+                        >
+                          + Nytt
+                        </button>
+                      )}
+                    </div>
+
+                    {showVehicleTypeForm && (
+                      <div
+                        style={{
+                          marginBottom: '1rem',
+                          paddingBottom: '1rem',
+                          borderBottom: '1px solid #dee2e6',
+                        }}
+                      >
+                        <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
+                          Ny fordonstyp
+                        </h3>
+
+                        <form onSubmit={handleAddType}>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input
+                              type="text"
+                              value={vehicleTypeForm}
+                              onChange={e => setVehicleTypeForm(e.target.value)}
+                              className="form-input"
+                              placeholder="T.ex. Lastbil, Skåpbil..."
+                              required
+                              style={{ flex: 1 }}
+                            />
+                            <button type="submit" className="btn btn-primary btn-small">
+                              Lägg till
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowVehicleTypeForm(false);
+                                setVehicleTypeForm('');
+                              }}
+                              className="btn btn-secondary btn-small"
+                            >
+                              Avbryt
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
+                    {data.vehicleTypes.length === 0 ? (
+                      <div className="empty-state">
+                        <p>Inga fordonstyper</p>
+                      </div>
+                    ) : (
+                      <div className="table-container">
+                        <table className="table">
+                          <thead>
+                            <tr>
+                              <th
+                                onClick={() =>
+                                  setVehicleTypeSortDirection(
+                                    vehicleTypeSortDirection === 'asc' ? 'desc' : 'asc'
+                                  )
+                                }
+                                style={{ cursor: 'pointer', userSelect: 'none' }}
+                              >
+                                Fordonstyp
+                                <span style={{ marginLeft: '0.25rem' }}>
+                                  {vehicleTypeSortDirection === 'asc' ? '↑' : '↓'}
+                                </span>
+                              </th>
+                              <th style={{ width: '80px' }}>Antal</th>
+                              <th style={{ width: '100px' }}>Åtgärder</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sortedVehicleTypes.map(type => {
+                              const count = data.vehicles.filter(v => v.type === type).length;
+                              return (
+                                <tr key={type}>
+                                  <td>
+                                    <strong>{type}</strong>
+                                  </td>
+                                  <td>{count}</td>
+                                  <td>
+                                    <button
+                                      onClick={() => setDeleteType(type)}
+                                      className="btn btn-small btn-danger text-sm"
+                                      disabled={count > 0}
+                                    >
+                                      Ta bort
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </div>
                 </div>
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={vehicleForm.active}
-                      onChange={(e) => setVehicleForm({ ...vehicleForm, active: e.target.checked })}
-                    />
-                    Aktiv
-                  </label>
-                </div>
               </div>
-              <div className="form-actions">
-                {editingVehicleId && (
-                  <>
-                    <button type="button" onClick={() => toggleVehicleActive(editingVehicleId, vehicleForm.active)} className="btn btn-secondary btn-small">
-                      {vehicleForm.active ? 'Inaktivera' : 'Aktivera'}
-                    </button>
-                    <button type="button" onClick={() => setDeleteVehicleId(editingVehicleId)} className="btn btn-danger btn-small">
-                      Ta bort
-                    </button>
-                  </>
-                )}
-                <button type="button" onClick={resetVehicleForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
-                  Avbryt
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingVehicleId ? 'Uppdatera' : 'Spara'}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
-        <>
-          {/* SAMMANFATTNING */}
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div className="stat-card" style={{ flex: 1 }}>
-              <div className="stat-label">Aktiva fordon</div>
-              <div className="stat-value">{activeVehicles.length}</div>
-            </div>
-            <div className="stat-card" style={{ flex: 1 }}>
-              <div className="stat-label">Fordon med förare</div>
-              <div className="stat-value">
-                {activeVehicles.filter(v => (v.driverIds || []).length > 0).length}
-              </div>
-            </div>
-            <div className="stat-card" style={{ flex: 1 }}>
-              <div className="stat-label">Fordon utan förare</div>
-              <div className="stat-value">
-                {activeVehicles.filter(v => !(v.driverIds || []).length).length}
-              </div>
-            </div>
-            <div className="stat-card" style={{ flex: 1 }}>
-              <div className="stat-label">Aktiva förare</div>
-              <div className="stat-value">{activeDrivers.length}</div>
-            </div>
-          </div>
-
-          {/* TWO COLUMN LAYOUT */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-            {/* LEFT COLUMN - AKTIVA FORDON OCH INAKTIVA FORDON */}
-            <div>
-              {/* AKTIVA FORDON */}
-              <div className="form" style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0 }}>Aktiva fordon ({activeVehicles.length})</h2>
-              <button onClick={() => setShowVehicleForm(true)} className="btn btn-primary btn-small">
-                + Nytt
-              </button>
-            </div>
-
-            {activeVehicles.length === 0 ? (
-              <div className="empty-state">
-                <p>Inga aktiva fordon</p>
-              </div>
-            ) : (
-              <>
-                <div className="table-container">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th onClick={() => handleVehicleSort('regNo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                          Reg.nr
-                          <SortIcon field="regNo" currentField={vehicleSortField} direction={vehicleSortDirection} />
-                        </th>
-                        <th onClick={() => handleVehicleSort('type')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                          Typ
-                          <SortIcon field="type" currentField={vehicleSortField} direction={vehicleSortDirection} />
-                        </th>
-                        <th>Förare</th>
-                        <th style={{ width: '100px' }}>Åtgärder</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayedActiveVehicles.map(vehicle => {
-                        const driverIds = vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
-                        const assignedDrivers = driverIds.map(id => data.drivers.find(d => d.id === id)).filter(Boolean);
-                        return (
-                          <tr key={vehicle.id}>
-                            <td><strong>{vehicle.regNo}</strong></td>
-                            <td>{vehicle.type}</td>
-                            <td>
-                              {assignedDrivers.length > 0 ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                  {assignedDrivers.map((d, i) => (
-                                    <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                      {i > 0 && <span className="text-muted">,</span>}
-                                      <span style={{
-                                        background: '#667eea',
-                                        color: 'white',
-                                        padding: '0.2rem 0.4rem',
-                                        borderRadius: '3px',
-                                        fontWeight: 'bold',
-                                        fontSize: '0.7rem',
-                                        minWidth: '45px',
-                                        textAlign: 'center'
-                                      }}>
-                                        {d.code || generateDriverCode(d.name)}
-                                      </span>
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-sm text-muted">-</span>
-                              )}
-                            </td>
-                            <td>
-                              <button
-                                onClick={() => handleEditVehicle(vehicle)}
-className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
-                              >
-                                Redigera
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                {activeVehicles.length > 5 && (
-                  <button
-                    onClick={() => setShowAllActiveVehicles(!showAllActiveVehicles)}
-                    className="btn btn-secondary btn-small"
-                    style={{ marginTop: '0.5rem', width: '100%' }}
-                  >
-                    {showAllActiveVehicles ? `Visa mindre` : `Visa alla (${activeVehicles.length})`}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-
-              {/* INAKTIVA FORDON */}
-              {inactiveVehicles.length > 0 && (
-                <div className="form">
-                  <h2 style={{ marginBottom: '1rem' }}>Inaktiva fordon ({inactiveVehicles.length})</h2>
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th onClick={() => handleVehicleSort('regNo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Reg.nr
-                        <SortIcon field="regNo" currentField={vehicleSortField} direction={vehicleSortDirection} />
-                      </th>
-                      <th onClick={() => handleVehicleSort('type')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Typ
-                        <SortIcon field="type" currentField={vehicleSortField} direction={vehicleSortDirection} />
-                      </th>
-                      <th>Förare</th>
-                      <th style={{ width: '100px' }}>Åtgärder</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedInactiveVehicles.map(vehicle => {
-                      const driverIds = vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
-                      const assignedDrivers = driverIds.map(id => data.drivers.find(d => d.id === id)).filter(Boolean);
-                      return (
-                        <tr key={vehicle.id} style={{ opacity: 0.6 }}>
-                          <td>{vehicle.regNo}</td>
-                          <td>{vehicle.type}</td>
-                          <td>
-                            {assignedDrivers.length > 0 ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                {assignedDrivers.map((d, i) => (
-                                  <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                    {i > 0 && <span className="text-muted">,</span>}
-                                    <span style={{
-                                      background: '#95a5a6',
-                                      color: 'white',
-                                      padding: '0.2rem 0.4rem',
-                                      borderRadius: '3px',
-                                      fontWeight: 'bold',
-                                      fontSize: '0.7rem',
-                                      minWidth: '45px',
-                                      textAlign: 'center'
-                                    }}>
-                                      {d.code || generateDriverCode(d.name)}
-                                    </span>
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-sm text-muted">-</span>
-                            )}
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => handleEditVehicle(vehicle)}
-className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
-                            >
-                              Redigera
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-                  {inactiveVehicles.length > 5 && (
-                    <button
-                      onClick={() => setShowAllInactiveVehicles(!showAllInactiveVehicles)}
-                      className="btn btn-secondary btn-small"
-                      style={{ marginTop: '0.5rem', width: '100%' }}
-                    >
-                      {showAllInactiveVehicles ? `Visa mindre` : `Visa alla (${inactiveVehicles.length})`}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* RIGHT COLUMN - FORDONSTYPER */}
-            <div>
-              <div className="form">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0 }}>Fordonstyper ({data.vehicleTypes.length})</h2>
-              {!showVehicleTypeForm && (
-                <button onClick={() => setShowVehicleTypeForm(true)} className="btn btn-primary btn-small">
-                  + Nytt
-                </button>
-              )}
-            </div>
-
-            {showVehicleTypeForm && (
-              <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dee2e6' }}>
-                <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
-                  Ny fordonstyp
-                </h3>
-
-                <form onSubmit={handleAddType}>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input
-                      type="text"
-                      value={vehicleTypeForm}
-                      onChange={(e) => setVehicleTypeForm(e.target.value)}
-                      className="form-input"
-                      placeholder="T.ex. Lastbil, Skåpbil..."
-                      required
-                      style={{ flex: 1 }}
-                    />
-                    <button type="submit" className="btn btn-primary btn-small">
-                      Lägg till
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowVehicleTypeForm(false);
-                        setVehicleTypeForm('');
-                      }}
-                      className="btn btn-secondary btn-small"
-                    >
-                      Avbryt
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {data.vehicleTypes.length === 0 ? (
-              <div className="empty-state">
-                <p>Inga fordonstyper</p>
-              </div>
-            ) : (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th
-                        onClick={() => setVehicleTypeSortDirection(vehicleTypeSortDirection === 'asc' ? 'desc' : 'asc')}
-                        style={{ cursor: 'pointer', userSelect: 'none' }}
-                      >
-                        Fordonstyp
-                        <span style={{ marginLeft: '0.25rem' }}>{vehicleTypeSortDirection === 'asc' ? '↑' : '↓'}</span>
-                      </th>
-                      <th style={{ width: '80px' }}>Antal</th>
-                      <th style={{ width: '100px' }}>Åtgärder</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedVehicleTypes.map(type => {
-                      const count = data.vehicles.filter(v => v.type === type).length;
-                      return (
-                        <tr key={type}>
-                          <td><strong>{type}</strong></td>
-                          <td>{count}</td>
-                          <td>
-                            <button
-                              onClick={() => setDeleteType(type)}
-className="btn btn-small btn-danger text-sm"
-                              disabled={count > 0}
-                            >
-                              Ta bort
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-              </div>
-            </div>
-          </div>
-        </>
-        )}
+            </>
+          )}
         </div>
       )}
 
@@ -1092,7 +1276,7 @@ className="btn btn-small btn-danger text-sm"
                       <input
                         type="text"
                         value={driverForm.name}
-                        onChange={(e) => setDriverForm({ ...driverForm, name: e.target.value })}
+                        onChange={e => setDriverForm({ ...driverForm, name: e.target.value })}
                         className="form-input"
                         placeholder="För- och efternamn"
                         required
@@ -1108,7 +1292,7 @@ className="btn btn-small btn-danger text-sm"
                       <input
                         type="tel"
                         value={driverForm.phone}
-                        onChange={(e) => setDriverForm({ ...driverForm, phone: e.target.value })}
+                        onChange={e => setDriverForm({ ...driverForm, phone: e.target.value })}
                         className="form-input"
                         placeholder="Telefon"
                       />
@@ -1119,24 +1303,33 @@ className="btn btn-small btn-danger text-sm"
                       <input
                         type="checkbox"
                         checked={driverForm.active}
-                        onChange={(e) => setDriverForm({ ...driverForm, active: e.target.checked })}
+                        onChange={e => setDriverForm({ ...driverForm, active: e.target.checked })}
                       />
                       Aktiv
                     </label>
                   </div>
                   <div className="form-group">
                     <label className="text-muted-2 label-sm">Fordon som föraren får använda</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
-                      {data.vehicles.filter(v => v.active).map(vehicle => (
-                        <label key={vehicle.id} className="checkbox-label" style={{ margin: 0 }}>
-                          <input
-                            type="checkbox"
-                            checked={(driverForm.vehicleIds || []).includes(vehicle.id)}
-                            onChange={() => handleDriverVehicleToggle(vehicle.id)}
-                          />
-                          {vehicle.regNo} ({vehicle.type})
-                        </label>
-                      ))}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.35rem',
+                        marginTop: '0.25rem',
+                      }}
+                    >
+                      {data.vehicles
+                        .filter(v => v.active)
+                        .map(vehicle => (
+                          <label key={vehicle.id} className="checkbox-label" style={{ margin: 0 }}>
+                            <input
+                              type="checkbox"
+                              checked={(driverForm.vehicleIds || []).includes(vehicle.id)}
+                              onChange={() => handleDriverVehicleToggle(vehicle.id)}
+                            />
+                            {vehicle.regNo} ({vehicle.type})
+                          </label>
+                        ))}
                       {data.vehicles.filter(v => v.active).length === 0 && (
                         <span className="text-muted text-sm">Inga aktiva fordon</span>
                       )}
@@ -1150,7 +1343,7 @@ className="btn btn-small btn-danger text-sm"
                     <input
                       type="text"
                       value={driverForm.address}
-                      onChange={(e) => setDriverForm({ ...driverForm, address: e.target.value })}
+                      onChange={e => setDriverForm({ ...driverForm, address: e.target.value })}
                       className="form-input"
                       placeholder="Adress"
                     />
@@ -1161,7 +1354,7 @@ className="btn btn-small btn-danger text-sm"
                       <input
                         type="text"
                         value={driverForm.postalCode}
-                        onChange={(e) => setDriverForm({ ...driverForm, postalCode: e.target.value })}
+                        onChange={e => setDriverForm({ ...driverForm, postalCode: e.target.value })}
                         className="form-input"
                         placeholder="Postnr"
                       />
@@ -1171,7 +1364,7 @@ className="btn btn-small btn-danger text-sm"
                       <input
                         type="text"
                         value={driverForm.city}
-                        onChange={(e) => setDriverForm({ ...driverForm, city: e.target.value })}
+                        onChange={e => setDriverForm({ ...driverForm, city: e.target.value })}
                         className="form-input"
                         placeholder="Ort"
                       />
@@ -1181,15 +1374,28 @@ className="btn btn-small btn-danger text-sm"
                 <div className="form-actions">
                   {editingDriverId && (
                     <>
-                      <button type="button" onClick={() => toggleDriverActive(editingDriverId, driverForm.active)} className="btn btn-secondary btn-small">
+                      <button
+                        type="button"
+                        onClick={() => toggleDriverActive(editingDriverId, driverForm.active)}
+                        className="btn btn-secondary btn-small"
+                      >
                         {driverForm.active ? 'Inaktivera' : 'Aktivera'}
                       </button>
-                      <button type="button" onClick={() => setDeleteDriverId(editingDriverId)} className="btn btn-danger btn-small">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteDriverId(editingDriverId)}
+                        className="btn btn-danger btn-small"
+                      >
                         Ta bort
                       </button>
                     </>
                   )}
-                  <button type="button" onClick={resetDriverForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
+                  <button
+                    type="button"
+                    onClick={resetDriverForm}
+                    className="btn btn-secondary"
+                    style={{ marginLeft: 'auto' }}
+                  >
                     Avbryt
                   </button>
                   <button type="submit" className="btn btn-primary">
@@ -1199,83 +1405,1422 @@ className="btn btn-small btn-danger text-sm"
               </form>
             </div>
           ) : (
-          <>
-          <div className="form" style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0 }}>Aktiva förare ({activeDrivers.length})</h2>
-              <button onClick={() => setShowDriverForm(true)} className="btn btn-primary btn-small">
-                + Ny
-              </button>
-            </div>
+            <>
+              <div className="form" style={{ marginBottom: '1.5rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '1rem',
+                  }}
+                >
+                  <h2 style={{ margin: 0 }}>Aktiva förare ({activeDrivers.length})</h2>
+                  <button
+                    onClick={() => setShowDriverForm(true)}
+                    className="btn btn-primary btn-small"
+                  >
+                    + Ny
+                  </button>
+                </div>
 
-            {activeDrivers.length === 0 ? (
-              <div className="empty-state">
-                <p>Inga aktiva förare</p>
+                {activeDrivers.length === 0 ? (
+                  <div className="empty-state">
+                    <p>Inga aktiva förare</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="table-container">
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th
+                              onClick={() => handleDriverSort('name')}
+                              style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}
+                            >
+                              Förare
+                              <SortIcon
+                                field="name"
+                                currentField={driverSortField}
+                                direction={driverSortDirection}
+                              />
+                            </th>
+                            <th
+                              onClick={() => handleDriverSort('phone')}
+                              style={{ cursor: 'pointer', userSelect: 'none' }}
+                            >
+                              Telefon
+                              <SortIcon
+                                field="phone"
+                                currentField={driverSortField}
+                                direction={driverSortDirection}
+                              />
+                            </th>
+                            <th>Fordon</th>
+                            <th style={{ width: '100px' }}>Åtgärder</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayedActiveDrivers.map(driver => {
+                            const isExpanded = expandedDriverId === driver.id;
+                            const assignedVehicles = data.vehicles.filter(
+                              v =>
+                                (v.driverIds || (v.driverId ? [v.driverId] : [])).includes(
+                                  driver.id
+                                ) && v.active
+                            );
+                            return (
+                              <React.Fragment key={driver.id}>
+                                <tr
+                                  onClick={() => setExpandedDriverId(isExpanded ? null : driver.id)}
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  <td style={{ whiteSpace: 'nowrap' }}>
+                                    <div
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.35rem',
+                                      }}
+                                    >
+                                      <span className="text-2xs text-muted">
+                                        {isExpanded ? '▼' : '▶'}
+                                      </span>
+                                      <span
+                                        style={{
+                                          background: '#667eea',
+                                          color: 'white',
+                                          padding: '0.2rem 0.4rem',
+                                          borderRadius: '3px',
+                                          fontWeight: 'bold',
+                                          fontSize: '0.7rem',
+                                          minWidth: '45px',
+                                          textAlign: 'center',
+                                        }}
+                                      >
+                                        {driver.code || generateDriverCode(driver.name)}
+                                      </span>
+                                      <strong className="text-base">{driver.name}</strong>
+                                    </div>
+                                  </td>
+                                  <td>{driver.phone || '-'}</td>
+                                  <td>
+                                    {isExpanded && assignedVehicles.length > 0 ? (
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          gap: '0.25rem',
+                                          flexWrap: 'wrap',
+                                        }}
+                                      >
+                                        {assignedVehicles.map(vehicle => (
+                                          <span
+                                            key={vehicle.id}
+                                            style={{
+                                              background: '#e8f5e9',
+                                              color: '#2e7d32',
+                                              padding: '0.15rem 0.4rem',
+                                              borderRadius: '3px',
+                                              fontSize: '0.7rem',
+                                              fontWeight: 'bold',
+                                            }}
+                                          >
+                                            {vehicle.regNo}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : assignedVehicles.length > 0 ? (
+                                      <span className="text-muted text-sm">
+                                        {assignedVehicles.length} fordon
+                                      </span>
+                                    ) : (
+                                      <span className="text-sm text-muted">-</span>
+                                    )}
+                                  </td>
+                                  <td onClick={e => e.stopPropagation()}>
+                                    <button
+                                      onClick={() => handleEditDriver(driver)}
+                                      className="btn btn-small btn-primary text-sm"
+                                      style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                                    >
+                                      Redigera
+                                    </button>
+                                  </td>
+                                </tr>
+                                {isExpanded && (
+                                  <tr>
+                                    <td
+                                      colSpan={4}
+                                      style={{
+                                        backgroundColor: 'var(--color-bg)',
+                                        padding: '1rem',
+                                        verticalAlign: 'top',
+                                      }}
+                                    >
+                                      <div className="mb-1" style={{ fontWeight: 600 }}>
+                                        {driver.name}
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: 'grid',
+                                          gridTemplateColumns: '1fr 1fr',
+                                          gap: '1.5rem',
+                                          fontSize: '0.85rem',
+                                        }}
+                                      >
+                                        <div>
+                                          <div style={{ marginBottom: '0.35rem' }}>
+                                            <span className="detail-label">Kod: </span>
+                                            <span className="detail-value">
+                                              {driver.code || '-'}
+                                            </span>
+                                          </div>
+                                          <div style={{ marginBottom: '0.35rem' }}>
+                                            <span className="detail-label">Telefon: </span>
+                                            <span className="detail-value">
+                                              {driver.phone || '-'}
+                                            </span>
+                                          </div>
+                                          <div style={{ marginBottom: '0.35rem' }}>
+                                            <span className="detail-label">Adress: </span>
+                                            <span className="detail-value">
+                                              {driver.address || '-'}
+                                            </span>
+                                          </div>
+                                          <div style={{ marginBottom: '0.35rem' }}>
+                                            <span className="detail-label">Postnr / Ort: </span>
+                                            <span className="detail-value">
+                                              {[driver.postalCode, driver.city]
+                                                .filter(Boolean)
+                                                .join(' ') || '-'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div>
+                                          {assignedVehicles.length > 0 ? (
+                                            <div>
+                                              <span className="detail-label">
+                                                Tilldelade fordon:{' '}
+                                              </span>
+                                              <div
+                                                style={{
+                                                  display: 'flex',
+                                                  gap: '0.25rem',
+                                                  flexWrap: 'wrap',
+                                                  marginTop: '0.25rem',
+                                                }}
+                                              >
+                                                {assignedVehicles.map(v => (
+                                                  <span
+                                                    key={v.id}
+                                                    style={{
+                                                      background: '#e8f5e9',
+                                                      color: '#2e7d32',
+                                                      padding: '0.15rem 0.4rem',
+                                                      borderRadius: '3px',
+                                                      fontSize: '0.7rem',
+                                                    }}
+                                                  >
+                                                    {v.regNo}
+                                                  </span>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <span className="text-muted">
+                                              Inga fordon tilldelade
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    {activeDrivers.length > 5 && (
+                      <button
+                        onClick={() => setShowAllActiveDrivers(!showAllActiveDrivers)}
+                        className="btn btn-secondary btn-small"
+                        style={{ marginTop: '0.5rem', width: '100%' }}
+                      >
+                        {showAllActiveDrivers
+                          ? `Visa mindre`
+                          : `Visa alla (${activeDrivers.length})`}
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
-            ) : (
-              <>
+
+              {/* INAKTIVA FÖRARE */}
+              {inactiveDrivers.length > 0 && (
+                <div className="form">
+                  <h2 style={{ marginBottom: '1rem' }}>
+                    Inaktiva förare ({inactiveDrivers.length})
+                  </h2>
+                  <div className="table-container">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th
+                            onClick={() => handleDriverSort('name')}
+                            style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}
+                          >
+                            Förare
+                            <SortIcon
+                              field="name"
+                              currentField={driverSortField}
+                              direction={driverSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleDriverSort('phone')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Telefon
+                            <SortIcon
+                              field="phone"
+                              currentField={driverSortField}
+                              direction={driverSortDirection}
+                            />
+                          </th>
+                          <th>Fordon</th>
+                          <th style={{ width: '100px' }}>Åtgärder</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {displayedInactiveDrivers.map(driver => {
+                          const isExpanded = expandedDriverId === driver.id;
+                          const assignedVehicles = data.vehicles.filter(v =>
+                            (v.driverIds || (v.driverId ? [v.driverId] : [])).includes(driver.id)
+                          );
+                          return (
+                            <React.Fragment key={driver.id}>
+                              <tr
+                                onClick={() => setExpandedDriverId(isExpanded ? null : driver.id)}
+                                style={{ cursor: 'pointer', opacity: 0.6 }}
+                              >
+                                <td style={{ whiteSpace: 'nowrap' }}>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.35rem',
+                                    }}
+                                  >
+                                    <span className="text-2xs text-muted">
+                                      {isExpanded ? '▼' : '▶'}
+                                    </span>
+                                    <span
+                                      style={{
+                                        background: '#95a5a6',
+                                        color: 'white',
+                                        padding: '0.2rem 0.4rem',
+                                        borderRadius: '3px',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.7rem',
+                                        minWidth: '45px',
+                                        textAlign: 'center',
+                                      }}
+                                    >
+                                      {driver.code || generateDriverCode(driver.name)}
+                                    </span>
+                                    <span className="text-base">{driver.name}</span>
+                                  </div>
+                                </td>
+                                <td>{driver.phone || '-'}</td>
+                                <td>
+                                  {isExpanded && assignedVehicles.length > 0 ? (
+                                    <div
+                                      style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}
+                                    >
+                                      {assignedVehicles.map(vehicle => (
+                                        <span
+                                          key={vehicle.id}
+                                          style={{
+                                            background: '#e0e0e0',
+                                            color: '#616161',
+                                            padding: '0.15rem 0.4rem',
+                                            borderRadius: '3px',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 'bold',
+                                          }}
+                                        >
+                                          {vehicle.regNo}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : assignedVehicles.length > 0 ? (
+                                    <span className="text-muted text-sm">
+                                      {assignedVehicles.length} fordon
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-muted">-</span>
+                                  )}
+                                </td>
+                                <td onClick={e => e.stopPropagation()}>
+                                  <button
+                                    onClick={() => handleEditDriver(driver)}
+                                    className="btn btn-small btn-primary text-sm"
+                                    style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                                  >
+                                    Redigera
+                                  </button>
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr>
+                                  <td
+                                    colSpan={4}
+                                    style={{
+                                      backgroundColor: 'var(--color-bg)',
+                                      padding: '1rem',
+                                      verticalAlign: 'top',
+                                      opacity: 0.9,
+                                    }}
+                                  >
+                                    <div className="mb-1" style={{ fontWeight: 600 }}>
+                                      {driver.name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: '1.5rem',
+                                        fontSize: '0.85rem',
+                                      }}
+                                    >
+                                      <div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Kod: </span>
+                                          <span className="detail-value">{driver.code || '-'}</span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Telefon: </span>
+                                          <span className="detail-value">
+                                            {driver.phone || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Adress: </span>
+                                          <span className="detail-value">
+                                            {driver.address || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Postnr / Ort: </span>
+                                          <span className="detail-value">
+                                            {[driver.postalCode, driver.city]
+                                              .filter(Boolean)
+                                              .join(' ') || '-'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        {assignedVehicles.length > 0 ? (
+                                          <div
+                                            style={{
+                                              display: 'flex',
+                                              gap: '0.25rem',
+                                              flexWrap: 'wrap',
+                                            }}
+                                          >
+                                            {assignedVehicles.map(v => (
+                                              <span
+                                                key={v.id}
+                                                style={{
+                                                  background: '#e0e0e0',
+                                                  color: '#616161',
+                                                  padding: '0.15rem 0.4rem',
+                                                  borderRadius: '3px',
+                                                  fontSize: '0.7rem',
+                                                }}
+                                              >
+                                                {v.regNo}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <span className="text-muted">Inga fordon tilldelade</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {inactiveDrivers.length > 5 && (
+                    <button
+                      onClick={() => setShowAllInactiveDrivers(!showAllInactiveDrivers)}
+                      className="btn btn-secondary btn-small"
+                      style={{ marginTop: '0.5rem', width: '100%' }}
+                    >
+                      {showAllInactiveDrivers
+                        ? `Visa mindre`
+                        : `Visa alla (${inactiveDrivers.length})`}
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* KUNDER TAB */}
+      {currentTab === 'kunder' && (
+        <div>
+          {showCustomerForm ? (
+            <div className="form">
+              <h2>{editingCustomerId ? 'Redigera kund' : 'Ny kund'}</h2>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '40% 60%',
+                  gap: '1.5rem',
+                  alignItems: 'start',
+                }}
+              >
+                {/* Vänster: kompakt kundformulär */}
+                <div>
+                  <form onSubmit={handleCustomerSubmit} className="text-sm">
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto',
+                        gap: '0.2rem 0.5rem',
+                        marginBottom: '0.2rem',
+                      }}
+                    >
+                      <input
+                        type="text"
+                        name="name"
+                        value={customerForm.name}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Namn *"
+                        required
+                      />
+                      <input
+                        type="text"
+                        name="customerNumber"
+                        value={customerForm.customerNumber}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Kundnr"
+                        style={{ width: '5.5rem' }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: '0.2rem' }}>
+                      <input
+                        type="text"
+                        name="shortName"
+                        value={customerForm.shortName || ''}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Förkortning"
+                        maxLength={6}
+                      />
+                    </div>
+                    <div style={{ marginBottom: '0.2rem' }}>
+                      <input
+                        type="text"
+                        name="contactPerson"
+                        value={customerForm.contactPerson}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Kontaktperson"
+                      />
+                    </div>
+                    <div style={{ marginBottom: '0.2rem' }}>
+                      <input
+                        type="text"
+                        name="address"
+                        value={customerForm.address}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Adress"
+                      />
+                    </div>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'auto 1fr',
+                        gap: '0.2rem 0.5rem',
+                        marginBottom: '0.2rem',
+                      }}
+                    >
+                      <input
+                        type="text"
+                        name="postalCode"
+                        value={customerForm.postalCode}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Postnr"
+                        style={{ width: '4rem' }}
+                      />
+                      <input
+                        type="text"
+                        name="city"
+                        value={customerForm.city}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Ort"
+                      />
+                    </div>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '0.2rem 0.5rem',
+                        marginBottom: '0.2rem',
+                      }}
+                    >
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={customerForm.phone}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Telefon"
+                      />
+                      <input
+                        type="tel"
+                        name="mobile"
+                        value={customerForm.mobile}
+                        onChange={handleCustomerChange}
+                        className="form-input input-sm"
+                        placeholder="Mobil"
+                      />
+                    </div>
+                    <label
+                      className="checkbox-label text-sm"
+                      style={{
+                        marginBottom: '0.25rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        name="active"
+                        checked={customerForm.active}
+                        onChange={handleCustomerChange}
+                      />
+                      Aktiv
+                    </label>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '0.25rem',
+                        marginTop: '0.3rem',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <button type="submit" className="btn btn-primary btn-small text-2xs">
+                        {editingCustomerId ? 'Spara' : 'Lägg till'}
+                      </button>
+                      {editingCustomerId && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleCustomerActive(editingCustomerId, customerForm.active)
+                            }
+                            className="btn btn-secondary btn-small text-2xs"
+                          >
+                            {customerForm.active ? 'Inaktivera' : 'Aktivera'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteCustomerId(editingCustomerId)}
+                            className="btn btn-danger btn-small text-2xs"
+                          >
+                            Ta bort
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={resetCustomerForm}
+                        className="btn btn-secondary btn-small text-2xs"
+                      >
+                        Avbryt
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Höger: priser per fordonstyp, väntetid m.m. */}
+                <div>
+                  <h3 className="section-title">Priser (kundspecifika)</h3>
+                  <div className="text-base">
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <select
+                        value={selectedCustomerVehicleType}
+                        onChange={handleCustomerVehicleTypeSelect}
+                        className="form-select form-input input-sm"
+                        style={{ width: '100%', maxWidth: '200px' }}
+                      >
+                        <option value="">+ Lägg till fordonstyp</option>
+                        {(data.vehicleTypes || [])
+                          .filter(t => !customerForm.pricesByVehicleType[t])
+                          .map(t => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    {Object.entries(customerForm.pricesByVehicleType || {}).map(
+                      ([vehicleType, prices]) => (
+                        <div key={vehicleType} className="card-block mb-1">
+                          <strong
+                            className="text-sm block"
+                            style={{ flexShrink: 0, marginBottom: '0.25rem' }}
+                          >
+                            {vehicleType}
+                          </strong>
+                          <div className="grid-cols-5">
+                            <div>
+                              <label className="label-sm">kr/km</label>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={prices.km || ''}
+                                onChange={e =>
+                                  handleCustomerPriceChange(vehicleType, 'km', e.target.value)
+                                }
+                                className="form-input input-sm"
+                                placeholder="–"
+                              />
+                            </div>
+                            <div>
+                              <label className="label-sm">kr/stopp</label>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={prices.stop || ''}
+                                onChange={e =>
+                                  handleCustomerPriceChange(vehicleType, 'stop', e.target.value)
+                                }
+                                className="form-input input-sm"
+                                placeholder="–"
+                              />
+                            </div>
+                            <div>
+                              <label className="label-sm">Väntetid kr/h</label>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={prices.wait || ''}
+                                onChange={e =>
+                                  handleCustomerPriceChange(vehicleType, 'wait', e.target.value)
+                                }
+                                className="form-input input-sm"
+                                placeholder="–"
+                              />
+                            </div>
+                            <div>
+                              <label className="label-sm">Timpris kr</label>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={prices.hour || ''}
+                                onChange={e =>
+                                  handleCustomerPriceChange(vehicleType, 'hour', e.target.value)
+                                }
+                                className="form-input input-sm"
+                                placeholder="–"
+                              />
+                            </div>
+                            <div>
+                              <label className="label-sm">Fast kr</label>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={prices.fixed || ''}
+                                onChange={e =>
+                                  handleCustomerPriceChange(vehicleType, 'fixed', e.target.value)
+                                }
+                                className="form-input input-sm"
+                                placeholder="–"
+                              />
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCustomerPriceTemplate(vehicleType)}
+                            className="btn btn-danger btn-small text-2xs"
+                            style={{
+                              flexShrink: 0,
+                              marginBottom: '0.25rem',
+                              marginLeft: 'auto',
+                              padding: '0.2rem 0.4rem',
+                            }}
+                          >
+                            Ta bort
+                          </button>
+                        </div>
+                      )
+                    )}
+                    {(!customerForm.pricesByVehicleType ||
+                      Object.keys(customerForm.pricesByVehicleType).length === 0) && (
+                      <p className="text-muted-2 text-sm" style={{ margin: 0 }}>
+                        Välj fordonstyp ovan för att lägga till priser (kr/km, väntetid, timpris
+                        m.m.)
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="form" style={{ marginBottom: '1.5rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '1rem',
+                  }}
+                >
+                  <h2 style={{ margin: 0 }}>Kunder ({data.customers.length})</h2>
+                  <button
+                    onClick={() => setShowCustomerForm(true)}
+                    className="btn btn-primary btn-small"
+                  >
+                    + Nytt
+                  </button>
+                </div>
+
+                {activeCustomers.length === 0 ? (
+                  <div className="empty-state">
+                    <p>Inga aktiva kunder</p>
+                  </div>
+                ) : (
+                  <div className="table-container">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th
+                            onClick={() => handleCustomerSort('customerNumber')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Kundnr
+                            <SortIcon
+                              field="customerNumber"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleCustomerSort('name')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Namn
+                            <SortIcon
+                              field="name"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleCustomerSort('contactPerson')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Kontaktperson
+                            <SortIcon
+                              field="contactPerson"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleCustomerSort('mobile')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Mobil
+                            <SortIcon
+                              field="mobile"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleCustomerSort('city')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Ort
+                            <SortIcon
+                              field="city"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th style={{ width: '100px' }}>Åtgärder</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeCustomers.map(customer => {
+                          const isExpanded = expandedCustomerId === customer.id;
+                          return (
+                            <React.Fragment key={customer.id}>
+                              <tr
+                                onClick={() =>
+                                  setExpandedCustomerId(isExpanded ? null : customer.id)
+                                }
+                                style={{ cursor: 'pointer' }}
+                              >
+                                <td style={{ whiteSpace: 'nowrap' }}>
+                                  <span
+                                    className="text-2xs text-muted"
+                                    style={{ marginRight: '0.35rem' }}
+                                  >
+                                    {isExpanded ? '▼' : '▶'}
+                                  </span>
+                                  {customer.customerNumber || '-'}
+                                </td>
+                                <td>
+                                  <strong>{customer.name}</strong>
+                                </td>
+                                <td>{customer.contactPerson || '-'}</td>
+                                <td>{customer.mobile || '-'}</td>
+                                <td>{customer.city || '-'}</td>
+                                <td onClick={e => e.stopPropagation()}>
+                                  <button
+                                    onClick={() => handleEditCustomer(customer)}
+                                    className="btn btn-small btn-primary text-sm"
+                                    style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                                  >
+                                    Redigera
+                                  </button>
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr>
+                                  <td
+                                    colSpan={6}
+                                    style={{
+                                      backgroundColor: '#0f1419',
+                                      padding: '1rem',
+                                      verticalAlign: 'top',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        marginBottom: '0.75rem',
+                                        fontSize: '1rem',
+                                        color: '#e1e8ed',
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {customer.name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: '1.5rem',
+                                        fontSize: '0.85rem',
+                                      }}
+                                    >
+                                      <div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span style={{ color: '#8899a6' }}>Kundnr: </span>
+                                          <span style={{ color: '#e1e8ed' }}>
+                                            {customer.customerNumber || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span style={{ color: '#8899a6' }}>Förkortning: </span>
+                                          <span style={{ color: '#e1e8ed' }}>
+                                            {customer.shortName || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span style={{ color: '#8899a6' }}>Kontaktperson: </span>
+                                          <span style={{ color: '#e1e8ed' }}>
+                                            {customer.contactPerson || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span style={{ color: '#8899a6' }}>Telefon: </span>
+                                          <span style={{ color: '#e1e8ed' }}>
+                                            {customer.phone || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span style={{ color: '#8899a6' }}>Mobil: </span>
+                                          <span style={{ color: '#e1e8ed' }}>
+                                            {customer.mobile || '-'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span style={{ color: '#8899a6' }}>Adress: </span>
+                                          <span style={{ color: '#e1e8ed' }}>
+                                            {customer.address || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span style={{ color: '#8899a6' }}>Postnr / Ort: </span>
+                                          <span style={{ color: '#e1e8ed' }}>
+                                            {[customer.postalCode, customer.city]
+                                              .filter(Boolean)
+                                              .join(' ') || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span style={{ color: '#8899a6' }}>Aktiv: </span>
+                                          <span style={{ color: '#e1e8ed' }}>
+                                            {customer.active ? 'Ja' : 'Nej'}
+                                          </span>
+                                        </div>
+                                        {customer.pricesByVehicleType &&
+                                          Object.keys(customer.pricesByVehicleType).length > 0 && (
+                                            <div style={{ marginTop: '0.5rem' }}>
+                                              <span style={{ color: '#8899a6' }}>Priser: </span>
+                                              <span style={{ color: '#e1e8ed' }}>
+                                                {Object.keys(customer.pricesByVehicleType).join(
+                                                  ', '
+                                                )}
+                                              </span>
+                                            </div>
+                                          )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* INAKTIVA KUNDER */}
+              {inactiveCustomers.length > 0 && (
+                <div className="form">
+                  <h2 style={{ marginBottom: '1rem' }}>
+                    Inaktiva kunder ({inactiveCustomers.length})
+                  </h2>
+                  <div className="table-container">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th
+                            onClick={() => handleCustomerSort('customerNumber')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Kundnr
+                            <SortIcon
+                              field="customerNumber"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleCustomerSort('name')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Namn
+                            <SortIcon
+                              field="name"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleCustomerSort('contactPerson')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Kontaktperson
+                            <SortIcon
+                              field="contactPerson"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleCustomerSort('mobile')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Mobil
+                            <SortIcon
+                              field="mobile"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th
+                            onClick={() => handleCustomerSort('city')}
+                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                          >
+                            Ort
+                            <SortIcon
+                              field="city"
+                              currentField={customerSortField}
+                              direction={customerSortDirection}
+                            />
+                          </th>
+                          <th style={{ width: '100px' }}>Åtgärder</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inactiveCustomers.map(customer => {
+                          const isExpanded = expandedCustomerId === customer.id;
+                          return (
+                            <React.Fragment key={customer.id}>
+                              <tr
+                                onClick={() =>
+                                  setExpandedCustomerId(isExpanded ? null : customer.id)
+                                }
+                                style={{ cursor: 'pointer', opacity: 0.6 }}
+                              >
+                                <td style={{ whiteSpace: 'nowrap' }}>
+                                  <span
+                                    className="text-2xs text-muted"
+                                    style={{ marginRight: '0.35rem' }}
+                                  >
+                                    {isExpanded ? '▼' : '▶'}
+                                  </span>
+                                  {customer.customerNumber || '-'}
+                                </td>
+                                <td>{customer.name}</td>
+                                <td>{customer.contactPerson || '-'}</td>
+                                <td>{customer.mobile || '-'}</td>
+                                <td>{customer.city || '-'}</td>
+                                <td onClick={e => e.stopPropagation()}>
+                                  <button
+                                    onClick={() => handleEditCustomer(customer)}
+                                    className="btn btn-small btn-primary text-sm"
+                                    style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                                  >
+                                    Redigera
+                                  </button>
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr>
+                                  <td
+                                    colSpan={6}
+                                    className="text-base"
+                                    style={{
+                                      backgroundColor: 'var(--color-bg)',
+                                      padding: '1rem',
+                                      verticalAlign: 'top',
+                                    }}
+                                  >
+                                    <div className="mb-1" style={{ fontWeight: 600 }}>
+                                      {customer.name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: '1.5rem',
+                                      }}
+                                    >
+                                      <div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Kundnr: </span>
+                                          <span className="detail-value">
+                                            {customer.customerNumber || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Förkortning: </span>
+                                          <span className="detail-value">
+                                            {customer.shortName || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Kontaktperson: </span>
+                                          <span className="detail-value">
+                                            {customer.contactPerson || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Telefon: </span>
+                                          <span className="detail-value">
+                                            {customer.phone || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Mobil: </span>
+                                          <span className="detail-value">
+                                            {customer.mobile || '-'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Adress: </span>
+                                          <span className="detail-value">
+                                            {customer.address || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Postnr / Ort: </span>
+                                          <span className="detail-value">
+                                            {[customer.postalCode, customer.city]
+                                              .filter(Boolean)
+                                              .join(' ') || '-'}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.35rem' }}>
+                                          <span className="detail-label">Aktiv: </span>
+                                          <span className="detail-value">Nej</span>
+                                        </div>
+                                        {customer.pricesByVehicleType &&
+                                          Object.keys(customer.pricesByVehicleType).length > 0 && (
+                                            <div style={{ marginTop: '0.5rem' }}>
+                                              <span className="detail-label">Priser: </span>
+                                              <span className="detail-value">
+                                                {Object.keys(customer.pricesByVehicleType).join(
+                                                  ', '
+                                                )}
+                                              </span>
+                                            </div>
+                                          )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* PLATSER TAB */}
+      {currentTab === 'platser' && (
+        <div>
+          {showLocationForm ? (
+            <div className="form">
+              <h2>{editingLocationId ? 'Redigera plats' : 'Ny plats'}</h2>
+              <form onSubmit={handleLocationSubmit}>
+                <div className="form-section">
+                  <div className="form-section-title">Grunduppgifter</div>
+                  <div className="form-group">
+                    <label className="text-muted-2 label-sm">Namn *</label>
+                    <input
+                      type="text"
+                      value={locationForm.name}
+                      onChange={e => setLocationForm({ ...locationForm, name: e.target.value })}
+                      className="form-input"
+                      placeholder="Namn (t.ex. Huvudlager, Hamnen...)"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="text-muted-2 label-sm">Adress *</label>
+                    <input
+                      type="text"
+                      value={locationForm.address}
+                      onChange={e => setLocationForm({ ...locationForm, address: e.target.value })}
+                      className="form-input"
+                      placeholder="Adress"
+                      required
+                    />
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 0.5 }}>
+                      <label className="text-muted-2 label-sm">Postnr</label>
+                      <input
+                        type="text"
+                        value={locationForm.postalCode}
+                        onChange={e =>
+                          setLocationForm({ ...locationForm, postalCode: e.target.value })
+                        }
+                        className="form-input"
+                        placeholder="Postnummer"
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="text-muted-2 label-sm">Ort</label>
+                      <input
+                        type="text"
+                        value={locationForm.city}
+                        onChange={e => setLocationForm({ ...locationForm, city: e.target.value })}
+                        className="form-input"
+                        placeholder="Ort"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="form-section">
+                  <div className="form-section-title">Kopplade kunder</div>
+                  <div
+                    style={{
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '6px',
+                      padding: '0.5rem',
+                      backgroundColor: 'var(--color-bg)',
+                    }}
+                  >
+                    {data.customers.map(customer => (
+                      <label
+                        key={customer.id}
+                        className="checkbox-label"
+                        style={{ display: 'block', padding: '0.25rem 0', margin: 0 }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={locationForm.customerIds.includes(customer.id)}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setLocationForm({
+                                ...locationForm,
+                                customerIds: [...locationForm.customerIds, customer.id],
+                              });
+                            } else {
+                              setLocationForm({
+                                ...locationForm,
+                                customerIds: locationForm.customerIds.filter(
+                                  id => id !== customer.id
+                                ),
+                              });
+                            }
+                          }}
+                        />
+                        {customer.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="form-actions">
+                  {editingLocationId && (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteLocationId(editingLocationId)}
+                      className="btn btn-danger btn-small"
+                    >
+                      Ta bort
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={resetLocationForm}
+                    className="btn btn-secondary"
+                    style={{ marginLeft: 'auto' }}
+                  >
+                    Avbryt
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    {editingLocationId ? 'Uppdatera' : 'Spara'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="form" style={{ marginBottom: '1.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1rem',
+                }}
+              >
+                <h2 style={{ margin: 0 }}>Platser ({(data.pickupLocations || []).length})</h2>
+                <button
+                  onClick={() => setShowLocationForm(true)}
+                  className="btn btn-primary btn-small"
+                >
+                  + Ny plats
+                </button>
+              </div>
+
+              {(data.pickupLocations || []).length === 0 ? (
+                <div className="empty-state">
+                  <p>Inga platser ännu</p>
+                </div>
+              ) : (
                 <div className="table-container">
                   <table className="table">
                     <thead>
                       <tr>
-                        <th onClick={() => handleDriverSort('name')} style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}>
-                          Förare
-                          <SortIcon field="name" currentField={driverSortField} direction={driverSortDirection} />
-                        </th>
-                        <th onClick={() => handleDriverSort('phone')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                          Telefon
-                          <SortIcon field="phone" currentField={driverSortField} direction={driverSortDirection} />
-                        </th>
-                        <th>Fordon</th>
+                        <th>Namn</th>
+                        <th>Adress</th>
+                        <th>Postnr</th>
+                        <th>Ort</th>
+                        <th>Kunder</th>
                         <th style={{ width: '100px' }}>Åtgärder</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {displayedActiveDrivers.map(driver => {
-                        const isExpanded = expandedDriverId === driver.id;
-                        const assignedVehicles = data.vehicles.filter(v => (v.driverIds || (v.driverId ? [v.driverId] : [])).includes(driver.id) && v.active);
+                      {(data.pickupLocations || []).map(location => {
+                        const isExpanded = expandedLocationId === location.id;
+                        const customerIds =
+                          location.customerIds ||
+                          (location.customerId ? [location.customerId] : []);
+                        const customers = customerIds
+                          .map(id => data.customers.find(c => c.id === id))
+                          .filter(Boolean);
+
                         return (
-                          <React.Fragment key={driver.id}>
+                          <React.Fragment key={location.id}>
                             <tr
-                              onClick={() => setExpandedDriverId(isExpanded ? null : driver.id)}
+                              onClick={() => setExpandedLocationId(isExpanded ? null : location.id)}
                               style={{ cursor: 'pointer' }}
                             >
                               <td style={{ whiteSpace: 'nowrap' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                  <span className="text-2xs text-muted">{isExpanded ? '▼' : '▶'}</span>
-                                  <span style={{
-                                    background: '#667eea',
-                                    color: 'white',
-                                    padding: '0.2rem 0.4rem',
-                                    borderRadius: '3px',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.7rem',
-                                    minWidth: '45px',
-                                    textAlign: 'center'
-                                  }}>
-                                    {driver.code || generateDriverCode(driver.name)}
-                                  </span>
-                                  <strong className="text-base">{driver.name}</strong>
-                                </div>
+                                <span
+                                  className="text-2xs text-muted"
+                                  style={{ marginRight: '0.35rem' }}
+                                >
+                                  {isExpanded ? '▼' : '▶'}
+                                </span>
+                                <strong>{location.name}</strong>
                               </td>
-                              <td>{driver.phone || '-'}</td>
-                              <td>
-                                {isExpanded && assignedVehicles.length > 0 ? (
-                                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                    {assignedVehicles.map(vehicle => (
-                                      <span key={vehicle.id} style={{ background: '#e8f5e9', color: '#2e7d32', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem', fontWeight: 'bold' }}>{vehicle.regNo}</span>
-                                    ))}
-                                  </div>
-                                ) : assignedVehicles.length > 0 ? (
-                                  <span className="text-muted text-sm">{assignedVehicles.length} fordon</span>
+                              <td>{location.address}</td>
+                              <td>{location.postalCode || '-'}</td>
+                              <td>{location.city || '-'}</td>
+                              <td onClick={e => e.stopPropagation()}>
+                                {customers.length > 0 ? (
+                                  <span className="text-muted text-sm">
+                                    {customers.length} kund(er)
+                                  </span>
                                 ) : (
-                                  <span className="text-sm text-muted">-</span>
+                                  <span style={{ color: '#95a5a6' }}>-</span>
                                 )}
                               </td>
-                              <td onClick={e => e.stopPropagation()}>
+                              <td
+                                onClick={e => e.stopPropagation()}
+                                style={{ whiteSpace: 'nowrap' }}
+                              >
                                 <button
-                                  onClick={() => handleEditDriver(driver)}
-                                  className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
+                                  onClick={() => handleEditLocation(location)}
+                                  className="btn btn-small btn-primary text-sm"
+                                  style={{ padding: '0.25rem 0.75rem', width: '100%' }}
                                 >
                                   Redigera
                                 </button>
@@ -1283,26 +2828,67 @@ className="btn btn-small btn-danger text-sm"
                             </tr>
                             {isExpanded && (
                               <tr>
-                                <td colSpan={4} style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', verticalAlign: 'top' }}>
-                                  <div className="mb-1" style={{ fontWeight: 600 }}>{driver.name}</div>
-                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
+                                <td
+                                  colSpan={6}
+                                  style={{
+                                    backgroundColor: 'var(--color-bg)',
+                                    padding: '1rem',
+                                    verticalAlign: 'top',
+                                  }}
+                                >
+                                  <div className="mb-1" style={{ fontWeight: 600 }}>
+                                    {location.name}
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: 'grid',
+                                      gridTemplateColumns: '1fr 1fr',
+                                      gap: '1.5rem',
+                                      fontSize: '0.85rem',
+                                    }}
+                                  >
                                     <div>
-                                      <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Kod: </span><span className="detail-value">{driver.code || '-'}</span></div>
-                                      <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Telefon: </span><span className="detail-value">{driver.phone || '-'}</span></div>
-                                      <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Adress: </span><span className="detail-value">{driver.address || '-'}</span></div>
-                                      <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Postnr / Ort: </span><span className="detail-value">{[driver.postalCode, driver.city].filter(Boolean).join(' ') || '-'}</span></div>
+                                      <div style={{ marginBottom: '0.35rem' }}>
+                                        <span className="detail-label">Adress: </span>
+                                        <span className="detail-value">
+                                          {location.address || '-'}
+                                        </span>
+                                      </div>
+                                      <div style={{ marginBottom: '0.35rem' }}>
+                                        <span className="detail-label">Postnr / Ort: </span>
+                                        <span className="detail-value">
+                                          {[location.postalCode, location.city]
+                                            .filter(Boolean)
+                                            .join(' ') || '-'}
+                                        </span>
+                                      </div>
                                     </div>
                                     <div>
-                                      {assignedVehicles.length > 0 ? (
-                                        <div><span className="detail-label">Tilldelade fordon: </span>
-                                          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
-                                            {assignedVehicles.map(v => (
-                                              <span key={v.id} style={{ background: '#e8f5e9', color: '#2e7d32', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem' }}>{v.regNo}</span>
-                                            ))}
-                                          </div>
+                                      {customers.length > 0 ? (
+                                        <div
+                                          style={{
+                                            display: 'flex',
+                                            gap: '0.25rem',
+                                            flexWrap: 'wrap',
+                                          }}
+                                        >
+                                          {customers.map(customer => (
+                                            <span
+                                              key={customer.id}
+                                              style={{
+                                                background: '#667eea',
+                                                color: 'white',
+                                                padding: '0.15rem 0.4rem',
+                                                borderRadius: '3px',
+                                                fontSize: '0.7rem',
+                                              }}
+                                            >
+                                              {customer.name}
+                                            </span>
+                                          ))}
                                         </div>
                                       ) : (
-                                        <span className="text-muted">Inga fordon tilldelade</span>
+                                        <span className="text-muted">Inga kunder kopplade</span>
                                       )}
                                     </div>
                                   </div>
@@ -1315,630 +2901,9 @@ className="btn btn-small btn-danger text-sm"
                     </tbody>
                   </table>
                 </div>
-                {activeDrivers.length > 5 && (
-                  <button
-                    onClick={() => setShowAllActiveDrivers(!showAllActiveDrivers)}
-                    className="btn btn-secondary btn-small"
-                    style={{ marginTop: '0.5rem', width: '100%' }}
-                  >
-                    {showAllActiveDrivers ? `Visa mindre` : `Visa alla (${activeDrivers.length})`}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* INAKTIVA FÖRARE */}
-          {inactiveDrivers.length > 0 && (
-            <div className="form">
-              <h2 style={{ marginBottom: '1rem' }}>Inaktiva förare ({inactiveDrivers.length})</h2>
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th onClick={() => handleDriverSort('name')} style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}>
-                        Förare
-                        <SortIcon field="name" currentField={driverSortField} direction={driverSortDirection} />
-                      </th>
-                      <th onClick={() => handleDriverSort('phone')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Telefon
-                        <SortIcon field="phone" currentField={driverSortField} direction={driverSortDirection} />
-                      </th>
-                      <th>Fordon</th>
-                      <th style={{ width: '100px' }}>Åtgärder</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedInactiveDrivers.map(driver => {
-                      const isExpanded = expandedDriverId === driver.id;
-                      const assignedVehicles = data.vehicles.filter(v => (v.driverIds || (v.driverId ? [v.driverId] : [])).includes(driver.id));
-                      return (
-                        <React.Fragment key={driver.id}>
-                          <tr
-                            onClick={() => setExpandedDriverId(isExpanded ? null : driver.id)}
-                            style={{ cursor: 'pointer', opacity: 0.6 }}
-                          >
-                            <td style={{ whiteSpace: 'nowrap' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                <span className="text-2xs text-muted">{isExpanded ? '▼' : '▶'}</span>
-                                <span style={{
-                                  background: '#95a5a6',
-                                  color: 'white',
-                                  padding: '0.2rem 0.4rem',
-                                  borderRadius: '3px',
-                                  fontWeight: 'bold',
-                                  fontSize: '0.7rem',
-                                  minWidth: '45px',
-                                  textAlign: 'center'
-                                }}>
-                                  {driver.code || generateDriverCode(driver.name)}
-                                </span>
-                                <span className="text-base">{driver.name}</span>
-                              </div>
-                            </td>
-                            <td>{driver.phone || '-'}</td>
-                            <td>
-                              {isExpanded && assignedVehicles.length > 0 ? (
-                                <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                  {assignedVehicles.map(vehicle => (
-                                    <span key={vehicle.id} style={{ background: '#e0e0e0', color: '#616161', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem', fontWeight: 'bold' }}>
-                                    {vehicle.regNo}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : assignedVehicles.length > 0 ? (
-                              <span className="text-muted text-sm">{assignedVehicles.length} fordon</span>
-                            ) : (
-                              <span className="text-sm text-muted">-</span>
-                            )}
-                          </td>
-                          <td onClick={e => e.stopPropagation()}>
-                            <button
-                              onClick={() => handleEditDriver(driver)}
-                              className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
-                            >
-                              Redigera
-                            </button>
-                          </td>
-                        </tr>
-                        {isExpanded && (
-                          <tr>
-                            <td colSpan={4} style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', verticalAlign: 'top', opacity: 0.9 }}>
-                              <div className="mb-1" style={{ fontWeight: 600 }}>{driver.name}</div>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
-                                <div>
-                                  <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Kod: </span><span className="detail-value">{driver.code || '-'}</span></div>
-                                  <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Telefon: </span><span className="detail-value">{driver.phone || '-'}</span></div>
-                                  <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Adress: </span><span className="detail-value">{driver.address || '-'}</span></div>
-                                  <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Postnr / Ort: </span><span className="detail-value">{[driver.postalCode, driver.city].filter(Boolean).join(' ') || '-'}</span></div>
-                                </div>
-                                <div>
-                                  {assignedVehicles.length > 0 ? (
-                                    <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                      {assignedVehicles.map(v => (
-                                        <span key={v.id} style={{ background: '#e0e0e0', color: '#616161', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem' }}>{v.regNo}</span>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <span className="text-muted">Inga fordon tilldelade</span>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-              {inactiveDrivers.length > 5 && (
-                <button
-                  onClick={() => setShowAllInactiveDrivers(!showAllInactiveDrivers)}
-                  className="btn btn-secondary btn-small"
-                  style={{ marginTop: '0.5rem', width: '100%' }}
-                >
-                  {showAllInactiveDrivers ? `Visa mindre` : `Visa alla (${inactiveDrivers.length})`}
-                </button>
               )}
             </div>
           )}
-          </>
-          )}
-        </div>
-      )}
-
-      {/* KUNDER TAB */}
-      {currentTab === 'kunder' && (
-        <div>
-        {showCustomerForm ? (
-          <div className="form">
-            <h2>{editingCustomerId ? 'Redigera kund' : 'Ny kund'}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '1.5rem', alignItems: 'start' }}>
-                  {/* Vänster: kompakt kundformulär */}
-                  <div>
-                    <form onSubmit={handleCustomerSubmit} className="text-sm">
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
-                        <input type="text" name="name" value={customerForm.name} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Namn *" required />
-                        <input type="text" name="customerNumber" value={customerForm.customerNumber} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Kundnr" style={{ width: '5.5rem' }} />
-                      </div>
-                      <div style={{ marginBottom: '0.2rem' }}>
-                        <input type="text" name="shortName" value={customerForm.shortName || ''} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Förkortning" maxLength={6} />
-                      </div>
-                      <div style={{ marginBottom: '0.2rem' }}>
-                        <input type="text" name="contactPerson" value={customerForm.contactPerson} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Kontaktperson" />
-                      </div>
-                      <div style={{ marginBottom: '0.2rem' }}>
-                        <input type="text" name="address" value={customerForm.address} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Adress" />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
-                        <input type="text" name="postalCode" value={customerForm.postalCode} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Postnr" style={{ width: '4rem' }} />
-                        <input type="text" name="city" value={customerForm.city} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Ort" />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.2rem 0.5rem', marginBottom: '0.2rem' }}>
-                        <input type="tel" name="phone" value={customerForm.phone} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Telefon" />
-                        <input type="tel" name="mobile" value={customerForm.mobile} onChange={handleCustomerChange} className="form-input input-sm" placeholder="Mobil" />
-                      </div>
-                      <label className="checkbox-label text-sm" style={{ marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <input type="checkbox" name="active" checked={customerForm.active} onChange={handleCustomerChange} />
-                        Aktiv
-                      </label>
-                      <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
-                        <button type="submit" className="btn btn-primary btn-small text-2xs">{editingCustomerId ? 'Spara' : 'Lägg till'}</button>
-                        {editingCustomerId && (
-                          <>
-                            <button type="button" onClick={() => toggleCustomerActive(editingCustomerId, customerForm.active)} className="btn btn-secondary btn-small text-2xs">{customerForm.active ? 'Inaktivera' : 'Aktivera'}</button>
-                            <button type="button" onClick={() => setDeleteCustomerId(editingCustomerId)} className="btn btn-danger btn-small text-2xs">Ta bort</button>
-                          </>
-                        )}
-                        <button type="button" onClick={resetCustomerForm} className="btn btn-secondary btn-small text-2xs">Avbryt</button>
-                      </div>
-                    </form>
-                  </div>
-
-                  {/* Höger: priser per fordonstyp, väntetid m.m. */}
-                  <div>
-                    <h3 className="section-title">
-                      Priser (kundspecifika)
-                    </h3>
-                    <div className="text-base">
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        <select
-                          value={selectedCustomerVehicleType}
-                          onChange={handleCustomerVehicleTypeSelect}
-className="form-select form-input input-sm" style={{ width: '100%', maxWidth: '200px' }}
-                        >
-                          <option value="">+ Lägg till fordonstyp</option>
-                          {(data.vehicleTypes || []).filter(t => !customerForm.pricesByVehicleType[t]).map(t => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
-                      </div>
-                      {Object.entries(customerForm.pricesByVehicleType || {}).map(([vehicleType, prices]) => (
-                        <div key={vehicleType} className="card-block mb-1">
-                          <strong className="text-sm block" style={{ flexShrink: 0, marginBottom: '0.25rem' }}>{vehicleType}</strong>
-                          <div className="grid-cols-5">
-                            <div>
-                              <label className="label-sm">kr/km</label>
-                              <input type="text" inputMode="decimal" value={prices.km || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'km', e.target.value)} className="form-input input-sm" placeholder="–" />
-                            </div>
-                            <div>
-                              <label className="label-sm">kr/stopp</label>
-                              <input type="text" inputMode="decimal" value={prices.stop || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'stop', e.target.value)} className="form-input input-sm" placeholder="–" />
-                            </div>
-                            <div>
-                              <label className="label-sm">Väntetid kr/h</label>
-                              <input type="text" inputMode="decimal" value={prices.wait || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'wait', e.target.value)} className="form-input input-sm" placeholder="–" />
-                            </div>
-                            <div>
-                              <label className="label-sm">Timpris kr</label>
-                              <input type="text" inputMode="decimal" value={prices.hour || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'hour', e.target.value)} className="form-input input-sm" placeholder="–" />
-                            </div>
-                            <div>
-                              <label className="label-sm">Fast kr</label>
-                              <input type="text" inputMode="decimal" value={prices.fixed || ''} onChange={(e) => handleCustomerPriceChange(vehicleType, 'fixed', e.target.value)} className="form-input input-sm" placeholder="–" />
-                            </div>
-                          </div>
-                          <button type="button" onClick={() => handleRemoveCustomerPriceTemplate(vehicleType)} className="btn btn-danger btn-small text-2xs" style={{ flexShrink: 0, marginBottom: '0.25rem', marginLeft: 'auto', padding: '0.2rem 0.4rem' }}>Ta bort</button>
-                        </div>
-                      ))}
-                      {(!customerForm.pricesByVehicleType || Object.keys(customerForm.pricesByVehicleType).length === 0) && (
-                        <p className="text-muted-2 text-sm" style={{ margin: 0 }}>Välj fordonstyp ovan för att lägga till priser (kr/km, väntetid, timpris m.m.)</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-          </div>
-        ) : (
-          <>
-          <div className="form" style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0 }}>Kunder ({data.customers.length})</h2>
-              <button onClick={() => setShowCustomerForm(true)} className="btn btn-primary btn-small">
-                + Nytt
-              </button>
-            </div>
-
-            {activeCustomers.length === 0 ? (
-              <div className="empty-state">
-                <p>Inga aktiva kunder</p>
-              </div>
-            ) : (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th onClick={() => handleCustomerSort('customerNumber')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Kundnr
-                        <SortIcon field="customerNumber" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th onClick={() => handleCustomerSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Namn
-                        <SortIcon field="name" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th onClick={() => handleCustomerSort('contactPerson')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Kontaktperson
-                        <SortIcon field="contactPerson" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th onClick={() => handleCustomerSort('mobile')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Mobil
-                        <SortIcon field="mobile" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th onClick={() => handleCustomerSort('city')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Ort
-                        <SortIcon field="city" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th style={{ width: '100px' }}>Åtgärder</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeCustomers.map(customer => {
-                      const isExpanded = expandedCustomerId === customer.id;
-                      return (
-                        <React.Fragment key={customer.id}>
-                          <tr
-                            onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <td style={{ whiteSpace: 'nowrap' }}>
-                              <span className="text-2xs text-muted" style={{ marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
-                              {customer.customerNumber || '-'}
-                            </td>
-                            <td><strong>{customer.name}</strong></td>
-                            <td>{customer.contactPerson || '-'}</td>
-                            <td>{customer.mobile || '-'}</td>
-                            <td>{customer.city || '-'}</td>
-                            <td onClick={e => e.stopPropagation()}>
-                              <button
-                                onClick={() => handleEditCustomer(customer)}
-className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
-                              >
-                                Redigera
-                              </button>
-                            </td>
-                          </tr>
-                          {isExpanded && (
-                            <tr>
-                              <td colSpan={6} style={{ backgroundColor: '#0f1419', padding: '1rem', verticalAlign: 'top' }}>
-                                <div style={{ marginBottom: '0.75rem', fontSize: '1rem', color: '#e1e8ed', fontWeight: 600 }}>
-                                  {customer.name}
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
-                                  <div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Kundnr: </span><span style={{ color: '#e1e8ed' }}>{customer.customerNumber || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Förkortning: </span><span style={{ color: '#e1e8ed' }}>{customer.shortName || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Kontaktperson: </span><span style={{ color: '#e1e8ed' }}>{customer.contactPerson || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Telefon: </span><span style={{ color: '#e1e8ed' }}>{customer.phone || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Mobil: </span><span style={{ color: '#e1e8ed' }}>{customer.mobile || '-'}</span></div>
-                                  </div>
-                                  <div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Adress: </span><span style={{ color: '#e1e8ed' }}>{customer.address || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Postnr / Ort: </span><span style={{ color: '#e1e8ed' }}>{[customer.postalCode, customer.city].filter(Boolean).join(' ') || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span style={{ color: '#8899a6' }}>Aktiv: </span><span style={{ color: '#e1e8ed' }}>{customer.active ? 'Ja' : 'Nej'}</span></div>
-                                    {(customer.pricesByVehicleType && Object.keys(customer.pricesByVehicleType).length > 0) && (
-                                      <div style={{ marginTop: '0.5rem' }}>
-                                        <span style={{ color: '#8899a6' }}>Priser: </span>
-                                        <span style={{ color: '#e1e8ed' }}>{Object.keys(customer.pricesByVehicleType).join(', ')}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* INAKTIVA KUNDER */}
-          {inactiveCustomers.length > 0 && (
-            <div className="form">
-              <h2 style={{ marginBottom: '1rem' }}>Inaktiva kunder ({inactiveCustomers.length})</h2>
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th onClick={() => handleCustomerSort('customerNumber')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Kundnr
-                        <SortIcon field="customerNumber" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th onClick={() => handleCustomerSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Namn
-                        <SortIcon field="name" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th onClick={() => handleCustomerSort('contactPerson')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Kontaktperson
-                        <SortIcon field="contactPerson" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th onClick={() => handleCustomerSort('mobile')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Mobil
-                        <SortIcon field="mobile" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th onClick={() => handleCustomerSort('city')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Ort
-                        <SortIcon field="city" currentField={customerSortField} direction={customerSortDirection} />
-                      </th>
-                      <th style={{ width: '100px' }}>Åtgärder</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inactiveCustomers.map(customer => {
-                      const isExpanded = expandedCustomerId === customer.id;
-                      return (
-                        <React.Fragment key={customer.id}>
-                          <tr
-                            onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
-                            style={{ cursor: 'pointer', opacity: 0.6 }}
-                          >
-                            <td style={{ whiteSpace: 'nowrap' }}>
-                              <span className="text-2xs text-muted" style={{ marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
-                              {customer.customerNumber || '-'}
-                            </td>
-                            <td>{customer.name}</td>
-                            <td>{customer.contactPerson || '-'}</td>
-                            <td>{customer.mobile || '-'}</td>
-                            <td>{customer.city || '-'}</td>
-                            <td onClick={e => e.stopPropagation()}>
-                              <button
-                                onClick={() => handleEditCustomer(customer)}
-className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
-                              >
-                                Redigera
-                              </button>
-                            </td>
-                          </tr>
-                          {isExpanded && (
-                            <tr>
-                              <td colSpan={6} className="text-base" style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', verticalAlign: 'top' }}>
-                                <div className="mb-1" style={{ fontWeight: 600 }}>{customer.name}</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                  <div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Kundnr: </span><span className="detail-value">{customer.customerNumber || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Förkortning: </span><span className="detail-value">{customer.shortName || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Kontaktperson: </span><span className="detail-value">{customer.contactPerson || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Telefon: </span><span className="detail-value">{customer.phone || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Mobil: </span><span className="detail-value">{customer.mobile || '-'}</span></div>
-                                  </div>
-                                  <div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Adress: </span><span className="detail-value">{customer.address || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Postnr / Ort: </span><span className="detail-value">{[customer.postalCode, customer.city].filter(Boolean).join(' ') || '-'}</span></div>
-                                    <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Aktiv: </span><span className="detail-value">Nej</span></div>
-                                    {(customer.pricesByVehicleType && Object.keys(customer.pricesByVehicleType).length > 0) && (
-                                      <div style={{ marginTop: '0.5rem' }}>
-                                        <span className="detail-label">Priser: </span>
-                                        <span className="detail-value">{Object.keys(customer.pricesByVehicleType).join(', ')}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-          </>
-        )}
-        </div>
-      )}
-
-      {/* PLATSER TAB */}
-      {currentTab === 'platser' && (
-        <div>
-        {showLocationForm ? (
-          <div className="form">
-            <h2>{editingLocationId ? 'Redigera plats' : 'Ny plats'}</h2>
-            <form onSubmit={handleLocationSubmit}>
-              <div className="form-section">
-                <div className="form-section-title">Grunduppgifter</div>
-                <div className="form-group">
-                  <label className="text-muted-2 label-sm">Namn *</label>
-                  <input
-                    type="text"
-                    value={locationForm.name}
-                    onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })}
-                    className="form-input"
-                    placeholder="Namn (t.ex. Huvudlager, Hamnen...)"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="text-muted-2 label-sm">Adress *</label>
-                  <input
-                    type="text"
-                    value={locationForm.address}
-                    onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })}
-                    className="form-input"
-                    placeholder="Adress"
-                    required
-                  />
-                </div>
-                <div className="form-row">
-                  <div className="form-group" style={{ flex: 0.5 }}>
-                    <label className="text-muted-2 label-sm">Postnr</label>
-                    <input
-                      type="text"
-                      value={locationForm.postalCode}
-                      onChange={(e) => setLocationForm({ ...locationForm, postalCode: e.target.value })}
-                      className="form-input"
-                      placeholder="Postnummer"
-                    />
-                  </div>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="text-muted-2 label-sm">Ort</label>
-                    <input
-                      type="text"
-                      value={locationForm.city}
-                      onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })}
-                      className="form-input"
-                      placeholder="Ort"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="form-section">
-                <div className="form-section-title">Kopplade kunder</div>
-                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.5rem', backgroundColor: 'var(--color-bg)' }}>
-                  {data.customers.map(customer => (
-                    <label key={customer.id} className="checkbox-label" style={{ display: 'block', padding: '0.25rem 0', margin: 0 }}>
-                      <input
-                        type="checkbox"
-                        checked={locationForm.customerIds.includes(customer.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setLocationForm({ ...locationForm, customerIds: [...locationForm.customerIds, customer.id] });
-                          } else {
-                            setLocationForm({ ...locationForm, customerIds: locationForm.customerIds.filter(id => id !== customer.id) });
-                          }
-                        }}
-                      />
-                      {customer.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="form-actions">
-                {editingLocationId && (
-                  <button type="button" onClick={() => setDeleteLocationId(editingLocationId)} className="btn btn-danger btn-small">
-                    Ta bort
-                  </button>
-                )}
-                <button type="button" onClick={resetLocationForm} className="btn btn-secondary" style={{ marginLeft: 'auto' }}>
-                  Avbryt
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingLocationId ? 'Uppdatera' : 'Spara'}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
-        <div className="form" style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ margin: 0 }}>Platser ({(data.pickupLocations || []).length})</h2>
-          <button onClick={() => setShowLocationForm(true)} className="btn btn-primary btn-small">
-            + Ny plats
-          </button>
-        </div>
-
-        {(data.pickupLocations || []).length === 0 ? (
-          <div className="empty-state">
-            <p>Inga platser ännu</p>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Namn</th>
-                  <th>Adress</th>
-                  <th>Postnr</th>
-                  <th>Ort</th>
-                  <th>Kunder</th>
-                  <th style={{ width: '100px' }}>Åtgärder</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(data.pickupLocations || []).map(location => {
-                  const isExpanded = expandedLocationId === location.id;
-                  const customerIds = location.customerIds || (location.customerId ? [location.customerId] : []);
-                  const customers = customerIds
-                    .map(id => data.customers.find(c => c.id === id))
-                    .filter(Boolean);
-                  
-                  return (
-                    <React.Fragment key={location.id}>
-                      <tr
-                        onClick={() => setExpandedLocationId(isExpanded ? null : location.id)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <td style={{ whiteSpace: 'nowrap' }}>
-                          <span className="text-2xs text-muted" style={{ marginRight: '0.35rem' }}>{isExpanded ? '▼' : '▶'}</span>
-                          <strong>{location.name}</strong>
-                        </td>
-                        <td>{location.address}</td>
-                        <td>{location.postalCode || '-'}</td>
-                        <td>{location.city || '-'}</td>
-                        <td onClick={e => e.stopPropagation()}>
-                          {customers.length > 0 ? (
-                            <span className="text-muted text-sm">{customers.length} kund(er)</span>
-                          ) : (
-                            <span style={{ color: '#95a5a6' }}>-</span>
-                          )}
-                        </td>
-                        <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
-                          <button
-                            onClick={() => handleEditLocation(location)}
-                            className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem', width: '100%' }}
-                          >
-                            Redigera
-                          </button>
-                        </td>
-                      </tr>
-                      {isExpanded && (
-                        <tr>
-                          <td colSpan={6} style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', verticalAlign: 'top' }}>
-                            <div className="mb-1" style={{ fontWeight: 600 }}>{location.name}</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.85rem' }}>
-                              <div>
-                                <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Adress: </span><span className="detail-value">{location.address || '-'}</span></div>
-                                <div style={{ marginBottom: '0.35rem' }}><span className="detail-label">Postnr / Ort: </span><span className="detail-value">{[location.postalCode, location.city].filter(Boolean).join(' ') || '-'}</span></div>
-                              </div>
-                              <div>
-                                {customers.length > 0 ? (
-                                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                    {customers.map(customer => (
-                                      <span key={customer.id} style={{ background: '#667eea', color: 'white', padding: '0.15rem 0.4rem', borderRadius: '3px', fontSize: '0.7rem' }}>{customer.name}</span>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <span className="text-muted">Inga kunder kopplade</span>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-        </div>
-        )}
         </div>
       )}
 
@@ -1950,12 +2915,26 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
             Exportera all data till backup-fil eller importera tidigare backup.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
-            <button onClick={handleExportBackup} className="btn btn-success" style={{ width: '100%' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              marginBottom: '1rem',
+            }}
+          >
+            <button
+              onClick={handleExportBackup}
+              className="btn btn-success"
+              style={{ width: '100%' }}
+            >
               Exportera backup (JSON)
             </button>
 
-            <label className="btn btn-secondary" style={{ cursor: 'pointer', width: '100%', textAlign: 'center' }}>
+            <label
+              className="btn btn-secondary"
+              style={{ cursor: 'pointer', width: '100%', textAlign: 'center' }}
+            >
               Importera backup
               <input
                 type="file"
@@ -1966,13 +2945,15 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
             </label>
           </div>
 
-          <div style={{
-            background: '#fff3cd',
-            border: '1px solid #ffc107',
-            borderRadius: '4px',
-            padding: '0.75rem',
-            fontSize: '0.875rem'
-          }}>
+          <div
+            style={{
+              background: '#fff3cd',
+              border: '1px solid #ffc107',
+              borderRadius: '4px',
+              padding: '0.75rem',
+              fontSize: '0.875rem',
+            }}
+          >
             <strong style={{ color: '#856404' }}>Varning:</strong>
             <span style={{ color: '#856404' }}> Import ersätter all befintlig data.</span>
           </div>
@@ -1984,7 +2965,8 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Testdata</h2>
           <p style={{ color: '#7f8c8d', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            Ladda in exempeldata för att testa appen: kunder, förare, bilar, platser och några bokningar (planerade, genomförda och fakturerade).
+            Ladda in exempeldata för att testa appen: kunder, förare, bilar, platser och några
+            bokningar (planerade, genomförda och fakturerade).
           </p>
           <button
             type="button"
@@ -2000,7 +2982,10 @@ className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.75rem
             </p>
           )}
           <p className="text-muted text-base">
-            Gå till <strong>Bokningar</strong> för att se bokningarna, <strong>Planering</strong> för att tilldela bil/förare och ange kostnad, och flikarna <strong>Fordon</strong>, <strong>Förare</strong>, <strong>Kunder</strong>, <strong>Platser</strong> här ovanför för att se listorna.
+            Gå till <strong>Bokningar</strong> för att se bokningarna, <strong>Planering</strong>{' '}
+            för att tilldela bil/förare och ange kostnad, och flikarna <strong>Fordon</strong>,{' '}
+            <strong>Förare</strong>, <strong>Kunder</strong>, <strong>Platser</strong> här ovanför
+            för att se listorna.
           </p>
         </div>
       )}

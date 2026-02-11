@@ -10,7 +10,7 @@ function Equipage({ data, updateData }) {
   const [sortDirection, setSortDirection] = useState('asc');
 
   // Generate driver code from name (same as in Settings)
-  const generateDriverCode = (name) => {
+  const generateDriverCode = name => {
     const parts = name.trim().split(' ');
     if (parts.length < 2) {
       return name.substring(0, 4).toUpperCase();
@@ -24,13 +24,16 @@ function Equipage({ data, updateData }) {
     const updatedVehicles = data.vehicles.map(v =>
       v.id === vehicleId ? { ...v, driverIds: driverIds || [] } : v
     );
-    const { vehicles: syncedVehicles, drivers: syncedDrivers } = syncVehicleDriverRelation(updatedVehicles, data.drivers);
+    const { vehicles: syncedVehicles, drivers: syncedDrivers } = syncVehicleDriverRelation(
+      updatedVehicles,
+      data.drivers
+    );
     updateData({ vehicles: syncedVehicles, drivers: syncedDrivers });
     setEditingVehicleId(null);
     setSelectedDriverIds([]);
   };
 
-  const startEditDriver = (vehicle) => {
+  const startEditDriver = vehicle => {
     setEditingVehicleId(vehicle.id);
     const ids = vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
     setSelectedDriverIds(ids);
@@ -41,13 +44,13 @@ function Equipage({ data, updateData }) {
     setSelectedDriverIds([]);
   };
 
-  const toggleDriverSelection = (driverId) => {
+  const toggleDriverSelection = driverId => {
     setSelectedDriverIds(prev =>
       prev.includes(driverId) ? prev.filter(id => id !== driverId) : [...prev, driverId]
     );
   };
 
-  const handleSort = (field) => {
+  const handleSort = field => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -56,10 +59,10 @@ function Equipage({ data, updateData }) {
     }
   };
 
-  const sortVehicles = (vehicles) => {
+  const sortVehicles = vehicles => {
     return [...vehicles].sort((a, b) => {
       let aVal, bVal;
-      
+
       const aDriverIds = a.driverIds || (a.driverId ? [a.driverId] : []);
       const bDriverIds = b.driverIds || (b.driverId ? [b.driverId] : []);
       const driverA = aDriverIds[0] ? data.drivers.find(d => d.id === aDriverIds[0]) : null;
@@ -79,7 +82,7 @@ function Equipage({ data, updateData }) {
         if (typeof aVal === 'string') aVal = aVal.toLowerCase();
         if (typeof bVal === 'string') bVal = bVal.toLowerCase();
       }
-      
+
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -92,9 +95,7 @@ function Equipage({ data, updateData }) {
   return (
     <div>
       <h1>Bilar</h1>
-      <p className="text-muted mb-2">
-        Översikt över alla fordon och deras tilldelade förare.
-      </p>
+      <p className="text-muted mb-2">Översikt över alla fordon och deras tilldelade förare.</p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
         {/* LEFT COLUMN - TABLE */}
@@ -109,19 +110,31 @@ function Equipage({ data, updateData }) {
               <table className="table">
                 <thead>
                   <tr>
-                    <th onClick={() => handleSort('regNo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <th
+                      onClick={() => handleSort('regNo')}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                    >
                       Reg.nr
                       <SortIcon field="regNo" currentField={sortField} direction={sortDirection} />
                     </th>
-                    <th onClick={() => handleSort('type')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <th
+                      onClick={() => handleSort('type')}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                    >
                       Typ
                       <SortIcon field="type" currentField={sortField} direction={sortDirection} />
                     </th>
-                    <th onClick={() => handleSort('driver')} style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}>
+                    <th
+                      onClick={() => handleSort('driver')}
+                      style={{ cursor: 'pointer', userSelect: 'none', minWidth: '220px' }}
+                    >
                       Förare
                       <SortIcon field="driver" currentField={sortField} direction={sortDirection} />
                     </th>
-                    <th onClick={() => handleSort('phone')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <th
+                      onClick={() => handleSort('phone')}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                    >
                       Telefon
                       <SortIcon field="phone" currentField={sortField} direction={sortDirection} />
                     </th>
@@ -130,19 +143,35 @@ function Equipage({ data, updateData }) {
                 </thead>
                 <tbody>
                   {activeVehicles.map(vehicle => {
-                    const driverIds = vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
-                    const assignedDrivers = driverIds.map(id => data.drivers.find(d => d.id === id)).filter(Boolean);
+                    const driverIds =
+                      vehicle.driverIds || (vehicle.driverId ? [vehicle.driverId] : []);
+                    const assignedDrivers = driverIds
+                      .map(id => data.drivers.find(d => d.id === id))
+                      .filter(Boolean);
                     const isEditing = editingVehicleId === vehicle.id;
 
                     return (
                       <tr key={vehicle.id}>
-                        <td><strong>{vehicle.regNo}</strong></td>
+                        <td>
+                          <strong>{vehicle.regNo}</strong>
+                        </td>
                         <td>{vehicle.type}</td>
                         <td style={{ whiteSpace: 'nowrap' }}>
                           {isEditing ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '200px' }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.35rem',
+                                minWidth: '200px',
+                              }}
+                            >
                               {activeDrivers.map(driver => (
-                                <label key={driver.id} className="checkbox-label" style={{ margin: 0 }}>
+                                <label
+                                  key={driver.id}
+                                  className="checkbox-label"
+                                  style={{ margin: 0 }}
+                                >
                                   <input
                                     type="checkbox"
                                     checked={selectedDriverIds.includes(driver.id)}
@@ -155,20 +184,36 @@ function Equipage({ data, updateData }) {
                           ) : (
                             <div>
                               {assignedDrivers.length > 0 ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    flexWrap: 'wrap',
+                                  }}
+                                >
                                   {assignedDrivers.map((d, i) => (
-                                    <span key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <span
+                                      key={d.id}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem',
+                                      }}
+                                    >
                                       {i > 0 && <span className="text-muted">,</span>}
-                                      <span style={{ 
-                                        background: '#667eea', 
-                                        color: 'white', 
-                                        padding: '0.2rem 0.4rem', 
-                                        borderRadius: '3px',
-                                        fontWeight: 'bold',
-                                        fontSize: 'var(--font-size-2xs)',
-                                        minWidth: '45px',
-                                        textAlign: 'center'
-                                      }}>
+                                      <span
+                                        style={{
+                                          background: '#667eea',
+                                          color: 'white',
+                                          padding: '0.2rem 0.4rem',
+                                          borderRadius: '3px',
+                                          fontWeight: 'bold',
+                                          fontSize: 'var(--font-size-2xs)',
+                                          minWidth: '45px',
+                                          textAlign: 'center',
+                                        }}
+                                      >
                                         {d.code || generateDriverCode(d.name)}
                                       </span>
                                     </span>
@@ -189,13 +234,15 @@ function Equipage({ data, updateData }) {
                               <>
                                 <button
                                   onClick={() => handleAssignDrivers(vehicle.id, selectedDriverIds)}
-                                  className="btn btn-small btn-success text-sm" style={{ padding: '0.25rem 0.5rem' }}
+                                  className="btn btn-small btn-success text-sm"
+                                  style={{ padding: '0.25rem 0.5rem' }}
                                 >
                                   Spara
                                 </button>
                                 <button
                                   onClick={cancelEdit}
-                                  className="btn btn-small btn-secondary text-sm" style={{ padding: '0.25rem 0.5rem' }}
+                                  className="btn btn-small btn-secondary text-sm"
+                                  style={{ padding: '0.25rem 0.5rem' }}
                                 >
                                   Avbryt
                                 </button>
@@ -203,7 +250,8 @@ function Equipage({ data, updateData }) {
                             ) : (
                               <button
                                 onClick={() => startEditDriver(vehicle)}
-                                className="btn btn-small btn-primary text-sm" style={{ padding: '0.25rem 0.5rem' }}
+                                className="btn btn-small btn-primary text-sm"
+                                style={{ padding: '0.25rem 0.5rem' }}
                               >
                                 Ändra förare
                               </button>
@@ -253,4 +301,3 @@ function Equipage({ data, updateData }) {
 }
 
 export default Equipage;
-

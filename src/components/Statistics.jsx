@@ -16,19 +16,15 @@ function Statistics({ data }) {
   const [showCustomerFilter, setShowCustomerFilter] = useState(false);
   const [showVehicleFilter, setShowVehicleFilter] = useState(false);
 
-  const toggleCustomer = (customerId) => {
+  const toggleCustomer = customerId => {
     setSelectedCustomers(prev =>
-      prev.includes(customerId)
-        ? prev.filter(id => id !== customerId)
-        : [...prev, customerId]
+      prev.includes(customerId) ? prev.filter(id => id !== customerId) : [...prev, customerId]
     );
   };
 
-  const toggleVehicle = (vehicleId) => {
+  const toggleVehicle = vehicleId => {
     setSelectedVehicles(prev =>
-      prev.includes(vehicleId)
-        ? prev.filter(id => id !== vehicleId)
-        : [...prev, vehicleId]
+      prev.includes(vehicleId) ? prev.filter(id => id !== vehicleId) : [...prev, vehicleId]
     );
   };
 
@@ -45,10 +41,12 @@ function Statistics({ data }) {
       if (booking.status === 'Avbruten') return false;
 
       // Customer filter
-      if (selectedCustomers.length > 0 && !selectedCustomers.includes(booking.customerId)) return false;
+      if (selectedCustomers.length > 0 && !selectedCustomers.includes(booking.customerId))
+        return false;
 
       // Vehicle filter
-      if (selectedVehicles.length > 0 && !selectedVehicles.includes(booking.vehicleId)) return false;
+      if (selectedVehicles.length > 0 && !selectedVehicles.includes(booking.vehicleId))
+        return false;
 
       return true;
     });
@@ -66,11 +64,11 @@ function Statistics({ data }) {
 
     // Calculate by status
     const byStatus = {
-      'Bokad': 0,
-      'Planerad': 0,
-      'Genomförd': 0,
-      'Prissatt': 0,
-      'Fakturerad': 0
+      Bokad: 0,
+      Planerad: 0,
+      Genomförd: 0,
+      Prissatt: 0,
+      Fakturerad: 0,
     };
     filteredBookings.forEach(booking => {
       if (byStatus.hasOwnProperty(booking.status)) {
@@ -82,7 +80,7 @@ function Statistics({ data }) {
       totalKm,
       totalAmount,
       totalBookings,
-      byStatus
+      byStatus,
     };
   };
 
@@ -93,15 +91,17 @@ function Statistics({ data }) {
       if (!bookingDate) return false;
       if (bookingDate < compareFrom || bookingDate > compareTo) return false;
       if (booking.status === 'Avbruten') return false;
-      if (selectedCustomers.length > 0 && !selectedCustomers.includes(booking.customerId)) return false;
-      if (selectedVehicles.length > 0 && !selectedVehicles.includes(booking.vehicleId)) return false;
+      if (selectedCustomers.length > 0 && !selectedCustomers.includes(booking.customerId))
+        return false;
+      if (selectedVehicles.length > 0 && !selectedVehicles.includes(booking.vehicleId))
+        return false;
       return true;
     });
 
     return {
       totalKm: filteredBookings.reduce((sum, b) => sum + (b.km || 0), 0),
       totalAmount: filteredBookings.reduce((sum, b) => sum + (b.amountSek || 0), 0),
-      totalBookings: filteredBookings.length
+      totalBookings: filteredBookings.length,
     };
   };
 
@@ -118,7 +118,7 @@ function Statistics({ data }) {
 
     return {
       from: prevFrom.toISOString().split('T')[0],
-      to: prevTo.toISOString().split('T')[0]
+      to: prevTo.toISOString().split('T')[0],
     };
   };
 
@@ -131,7 +131,7 @@ function Statistics({ data }) {
 
     return {
       from: from.toISOString().split('T')[0],
-      to: to.toISOString().split('T')[0]
+      to: to.toISOString().split('T')[0],
     };
   };
 
@@ -149,7 +149,7 @@ function Statistics({ data }) {
     return ((current - previous) / previous) * 100;
   };
 
-  const setDateRange = (range) => {
+  const setDateRange = range => {
     const now = new Date();
     let from, to;
 
@@ -183,40 +183,50 @@ function Statistics({ data }) {
     <div>
       <h1>Dashboard</h1>
 
-      <div style={{
-        background: '#1a2332',
-        padding: '1rem',
-        borderRadius: '12px',
-        marginBottom: '1.5rem',
-        border: '1px solid #2a3647'
-      }}>
-        <div style={{
-          display: 'flex',
-          gap: '1rem',
-          flexWrap: 'wrap',
-          alignItems: 'flex-end',
-          marginBottom: '1rem'
-        }}>
+      <div
+        style={{
+          background: '#1a2332',
+          padding: '1rem',
+          borderRadius: '12px',
+          marginBottom: '1.5rem',
+          border: '1px solid #2a3647',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            flexWrap: 'wrap',
+            alignItems: 'flex-end',
+            marginBottom: '1rem',
+          }}
+        >
           <div style={{ flex: '1 1 150px', minWidth: '150px' }}>
-            <label className="label-sm text-muted" style={{ marginBottom: '0.5rem', display: 'block' }}>
+            <label
+              className="label-sm text-muted"
+              style={{ marginBottom: '0.5rem', display: 'block' }}
+            >
               Från
             </label>
             <input
               type="date"
               value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
+              onChange={e => setDateFrom(e.target.value)}
               className="form-input"
             />
           </div>
 
           <div style={{ flex: '1 1 150px', minWidth: '150px' }}>
-            <label className="label-sm text-muted" style={{ marginBottom: '0.5rem', display: 'block' }}>
+            <label
+              className="label-sm text-muted"
+              style={{ marginBottom: '0.5rem', display: 'block' }}
+            >
               Till
             </label>
             <input
               type="date"
               value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
+              onChange={e => setDateTo(e.target.value)}
               className="form-input"
             />
           </div>
@@ -259,34 +269,45 @@ function Statistics({ data }) {
               type="button"
               onClick={() => setShowCustomerFilter(!showCustomerFilter)}
               className="btn btn-secondary"
-              style={{ width: '100%', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}
+              style={{
+                width: '100%',
+                justifyContent: 'space-between',
+                display: 'flex',
+                alignItems: 'center',
+              }}
             >
               <span>Kunder {selectedCustomers.length > 0 && `(${selectedCustomers.length})`}</span>
               <span>{showCustomerFilter ? '▲' : '▼'}</span>
             </button>
             {showCustomerFilter && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                marginTop: '0.5rem',
-                padding: '0.75rem',
-                backgroundColor: 'var(--color-bg)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '8px',
-                maxHeight: '250px',
-                overflowY: 'auto',
-                zIndex: 1000,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
-              }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.5rem',
+                  padding: '0.75rem',
+                  backgroundColor: 'var(--color-bg)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  maxHeight: '250px',
+                  overflowY: 'auto',
+                  zIndex: 1000,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                }}
+              >
                 {activeCustomers.map(customer => (
-                  <label key={customer.id} className="checkbox-label" style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    padding: '0.25rem',
-                    cursor: 'pointer'
-                  }}>
+                  <label
+                    key={customer.id}
+                    className="checkbox-label"
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      padding: '0.25rem',
+                      cursor: 'pointer',
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedCustomers.includes(customer.id)}
@@ -314,40 +335,53 @@ function Statistics({ data }) {
               type="button"
               onClick={() => setShowVehicleFilter(!showVehicleFilter)}
               className="btn btn-secondary"
-              style={{ width: '100%', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}
+              style={{
+                width: '100%',
+                justifyContent: 'space-between',
+                display: 'flex',
+                alignItems: 'center',
+              }}
             >
               <span>Bilar {selectedVehicles.length > 0 && `(${selectedVehicles.length})`}</span>
               <span>{showVehicleFilter ? '▲' : '▼'}</span>
             </button>
             {showVehicleFilter && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                marginTop: '0.5rem',
-                padding: '0.75rem',
-                backgroundColor: 'var(--color-bg)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '8px',
-                maxHeight: '250px',
-                overflowY: 'auto',
-                zIndex: 1000,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
-              }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.5rem',
+                  padding: '0.75rem',
+                  backgroundColor: 'var(--color-bg)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  maxHeight: '250px',
+                  overflowY: 'auto',
+                  zIndex: 1000,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                }}
+              >
                 {activeVehicles.map(vehicle => (
-                  <label key={vehicle.id} className="checkbox-label" style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    padding: '0.25rem',
-                    cursor: 'pointer'
-                  }}>
+                  <label
+                    key={vehicle.id}
+                    className="checkbox-label"
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      padding: '0.25rem',
+                      cursor: 'pointer',
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedVehicles.includes(vehicle.id)}
                       onChange={() => toggleVehicle(vehicle.id)}
                     />
-                    <span style={{ marginLeft: '0.5rem' }}>{vehicle.regNo} ({vehicle.type})</span>
+                    <span style={{ marginLeft: '0.5rem' }}>
+                      {vehicle.regNo} ({vehicle.type})
+                    </span>
                   </label>
                 ))}
                 {selectedVehicles.length > 0 && (
@@ -372,25 +406,53 @@ function Statistics({ data }) {
           <div className="stat-label">Vald Period</div>
           <div style={{ marginTop: '1rem' }}>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>Bokningar</div>
-              <div className="text-2xl" style={{ fontWeight: 700 }}>{stats.totalBookings}</div>
+              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>
+                Bokningar
+              </div>
+              <div className="text-2xl" style={{ fontWeight: 700 }}>
+                {stats.totalBookings}
+              </div>
             </div>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>Körsträcka</div>
-              <div className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</div>
+              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>
+                Körsträcka
+              </div>
+              <div className="text-2xl" style={{ fontWeight: 700 }}>
+                {formatNumber(stats.totalKm)} km
+              </div>
             </div>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>Intäkt</div>
-              <div className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</div>
+              <div className="text-sm text-muted" style={{ marginBottom: '0.25rem' }}>
+                Intäkt
+              </div>
+              <div className="text-2xl" style={{ fontWeight: 700 }}>
+                {formatNumber(stats.totalAmount)} SEK
+              </div>
             </div>
-            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
-              <div className="text-sm text-muted" style={{ marginBottom: '0.5rem' }}>Status</div>
+            <div
+              style={{
+                marginTop: '1rem',
+                paddingTop: '1rem',
+                borderTop: '1px solid var(--color-border)',
+              }}
+            >
+              <div className="text-sm text-muted" style={{ marginBottom: '0.5rem' }}>
+                Status
+              </div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <span className="status-badge status-bokad">Bokad: {stats.byStatus['Bokad']}</span>
-                <span className="status-badge status-planerad">Planerad: {stats.byStatus['Planerad']}</span>
-                <span className="status-badge status-genomförd">Genomförd: {stats.byStatus['Genomförd']}</span>
-                <span className="status-badge status-prissatt">Prissatta: {stats.byStatus['Prissatt']}</span>
-                <span className="status-badge status-fakturerad">Fakturerad: {stats.byStatus['Fakturerad']}</span>
+                <span className="status-badge status-planerad">
+                  Planerad: {stats.byStatus['Planerad']}
+                </span>
+                <span className="status-badge status-genomförd">
+                  Genomförd: {stats.byStatus['Genomförd']}
+                </span>
+                <span className="status-badge status-prissatt">
+                  Prissatta: {stats.byStatus['Prissatt']}
+                </span>
+                <span className="status-badge status-fakturerad">
+                  Fakturerad: {stats.byStatus['Fakturerad']}
+                </span>
               </div>
             </div>
           </div>
@@ -404,46 +466,76 @@ function Statistics({ data }) {
           </div>
           <div style={{ marginTop: '1rem' }}>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Bokningar</div>
+              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                Bokningar
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="text-2xl" style={{ fontWeight: 700 }}>{stats.totalBookings}</span>
-                <span style={{
-                  color: stats.totalBookings >= prevStats.totalBookings ? '#34d399' : '#f87171',
-                  fontSize: '0.9rem',
-                  fontWeight: 600
-                }}>
-                  {stats.totalBookings >= prevStats.totalBookings ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalBookings, prevStats.totalBookings)).toFixed(1)}%
+                <span className="text-2xl" style={{ fontWeight: 700 }}>
+                  {stats.totalBookings}
+                </span>
+                <span
+                  style={{
+                    color: stats.totalBookings >= prevStats.totalBookings ? '#34d399' : '#f87171',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {stats.totalBookings >= prevStats.totalBookings ? '▲' : '▼'}{' '}
+                  {Math.abs(
+                    calculatePercentageChange(stats.totalBookings, prevStats.totalBookings)
+                  ).toFixed(1)}
+                  %
                 </span>
               </div>
               <div className="text-2xs text-muted">Förra: {prevStats.totalBookings}</div>
             </div>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Körsträcka</div>
+              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                Körsträcka
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</span>
-                <span style={{
-                  color: stats.totalKm >= prevStats.totalKm ? '#34d399' : '#f87171',
-                  fontSize: '0.9rem',
-                  fontWeight: 600
-                }}>
-                  {stats.totalKm >= prevStats.totalKm ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalKm, prevStats.totalKm)).toFixed(1)}%
+                <span className="text-2xl" style={{ fontWeight: 700 }}>
+                  {formatNumber(stats.totalKm)} km
+                </span>
+                <span
+                  style={{
+                    color: stats.totalKm >= prevStats.totalKm ? '#34d399' : '#f87171',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {stats.totalKm >= prevStats.totalKm ? '▲' : '▼'}{' '}
+                  {Math.abs(calculatePercentageChange(stats.totalKm, prevStats.totalKm)).toFixed(1)}
+                  %
                 </span>
               </div>
               <div className="text-2xs text-muted">Förra: {formatNumber(prevStats.totalKm)} km</div>
             </div>
             <div>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Intäkt</div>
+              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                Intäkt
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</span>
-                <span style={{
-                  color: stats.totalAmount >= prevStats.totalAmount ? '#34d399' : '#f87171',
-                  fontSize: '0.9rem',
-                  fontWeight: 600
-                }}>
-                  {stats.totalAmount >= prevStats.totalAmount ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalAmount, prevStats.totalAmount)).toFixed(1)}%
+                <span className="text-2xl" style={{ fontWeight: 700 }}>
+                  {formatNumber(stats.totalAmount)} SEK
+                </span>
+                <span
+                  style={{
+                    color: stats.totalAmount >= prevStats.totalAmount ? '#34d399' : '#f87171',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {stats.totalAmount >= prevStats.totalAmount ? '▲' : '▼'}{' '}
+                  {Math.abs(
+                    calculatePercentageChange(stats.totalAmount, prevStats.totalAmount)
+                  ).toFixed(1)}
+                  %
                 </span>
               </div>
-              <div className="text-2xs text-muted">Förra: {formatNumber(prevStats.totalAmount)} SEK</div>
+              <div className="text-2xs text-muted">
+                Förra: {formatNumber(prevStats.totalAmount)} SEK
+              </div>
             </div>
           </div>
         </div>
@@ -456,46 +548,83 @@ function Statistics({ data }) {
           </div>
           <div style={{ marginTop: '1rem' }}>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Bokningar</div>
+              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                Bokningar
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="text-2xl" style={{ fontWeight: 700 }}>{stats.totalBookings}</span>
-                <span style={{
-                  color: stats.totalBookings >= lastYearStats.totalBookings ? '#34d399' : '#f87171',
-                  fontSize: '0.9rem',
-                  fontWeight: 600
-                }}>
-                  {stats.totalBookings >= lastYearStats.totalBookings ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalBookings, lastYearStats.totalBookings)).toFixed(1)}%
+                <span className="text-2xl" style={{ fontWeight: 700 }}>
+                  {stats.totalBookings}
+                </span>
+                <span
+                  style={{
+                    color:
+                      stats.totalBookings >= lastYearStats.totalBookings ? '#34d399' : '#f87171',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {stats.totalBookings >= lastYearStats.totalBookings ? '▲' : '▼'}{' '}
+                  {Math.abs(
+                    calculatePercentageChange(stats.totalBookings, lastYearStats.totalBookings)
+                  ).toFixed(1)}
+                  %
                 </span>
               </div>
-              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>Förra året: {lastYearStats.totalBookings}</div>
+              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>
+                Förra året: {lastYearStats.totalBookings}
+              </div>
             </div>
             <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Körsträcka</div>
+              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                Körsträcka
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalKm)} km</span>
-                <span style={{
-                  color: stats.totalKm >= lastYearStats.totalKm ? '#34d399' : '#f87171',
-                  fontSize: '0.9rem',
-                  fontWeight: 600
-                }}>
-                  {stats.totalKm >= lastYearStats.totalKm ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalKm, lastYearStats.totalKm)).toFixed(1)}%
+                <span className="text-2xl" style={{ fontWeight: 700 }}>
+                  {formatNumber(stats.totalKm)} km
+                </span>
+                <span
+                  style={{
+                    color: stats.totalKm >= lastYearStats.totalKm ? '#34d399' : '#f87171',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {stats.totalKm >= lastYearStats.totalKm ? '▲' : '▼'}{' '}
+                  {Math.abs(
+                    calculatePercentageChange(stats.totalKm, lastYearStats.totalKm)
+                  ).toFixed(1)}
+                  %
                 </span>
               </div>
-              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>Förra året: {formatNumber(lastYearStats.totalKm)} km</div>
+              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>
+                Förra året: {formatNumber(lastYearStats.totalKm)} km
+              </div>
             </div>
             <div>
-              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Intäkt</div>
+              <div style={{ color: '#8899a6', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                Intäkt
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="text-2xl" style={{ fontWeight: 700 }}>{formatNumber(stats.totalAmount)} SEK</span>
-                <span style={{
-                  color: stats.totalAmount >= lastYearStats.totalAmount ? '#34d399' : '#f87171',
-                  fontSize: '0.9rem',
-                  fontWeight: 600
-                }}>
-                  {stats.totalAmount >= lastYearStats.totalAmount ? '▲' : '▼'} {Math.abs(calculatePercentageChange(stats.totalAmount, lastYearStats.totalAmount)).toFixed(1)}%
+                <span className="text-2xl" style={{ fontWeight: 700 }}>
+                  {formatNumber(stats.totalAmount)} SEK
+                </span>
+                <span
+                  style={{
+                    color: stats.totalAmount >= lastYearStats.totalAmount ? '#34d399' : '#f87171',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {stats.totalAmount >= lastYearStats.totalAmount ? '▲' : '▼'}{' '}
+                  {Math.abs(
+                    calculatePercentageChange(stats.totalAmount, lastYearStats.totalAmount)
+                  ).toFixed(1)}
+                  %
                 </span>
               </div>
-              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>Förra året: {formatNumber(lastYearStats.totalAmount)} SEK</div>
+              <div style={{ color: '#8899a6', fontSize: '0.7rem' }}>
+                Förra året: {formatNumber(lastYearStats.totalAmount)} SEK
+              </div>
             </div>
           </div>
         </div>
@@ -505,4 +634,3 @@ function Statistics({ data }) {
 }
 
 export default Statistics;
-

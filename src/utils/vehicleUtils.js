@@ -40,7 +40,7 @@ export function isDriverOccupied(driverId, currentBooking, allBookings = []) {
 export function syncVehicleDriverRelation(vehicles = [], drivers = []) {
   const vehiclesNorm = vehicles.map(v => ({
     ...v,
-    driverIds: Array.isArray(v.driverIds) ? v.driverIds : (v.driverId ? [v.driverId] : [])
+    driverIds: Array.isArray(v.driverIds) ? v.driverIds : v.driverId ? [v.driverId] : [],
   }));
 
   const driverMap = new Map(drivers.map(d => [d.id, { ...d, vehicleIds: [] }]));
@@ -53,7 +53,7 @@ export function syncVehicleDriverRelation(vehicles = [], drivers = []) {
 
   const driversNorm = Array.from(driverMap.values()).map(d => ({
     ...d,
-    vehicleIds: d.vehicleIds || []
+    vehicleIds: d.vehicleIds || [],
   }));
 
   return { vehicles: vehiclesNorm, drivers: driversNorm };

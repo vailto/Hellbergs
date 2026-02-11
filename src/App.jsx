@@ -30,7 +30,9 @@ function App() {
           const timeStr = (b.deliveryTime || b.pickupTime || b.time || '23:59').trim();
           if (!dateStr) return b;
           const [h, m] = timeStr.split(':').map(s => parseInt(s, 10) || 0);
-          const delivery = new Date(dateStr + 'T' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':00');
+          const delivery = new Date(
+            dateStr + 'T' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':00'
+          );
           if (now < delivery) return b;
           return { ...b, status: 'Genomförd' };
         });
@@ -43,7 +45,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const updateData = (updates) => {
+  const updateData = updates => {
     setData(prev => ({ ...prev, ...updates }));
   };
 
@@ -56,7 +58,7 @@ function App() {
 
   const renderSection = () => {
     const props = { data, updateData, setCurrentSection };
-    
+
     switch (currentSection) {
       case 'dashboard':
         return <Statistics {...props} />;
@@ -113,12 +115,9 @@ function App() {
           ))}
         </nav>
       </aside>
-      <main className="main-content">
-        {renderSection()}
-      </main>
+      <main className="main-content">{renderSection()}</main>
     </div>
   );
 }
 
 export default App;
-

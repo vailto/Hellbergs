@@ -27,8 +27,8 @@ function CostEntryModal({ booking, data, onSave, onClose }) {
     booking.costDetails?.fixed != null ? Boolean(booking.costDetails.fixed) : false
   );
 
-  const num = (v) => parseNumber(v) ?? 0;
-  const priceNum = (p) => (p && p !== '' ? parseFloat(String(p).replace(',', '.')) : 0) || 0;
+  const num = v => parseNumber(v) ?? 0;
+  const priceNum = p => (p && p !== '' ? parseFloat(String(p).replace(',', '.')) : 0) || 0;
 
   const calculatedTotal = useMemo(() => {
     if (!hasPriceTemplate || !prices) return null;
@@ -48,12 +48,14 @@ function CostEntryModal({ booking, data, onSave, onClose }) {
 
   const overrideAmount = parseNumber(manualAmount);
   const finalAmount = hasPriceTemplate
-    ? (overrideAmount != null && String(manualAmount).trim() !== '' ? overrideAmount : calculatedTotal)
+    ? overrideAmount != null && String(manualAmount).trim() !== ''
+      ? overrideAmount
+      : calculatedTotal
     : overrideAmount;
 
   const canSave = vehicle && finalAmount != null && finalAmount >= 0;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
     if (!canSave) return;
     const amount = finalAmount;
@@ -63,14 +65,14 @@ function CostEntryModal({ booking, data, onSave, onClose }) {
           stops: num(stops) || undefined,
           waitHours: num(waitHours) || undefined,
           driveHours: num(driveHours) || undefined,
-          fixed: useFixed ? priceNum(prices?.fixed) : undefined
+          fixed: useFixed ? priceNum(prices?.fixed) : undefined,
         }
       : undefined;
     onSave({
       ...booking,
       amountSek: amount,
       km: num(km) || booking.km,
-      costDetails
+      costDetails,
     });
     onClose();
   };
@@ -91,11 +93,18 @@ function CostEntryModal({ booking, data, onSave, onClose }) {
         ) : !hasPriceTemplate ? (
           <div className="mb-1">
             <p className="text-muted-2 text-sm mb-1">
-              Kundens prismall saknas för fordonstyp &quot;{vehicleType}&quot;. Ange totalbelopp manuellt eller lägg till prismall under Kunder.
+              Kundens prismall saknas för fordonstyp &quot;{vehicleType}&quot;. Ange totalbelopp
+              manuellt eller lägg till prismall under Kunder.
             </p>
             <div>
               <label className="label-sm">Belopp (SEK)</label>
-              <input type="text" value={manualAmount} onChange={e => setManualAmount(e.target.value)} className="form-input input-sm" placeholder="0" />
+              <input
+                type="text"
+                value={manualAmount}
+                onChange={e => setManualAmount(e.target.value)}
+                className="form-input input-sm"
+                placeholder="0"
+              />
             </div>
           </div>
         ) : (
@@ -104,27 +113,69 @@ function CostEntryModal({ booking, data, onSave, onClose }) {
               <strong className="text-sm block mb-1">Tider och antal</strong>
               <div className="grid-cols-5">
                 <div>
-                  <input type="text" value={km} onChange={e => setKm(e.target.value)} className="form-input input-sm mb-1" placeholder="0" style={{ marginBottom: '0.15rem' }} />
-                  <label className="label-sm" style={{ marginBottom: 0 }}>kr/km{prices.km ? ` × ${prices.km} SEK` : ''}</label>
+                  <input
+                    type="text"
+                    value={km}
+                    onChange={e => setKm(e.target.value)}
+                    className="form-input input-sm mb-1"
+                    placeholder="0"
+                    style={{ marginBottom: '0.15rem' }}
+                  />
+                  <label className="label-sm" style={{ marginBottom: 0 }}>
+                    kr/km{prices.km ? ` × ${prices.km} SEK` : ''}
+                  </label>
                 </div>
                 <div>
-                  <input type="text" value={stops} onChange={e => setStops(e.target.value)} className="form-input input-sm" placeholder="0" style={{ marginBottom: '0.15rem' }} />
-                  <label className="label-sm" style={{ marginBottom: 0 }}>kr/stopp{prices.stop ? ` × ${prices.stop} SEK` : ''}</label>
+                  <input
+                    type="text"
+                    value={stops}
+                    onChange={e => setStops(e.target.value)}
+                    className="form-input input-sm"
+                    placeholder="0"
+                    style={{ marginBottom: '0.15rem' }}
+                  />
+                  <label className="label-sm" style={{ marginBottom: 0 }}>
+                    kr/stopp{prices.stop ? ` × ${prices.stop} SEK` : ''}
+                  </label>
                 </div>
                 <div>
-                  <input type="text" value={waitHours} onChange={e => setWaitHours(e.target.value)} className="form-input input-sm" placeholder="0" style={{ marginBottom: '0.15rem' }} />
-                  <label className="label-sm" style={{ marginBottom: 0 }}>Väntetid kr/h{prices.wait ? ` × ${prices.wait} SEK` : ''}</label>
+                  <input
+                    type="text"
+                    value={waitHours}
+                    onChange={e => setWaitHours(e.target.value)}
+                    className="form-input input-sm"
+                    placeholder="0"
+                    style={{ marginBottom: '0.15rem' }}
+                  />
+                  <label className="label-sm" style={{ marginBottom: 0 }}>
+                    Väntetid kr/h{prices.wait ? ` × ${prices.wait} SEK` : ''}
+                  </label>
                 </div>
                 <div>
-                  <input type="text" value={driveHours} onChange={e => setDriveHours(e.target.value)} className="form-input input-sm" placeholder="0" style={{ marginBottom: '0.15rem' }} />
-                  <label className="label-sm" style={{ marginBottom: 0 }}>Timpris kr{prices.hour ? ` × ${prices.hour} SEK` : ''}</label>
+                  <input
+                    type="text"
+                    value={driveHours}
+                    onChange={e => setDriveHours(e.target.value)}
+                    className="form-input input-sm"
+                    placeholder="0"
+                    style={{ marginBottom: '0.15rem' }}
+                  />
+                  <label className="label-sm" style={{ marginBottom: 0 }}>
+                    Timpris kr{prices.hour ? ` × ${prices.hour} SEK` : ''}
+                  </label>
                 </div>
                 <div>
                   <label className="checkbox-label text-sm" style={{ marginBottom: '0.15rem' }}>
-                    <input type="checkbox" checked={useFixed} onChange={e => setUseFixed(e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={useFixed}
+                      onChange={e => setUseFixed(e.target.checked)}
+                    />
                     Inkludera
                   </label>
-                  <label className="label-sm" style={{ marginBottom: 0 }}>Fast kr{prices.fixed ? ` × ${prices.fixed} SEK` : ''}</label>
+                  <label className="label-sm" style={{ marginBottom: 0 }}>
+                    Fast kr{prices.fixed ? ` × ${prices.fixed} SEK` : ''}
+                  </label>
                 </div>
               </div>
             </div>
@@ -139,13 +190,28 @@ function CostEntryModal({ booking, data, onSave, onClose }) {
         {hasPriceTemplate && (
           <div className="mb-1">
             <label className="label-sm">Alternativt, överstig belopp (SEK)</label>
-            <input type="text" value={manualAmount} onChange={e => setManualAmount(e.target.value)} className="form-input input-sm" placeholder="Lämna tomt för beräknat belopp" />
+            <input
+              type="text"
+              value={manualAmount}
+              onChange={e => setManualAmount(e.target.value)}
+              className="form-input input-sm"
+              placeholder="Lämna tomt för beräknat belopp"
+            />
           </div>
         )}
 
         <div className="modal-actions">
-          <button type="button" onClick={onClose} className="btn btn-secondary btn-small">Avbryt</button>
-          <button type="button" onClick={handleSubmit} className="btn btn-primary btn-small" disabled={!canSave}>Spara</button>
+          <button type="button" onClick={onClose} className="btn btn-secondary btn-small">
+            Avbryt
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="btn btn-primary btn-small"
+            disabled={!canSave}
+          >
+            Spara
+          </button>
         </div>
       </div>
     </div>

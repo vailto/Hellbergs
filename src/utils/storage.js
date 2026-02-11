@@ -6,7 +6,7 @@ export function migrateVehicleDriverData(data) {
   if (!data.vehicles && !data.drivers) return;
   const vehicles = (data.vehicles || []).map(v => ({
     ...v,
-    driverIds: Array.isArray(v.driverIds) ? v.driverIds : (v.driverId ? [v.driverId] : [])
+    driverIds: Array.isArray(v.driverIds) ? v.driverIds : v.driverId ? [v.driverId] : [],
   }));
   const drivers = data.drivers || [];
   const driverMap = new Map(drivers.map(d => [d.id, { ...d, vehicleIds: d.vehicleIds || [] }]));
@@ -30,7 +30,7 @@ const DEFAULT_DATA = {
   bookings: [],
   bookingBlocks: [],
   pickupLocations: [],
-  lastBookingNumber: { year: new Date().getFullYear(), number: 0 }
+  lastBookingNumber: { year: new Date().getFullYear(), number: 0 },
 };
 
 export const loadData = () => {
@@ -44,9 +44,9 @@ export const loadData = () => {
         ...data,
         vehicleTypes: data.vehicleTypes || DEFAULT_DATA.vehicleTypes,
         pickupLocations: data.pickupLocations || [],
-        bookingBlocks: data.bookingBlocks || []
+        bookingBlocks: data.bookingBlocks || [],
       };
-      
+
       migrateVehicleDriverData(loadedData);
       return loadedData;
     }
@@ -56,7 +56,7 @@ export const loadData = () => {
   return DEFAULT_DATA;
 };
 
-export const saveData = (data) => {
+export const saveData = data => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
@@ -64,7 +64,7 @@ export const saveData = (data) => {
   }
 };
 
-export const exportToJSON = (data) => {
+export const exportToJSON = data => {
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -75,10 +75,10 @@ export const exportToJSON = (data) => {
   URL.revokeObjectURL(url);
 };
 
-export const importFromJSON = async (file) => {
+export const importFromJSON = async file => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const data = JSON.parse(e.target.result);
         resolve(data);
@@ -90,5 +90,3 @@ export const importFromJSON = async (file) => {
     reader.readAsText(file);
   });
 };
-
-
