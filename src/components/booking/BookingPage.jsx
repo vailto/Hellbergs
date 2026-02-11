@@ -7,6 +7,7 @@ import {
 } from '../../utils/formatters';
 import { validateBooking } from '../../utils/validation';
 import BookingModals from './BookingModals';
+import useRecurringBooking from '../../hooks/useRecurringBooking';
 import BookingFormSection from './BookingFormSection';
 import BookingTableSection from './BookingTableSection';
 import useBookingState from '../../hooks/useBookingState';
@@ -81,6 +82,14 @@ function BookingPage({
     vehicleOccupied,
     driverOccupied,
   } = useBookingState(data, editingBookingId);
+
+  const { saveBookingWithRecurring, recurringMessage } = useRecurringBooking({
+    data,
+    updateData,
+    saveBookingToApi,
+    resetForm,
+    setShowForm,
+  });
 
   const handleChange = e => {
     const { name, value, type, checked } = e.target;
@@ -265,25 +274,8 @@ function BookingPage({
         setShowSaveLocationModal(true);
       } else {
         // Save booking directly
-        saveBooking(bookingData);
+        saveBookingWithRecurring(bookingData);
       }
-    }
-  };
-
-  const saveBooking = async bookingData => {
-    const { bookingNo, lastBookingNumber } = generateBookingNumber(data.lastBookingNumber);
-    const newBooking = {
-      ...bookingData,
-      id: generateId('bk'),
-      bookingNo,
-    };
-    try {
-      await saveBookingToApi(newBooking);
-      updateData({ lastBookingNumber });
-      resetForm();
-      setShowForm(false);
-    } catch {
-      alert('Kunde inte spara bokning. Försök igen.');
     }
   };
 
@@ -304,7 +296,7 @@ function BookingPage({
 
     // Save the booking
     if (pendingBookingData) {
-      saveBooking(pendingBookingData);
+      saveBookingWithRecurring(pendingBookingData);
       setPendingBookingData(null);
     }
 
@@ -507,6 +499,16 @@ function BookingPage({
         <button onClick={handleNewBooking} className="btn btn-primary mb-2">
           + Ny bokning
         </button>
+      )}
+
+      {/* Recurring confirmation message */}
+      {recurringMessage && (
+        <div
+          className="alert alert-success mb-2"
+          style={{ padding: '0.75rem', backgroundColor: '#d4edda', border: '1px solid #c3e6cb' }}
+        >
+          {recurringMessage}
+        </div>
       )}
 
       {/* Booking Form */}

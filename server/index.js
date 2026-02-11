@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const { connect } = require('./db/mongo');
 const bookingsRouter = require('./routes/bookings');
+const recurringRulesRouter = require('./routes/recurringRules');
 
 require('dotenv').config();
 
@@ -13,6 +14,7 @@ app.use(express.json({ limit: '10mb' }));
 
 // API Routes
 app.use('/api/bookings', bookingsRouter);
+app.use('/api/recurring-rules', recurringRulesRouter);
 
 // Serve static files from dist in production
 const distPath = path.join(__dirname, '../dist');

@@ -65,6 +65,9 @@ function useBookingState(data, _editingBookingId) {
     costFixedAmount: '',
     status: 'Bokad',
     note: '',
+    recurringEnabled: false,
+    repeatWeeks: 1,
+    weeksAhead: 12,
   });
 
   // ============================================================================
@@ -190,6 +193,9 @@ function useBookingState(data, _editingBookingId) {
       costFixedAmount: '',
       status: 'Bokad',
       note: '',
+      recurringEnabled: false,
+      repeatWeeks: 1,
+      weeksAhead: 12,
     });
     setEditingId(null);
     setErrors({});
