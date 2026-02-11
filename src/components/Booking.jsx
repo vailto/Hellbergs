@@ -1,78 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { generateId, generateBookingNumber, formatNumber, parseNumber, formatTime24, getCurrentTime24, getCustomerShort } from '../utils/formatters';
-import { isVehicleOccupied, isDriverOccupied } from '../utils/vehicleUtils';
 import { BOOKING_STATUSES } from '../utils/constants';
 import { validateBooking } from '../utils/validation';
 import CostEntryModal from './CostEntryModal';
 import TimeInput24 from './TimeInput24';
+import BookingTabs from './booking/BookingTabs';
+import useBookingState from '../hooks/useBookingState';
 
 function Booking({ data, updateData, setCurrentSection, editingBookingId, setEditingBookingId, returnToSection, setReturnToSection }) {
-  const [currentTab, setCurrentTab] = useState('bokad');
-  const [costEntryBookingId, setCostEntryBookingId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [errors, setErrors] = useState({});
-  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
-  const [showSaveLocationModal, setShowSaveLocationModal] = useState(false);
-  const [pickupMode, setPickupMode] = useState('customer'); // 'customer', 'browse', 'freetext'
-  const [deliveryMode, setDeliveryMode] = useState('customer'); // 'customer', 'browse', 'freetext'
-  const [selectedPickupLocationId, setSelectedPickupLocationId] = useState('');
-  const [selectedDeliveryLocationId, setSelectedDeliveryLocationId] = useState('');
-  const [tempLocationName, setTempLocationName] = useState('');
-  const [tempLocationCustomerId, setTempLocationCustomerId] = useState('');
-  const [pendingBookingData, setPendingBookingData] = useState(null);
-  const [expandedBookingId, setExpandedBookingId] = useState(null);
-  const [expandedBlockId, setExpandedBlockId] = useState(null);
-  const [editingBlockId, setEditingBlockId] = useState(null);
-  const [editingBlockNameValue, setEditingBlockNameValue] = useState('');
-  const [sortField, setSortField] = useState('pickupDate');
-  const [sortDirection, setSortDirection] = useState('desc');
-  
-  const [tempCustomerData, setTempCustomerData] = useState({
-    name: '',
-    address: '',
-    postalCode: '',
-    city: '',
-    phone: '',
-    mobile: '',
-    customerNumber: '',
-    contactPerson: '',
-    active: true
-  });
-
-  const [formData, setFormData] = useState({
-    customerId: '',
-    vehicleId: '',
-    driverId: '',
-    hasContainer: false,
-    hasTrailer: false,
-    containerNr: '',
-    trailerNr: '',
-    marking: '',
-    pickupAddress: '',
-    pickupPostalCode: '',
-    pickupCity: '',
-    pickupDate: new Date().toISOString().split('T')[0],
-    pickupTime: getCurrentTime24(),
-    pickupContactName: '',
-    pickupContactPhone: '',
-    deliveryAddress: '',
-    deliveryPostalCode: '',
-    deliveryCity: '',
-    deliveryDate: new Date().toISOString().split('T')[0],
-    deliveryTime: getCurrentTime24(),
-    deliveryContactName: '',
-    deliveryContactPhone: '',
-    km: '',
-    amountSek: '',
-    costStops: '',
-    costWaitHours: '',
-    costDriveHours: '',
-    costUseFixed: false,
-    costFixedAmount: '',
-    status: 'Bokad',
-    note: ''
-  });
+  // Use custom hook for all state management
+  const {
+    currentTab,
+    setCurrentTab,
+    sortField,
+    setSortField,
+    sortDirection,
+    setSortDirection,
+    costEntryBookingId,
+    setCostEntryBookingId,
+    showNewCustomerModal,
+    setShowNewCustomerModal,
+    showSaveLocationModal,
+    setShowSaveLocationModal,
+    editingBlockId,
+    setEditingBlockId,
+    editingBlockNameValue,
+    setEditingBlockNameValue,
+    showForm,
+    setShowForm,
+    editingId,
+    setEditingId,
+    errors,
+    setErrors,
+    formData,
+    setFormData,
+    pickupMode,
+    setPickupMode,
+    deliveryMode,
+    setDeliveryMode,
+    selectedPickupLocationId,
+    setSelectedPickupLocationId,
+    selectedDeliveryLocationId,
+    setSelectedDeliveryLocationId,
+    tempLocationName,
+    setTempLocationName,
+    tempLocationCustomerId,
+    setTempLocationCustomerId,
+    pendingBookingData,
+    setPendingBookingData,
+    tempCustomerData,
+    setTempCustomerData,
+    expandedBookingId,
+    setExpandedBookingId,
+    expandedBlockId,
+    setExpandedBlockId,
+    activeCustomers,
+    activeVehicles,
+    activeDrivers,
+    formVehicleId,
+    formDriverId,
+    driversForSelectedVehicle,
+    customerPickupLocations,
+    allPickupLocations,
+    rowsToRender,
+    resetForm,
+    vehicleOccupied,
+    driverOccupied
+  } = useBookingState(data, editingBookingId);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -290,47 +284,6 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     setTempLocationCustomerId('');
   };
 
-  const resetForm = () => {
-    setFormData({
-      customerId: '',
-      vehicleId: '',
-      driverId: '',
-      hasContainer: false,
-      hasTrailer: false,
-      containerNr: '',
-      trailerNr: '',
-      marking: '',
-      pickupAddress: '',
-      pickupPostalCode: '',
-      pickupCity: '',
-      pickupDate: new Date().toISOString().split('T')[0],
-      pickupTime: getCurrentTime24(),
-      pickupContactName: '',
-      pickupContactPhone: '',
-      deliveryAddress: '',
-      deliveryPostalCode: '',
-      deliveryCity: '',
-      deliveryDate: new Date().toISOString().split('T')[0],
-      deliveryTime: getCurrentTime24(),
-      deliveryContactName: '',
-      deliveryContactPhone: '',
-    km: '',
-    amountSek: '',
-    costStops: '',
-    costWaitHours: '',
-    costDriveHours: '',
-    costUseFixed: false,
-    costFixedAmount: '',
-    status: 'Bokad',
-    note: ''
-  });
-  setEditingId(null);
-    setErrors({});
-    setPickupMode('customer');
-    setDeliveryMode('customer');
-    setSelectedPickupLocationId('');
-    setSelectedDeliveryLocationId('');
-  };
 
   const handleCancelForm = () => {
     resetForm();
@@ -443,18 +396,6 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
     });
   };
 
-  const activeCustomers = data.customers.filter(c => c.active);
-  const activeVehicles = data.vehicles.filter(v => v.active);
-  const activeDrivers = data.drivers.filter(d => d.active);
-  const formVehicleId = formData.vehicleId || null;
-  const formDriverId = formData.driverId || null;
-  const driversForSelectedVehicle = formVehicleId
-    ? activeDrivers.filter(d => (d.vehicleIds || []).includes(formVehicleId) || d.id === formDriverId)
-    : activeDrivers;
-
-  const vehicleOccupied = (vehicleId, booking) => isVehicleOccupied(vehicleId, booking, data.bookings || []);
-  const driverOccupied = (driverId, booking) => isDriverOccupied(driverId, booking, data.bookings || []);
-
   const handleVehicleAssign = (bookingId, vehicleId) => {
     const booking = data.bookings.find(b => b.id === bookingId);
     const authorizedDrivers = vehicleId ? (data.drivers || []).filter(d => (d.vehicleIds || []).includes(vehicleId)) : [];
@@ -505,130 +446,6 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       setSortDirection('asc');
     }
   };
-
-  const filterByTab = (b) => {
-    if (currentTab === 'bokad') return b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId);
-    if (currentTab === 'planerad') return b.status === 'Planerad' && b.vehicleId;
-    if (currentTab === 'genomford') return b.status === 'Genomförd';
-    if (currentTab === 'prissatt') return b.status === 'Prissatt';
-    if (currentTab === 'fakturerad') return b.status === 'Fakturerad';
-    return false;
-  };
-
-  const compareBookings = (a, b) => {
-    let aVal, bVal;
-    switch (sortField) {
-      case 'bookingNo':
-        aVal = a.bookingNo || '';
-        bVal = b.bookingNo || '';
-        break;
-      case 'pickupDate':
-        aVal = a.pickupDate || a.date || '';
-        bVal = b.pickupDate || b.date || '';
-        break;
-      case 'customer': {
-        const customerA = data.customers.find(c => c.id === a.customerId);
-        const customerB = data.customers.find(c => c.id === b.customerId);
-        aVal = customerA?.name || '';
-        bVal = customerB?.name || '';
-        break;
-      }
-      case 'vehicle': {
-        const vehicleA = data.vehicles.find(v => v.id === a.vehicleId);
-        const vehicleB = data.vehicles.find(v => v.id === b.vehicleId);
-        aVal = vehicleA?.regNo || '';
-        bVal = vehicleB?.regNo || '';
-        break;
-      }
-      case 'pickup': {
-        const pickupLocA = data.pickupLocations.find(
-          loc => loc.address.toLowerCase() === a.pickupAddress?.toLowerCase()
-        );
-        const pickupLocB = data.pickupLocations.find(
-          loc => loc.address.toLowerCase() === b.pickupAddress?.toLowerCase()
-        );
-        aVal = pickupLocA?.name || a.pickupCity || a.pickupAddress || '';
-        bVal = pickupLocB?.name || b.pickupCity || b.pickupAddress || '';
-        break;
-      }
-      case 'delivery': {
-        const deliveryLocA = data.pickupLocations.find(
-          loc => loc.address.toLowerCase() === a.deliveryAddress?.toLowerCase()
-        );
-        const deliveryLocB = data.pickupLocations.find(
-          loc => loc.address.toLowerCase() === b.deliveryAddress?.toLowerCase()
-        );
-        aVal = deliveryLocA?.name || a.deliveryCity || a.deliveryAddress || '';
-        bVal = deliveryLocB?.name || b.deliveryCity || b.deliveryAddress || '';
-        break;
-      }
-      case 'status':
-        aVal = a.status || '';
-        bVal = b.status || '';
-        break;
-      default:
-        return 0;
-    }
-    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  };
-
-  const sortBookings = (bookings) => {
-    return [...bookings].sort(compareBookings);
-  };
-
-  // Rader att visa: enskilda bokningar (utan blockId) + block (en rad per block med flera bokningar)
-  const getDisplayRows = () => {
-    const filtered = (data.bookings || []).filter(filterByTab);
-    const standalone = filtered.filter(b => !b.blockId);
-    const blockIds = [...new Set(filtered.map(b => b.blockId).filter(Boolean))];
-    const blockRows = blockIds.map(blockId => {
-      const block = (data.bookingBlocks || []).find(bl => bl.id === blockId);
-      const bookings = filtered.filter(b => b.blockId === blockId);
-      return block && bookings.length ? { type: 'block', block, bookings } : null;
-    }).filter(Boolean);
-    const rows = [
-      ...standalone.map(b => ({ type: 'booking', booking: b })),
-      ...blockRows
-    ];
-    return rows.sort((ra, rb) => {
-      const bookA = ra.type === 'booking' ? ra.booking : ra.bookings[0];
-      const bookB = rb.type === 'booking' ? rb.booking : rb.bookings[0];
-      return compareBookings(bookA, bookB);
-    });
-  };
-
-  // Platt lista att rendera: block-rad + vid expand underliggande bokningsrader
-  const getRowsToRender = () => {
-    const displayRows = getDisplayRows();
-    const out = [];
-    for (const row of displayRows) {
-      if (row.type === 'booking') {
-        out.push({ type: 'booking', booking: row.booking, isInBlock: false });
-      } else {
-        out.push({ type: 'block', block: row.block, bookings: row.bookings });
-        if (expandedBlockId === row.block.id) {
-          for (const b of row.bookings) {
-            out.push({ type: 'booking', booking: b, isInBlock: true });
-          }
-        }
-      }
-    }
-    return out;
-  };
-  
-  // Get pickup locations for selected customer
-  const customerPickupLocations = formData.customerId 
-    ? (data.pickupLocations || []).filter(loc => {
-        // Handle both old format (customerId) and new format (customerIds)
-        const customerIds = loc.customerIds || (loc.customerId ? [loc.customerId] : []);
-        return customerIds.includes(formData.customerId) || customerIds.length === 0;
-      })
-    : [];
-  
-  // Get all pickup locations for browse mode
-  const allPickupLocations = data.pickupLocations || [];
 
   return (
     <div>
@@ -1603,72 +1420,13 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
       {!showForm && (
         <>
           {/* Tab Navigation */}
-          <div style={{
-            display: 'flex',
-            gap: '0.5rem',
-            marginTop: '1.5rem',
-            marginBottom: '1.5rem',
-            borderBottom: '2px solid var(--color-border)',
-            paddingBottom: '0'
-          }}>
-            <button
-              onClick={() => setCurrentTab('bokad')}
-              className={`btn btn-small ${currentTab === 'bokad' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'bokad' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Bokade ({data.bookings.filter(b => b.status === 'Bokad' || (b.status === 'Planerad' && !b.vehicleId)).length})
-            </button>
-            <button
-              onClick={() => setCurrentTab('planerad')}
-              className={`btn btn-small ${currentTab === 'planerad' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'planerad' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Planerade ({data.bookings.filter(b => b.status === 'Planerad' && b.vehicleId).length})
-            </button>
-            <button
-              onClick={() => setCurrentTab('genomford')}
-              className={`btn btn-small ${currentTab === 'genomford' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'genomford' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Genomförda ({data.bookings.filter(b => b.status === 'Genomförd').length})
-            </button>
-            <button
-              onClick={() => setCurrentTab('prissatt')}
-              className={`btn btn-small ${currentTab === 'prissatt' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'prissatt' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Prissatta ({data.bookings.filter(b => b.status === 'Prissatt').length})
-            </button>
-            <button
-              onClick={() => setCurrentTab('fakturerad')}
-              className={`btn btn-small ${currentTab === 'fakturerad' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                borderRadius: '6px 6px 0 0',
-                borderBottom: currentTab === 'fakturerad' ? '2px solid #2563ab' : 'none',
-                marginBottom: '-2px'
-              }}
-            >
-              Fakturerade ({data.bookings.filter(b => b.status === 'Fakturerad').length})
-            </button>
-          </div>
+          <BookingTabs 
+            currentTab={currentTab}
+            onTabChange={setCurrentTab}
+            bookings={data.bookings || []}
+          />
 
-          {getDisplayRows().length === 0 ? (
+          {rowsToRender.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon"></div>
               <p>
@@ -1731,7 +1489,7 @@ function Booking({ data, updateData, setCurrentSection, editingBookingId, setEdi
                   </tr>
                 </thead>
                 <tbody>
-                  {getRowsToRender().map((item, idx) => {
+                  {rowsToRender.map((item, idx) => {
                     if (item.type === 'block') {
                       const { block, bookings } = item;
                       const first = bookings[0];
