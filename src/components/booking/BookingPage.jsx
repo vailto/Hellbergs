@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   generateId,
   generateBookingNumber,
@@ -6,8 +6,8 @@ import {
   getCurrentTime24,
 } from '../../utils/formatters';
 import { validateBooking } from '../../utils/validation';
-import { createRecurringRule } from '../../services/recurringRulesService';
 import BookingModals from './BookingModals';
+import useRecurringBooking from '../../hooks/useRecurringBooking';
 import BookingFormSection from './BookingFormSection';
 import BookingTableSection from './BookingTableSection';
 import useBookingState from '../../hooks/useBookingState';
@@ -23,9 +23,6 @@ function BookingPage({
   saveBooking: saveBookingToApi,
   removeBooking: removeBookingFromApi,
 }) {
-  // Recurring confirmation message state
-  const [recurringMessage, setRecurringMessage] = useState(null);
-
   // Use custom hook for all state management
   const {
     currentTab,
@@ -85,6 +82,14 @@ function BookingPage({
     vehicleOccupied,
     driverOccupied,
   } = useBookingState(data, editingBookingId);
+
+  const { saveBookingWithRecurring, recurringMessage } = useRecurringBooking({
+    data,
+    updateData,
+    saveBookingToApi,
+    resetForm,
+    setShowForm,
+  });
 
   const handleChange = e => {
     const { name, value, type, checked } = e.target;
@@ -269,58 +274,7 @@ function BookingPage({
         setShowSaveLocationModal(true);
       } else {
         // Save booking directly
-        saveBooking(bookingData);
-      }
-    }
-  };
-
-  const saveBooking = async bookingData => {
-    // Check if this is a recurring booking
-    if (bookingData.recurringEnabled) {
-      try {
-        // Build template booking (strip identity and recurring fields)
-        const {
-          recurringEnabled: _recurringEnabled,
-          repeatWeeks,
-          weeksAhead,
-          ...templateBooking
-        } = bookingData;
-
-        // Call recurring rules API
-        const result = await createRecurringRule({
-          templateBooking,
-          startDate: bookingData.pickupDate,
-          repeatWeeks: Number(repeatWeeks) || 1,
-          weeksAhead: Number(weeksAhead) || 12,
-        });
-
-        // Show confirmation
-        const created = result?.generated?.created || 0;
-        setRecurringMessage(`Skapade ${created} återkommande bokningar`);
-        setTimeout(() => setRecurringMessage(null), 5000);
-
-        // Update last booking number (recurring bookings also consume numbers)
-        updateData({ lastBookingNumber: data.lastBookingNumber });
-        resetForm();
-        setShowForm(false);
-      } catch {
-        alert('Kunde inte skapa återkommande bokningar. Försök igen.');
-      }
-    } else {
-      // Normal single booking
-      const { bookingNo, lastBookingNumber } = generateBookingNumber(data.lastBookingNumber);
-      const newBooking = {
-        ...bookingData,
-        id: generateId('bk'),
-        bookingNo,
-      };
-      try {
-        await saveBookingToApi(newBooking);
-        updateData({ lastBookingNumber });
-        resetForm();
-        setShowForm(false);
-      } catch {
-        alert('Kunde inte spara bokning. Försök igen.');
+        saveBookingWithRecurring(bookingData);
       }
     }
   };
@@ -342,7 +296,7 @@ function BookingPage({
 
     // Save the booking
     if (pendingBookingData) {
-      saveBooking(pendingBookingData);
+      saveBookingWithRecurring(pendingBookingData);
       setPendingBookingData(null);
     }
 
