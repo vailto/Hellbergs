@@ -2,6 +2,10 @@ import React from 'react';
 import { getCustomerShort, formatTime24 } from '../../utils/formatters';
 import BookingTabs from './BookingTabs';
 
+function isRecurringBooking(booking) {
+  return !!(booking?.recurringKey || booking?.recurringRuleId || booking?.recurringDate);
+}
+
 function BookingTableSection({
   // State
   showForm,
@@ -221,9 +225,21 @@ function BookingTableSection({
                           paddingLeft: item.isInBlock ? '2rem' : undefined,
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            flexWrap: 'wrap',
+                          }}
+                        >
                           <span className="text-2xs text-muted">{isExpanded ? '▼' : '▶'}</span>
                           <strong>{booking.bookingNo}</strong>
+                          {isRecurringBooking(booking) && (
+                            <span className="recurring-badge" title="Återkommande bokning">
+                              Återkommande
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td style={{ whiteSpace: 'nowrap' }}>{booking.pickupDate || booking.date}</td>

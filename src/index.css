@@ -629,6 +629,20 @@ h2 {
   border: 1px solid rgba(59, 130, 246, 0.4);
 }
 
+/* Recurring booking pill (table) */
+.recurring-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background-color: rgba(148, 163, 184, 0.25);
+  color: var(--color-text-muted);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
 /* Legacy / övriga */
 .status-planned,
 .status-completed,
