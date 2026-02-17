@@ -9,12 +9,25 @@ import { useBackupExport } from '../hooks/useBackupExport';
 import { usePricing } from '../hooks/usePricing';
 import { useWarehouse } from '../hooks/useWarehouse';
 import { useCustomerDmtToggle } from '../hooks/useCustomerDmtToggle';
+import { useAdminSeedMasterdata } from '../hooks/useAdminSeedMasterdata';
 
-function Settings({ data, updateData }) {
+function Settings({ data, updateData, refreshMasterdata }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
   const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
   const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
   const { toggleCustomerDmt, dmtError } = useCustomerDmtToggle({ data, updateData });
+  const {
+    token: seedToken,
+    setToken: setSeedToken,
+    loading: seedLoading,
+    error: seedError,
+    result: seedResult,
+    runSeed,
+  } = useAdminSeedMasterdata({
+    onSuccess: () => {
+      if (typeof refreshMasterdata === 'function') refreshMasterdata();
+    },
+  });
   // Tab State
   const [currentTab, setCurrentTab] = useState('fordon');
 
@@ -768,6 +781,17 @@ function Settings({ data, updateData }) {
           }}
         >
           Testdata
+        </button>
+        <button
+          onClick={() => setCurrentTab('admin')}
+          className={`btn btn-small ${currentTab === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: currentTab === 'admin' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px',
+          }}
+        >
+          Admin
         </button>
       </div>
 
@@ -3063,6 +3087,58 @@ function Settings({ data, updateData }) {
           >
             <strong style={{ color: '#856404' }}>Varning:</strong>
             <span style={{ color: '#856404' }}> Import ersätter all befintlig data.</span>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN TAB */}
+      {currentTab === 'admin' && (
+        <div className="form">
+          <h2 style={{ marginBottom: '1rem' }}>Admin</h2>
+          <div
+            style={{
+              border: '1px solid var(--color-border)',
+              borderRadius: '6px',
+              padding: '1rem',
+              marginBottom: '1rem',
+              maxWidth: '400px',
+            }}
+          >
+            <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Seed masterdata</h3>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+              Ange SEED_TOKEN och klicka för att köra seed mot API. Listor uppdateras efter lyckad
+              seed.
+            </p>
+            <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+              <label className="text-muted-2 label-sm">SEED_TOKEN</label>
+              <input
+                type="password"
+                value={seedToken}
+                onChange={e => setSeedToken(e.target.value)}
+                className="form-input"
+                placeholder="Token"
+                style={{ maxWidth: '280px' }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={runSeed}
+              disabled={!seedToken.trim() || seedLoading}
+              className="btn btn-primary btn-small"
+            >
+              {seedLoading ? 'Kör...' : 'Seed masterdata'}
+            </button>
+            {seedError && (
+              <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                {seedError}
+              </p>
+            )}
+            {seedResult && !seedError && (
+              <p style={{ color: '#16a34a', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                Klar. Kund: {seedResult.customersUpserted ?? 0}, Fordon:{' '}
+                {seedResult.vehiclesUpserted ?? 0}, Förare: {seedResult.driversUpserted ?? 0}.
+              </p>
+            )}
           </div>
         </div>
       )}

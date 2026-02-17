@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { loadData, saveData } from './utils/storage';
 import { useBookingSync } from './hooks/useBookingSync';
 import { useMasterdata } from './hooks/useMasterdata';
@@ -19,7 +19,7 @@ function App() {
 
   // Sync bookings with API
   const { bookings, loading, saveBooking, removeBooking, updateBookings } = useBookingSync();
-  const { customers, vehicles, drivers, loading: masterdataLoading } = useMasterdata();
+  const { customers, vehicles, drivers, loading: masterdataLoading, refresh } = useMasterdata();
 
   // Once masterdata has loaded, merge into data exactly once (only customers/vehicles/drivers)
   useEffect(() => {
@@ -32,6 +32,17 @@ function App() {
       drivers,
     }));
   }, [masterdataLoading, customers, vehicles, drivers]);
+
+  const refreshMasterdata = useCallback(() => {
+    return refresh().then(fetched => {
+      setData(prev => ({
+        ...prev,
+        customers: fetched.customers ?? [],
+        vehicles: fetched.vehicles ?? [],
+        drivers: fetched.drivers ?? [],
+      }));
+    });
+  }, [refresh]);
 
   // Save non-booking data to localStorage
   useEffect(() => {
@@ -91,7 +102,14 @@ function App() {
   const renderSection = () => {
     // Merge bookings from API with other data
     const mergedData = { ...data, bookings };
-    const props = { data: mergedData, updateData, setCurrentSection, saveBooking, removeBooking };
+    const props = {
+      data: mergedData,
+      updateData,
+      setCurrentSection,
+      saveBooking,
+      removeBooking,
+      refreshMasterdata,
+    };
 
     switch (currentSection) {
       case 'dashboard':
