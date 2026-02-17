@@ -8,6 +8,7 @@ import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../u
 import { useBackupExport } from '../hooks/useBackupExport';
 import { usePricing } from '../hooks/usePricing';
 import { useWarehouse } from '../hooks/useWarehouse';
+import { effectiveMilPrice } from '../utils/dmtPricing';
 
 function Settings({ data, updateData }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
@@ -102,6 +103,14 @@ function Settings({ data, updateData }) {
   const [vehicleTypeSortDirection, setVehicleTypeSortDirection] = useState('asc');
   const [testDataLoaded, setTestDataLoaded] = useState(false);
   const [showLoadTestDataConfirm, setShowLoadTestDataConfirm] = useState(false);
+
+  // Priser tab: selected customer and new row form
+  const [selectedPricingCustomerId, setSelectedPricingCustomerId] = useState('');
+  const [pricingForm, setPricingForm] = useState({
+    validFrom: new Date().toISOString().slice(0, 10),
+    milPrice: '',
+    dmtPercent: '',
+  });
 
   // Vehicle Types Handlers
   const handleAddType = e => {
@@ -3011,13 +3020,146 @@ function Settings({ data, updateData }) {
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Priser</h2>
           <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-            {pricingLoading ? 'Laddar...' : `Antal: ${pricing?.length ?? 0}`}
+            DMT påverkar bara mil, inte tid/stopp/väntetid.
           </p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
           {pricingError && (
-            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+            <p style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
               {pricingError}
             </p>
+          )}
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="label-sm" style={{ display: 'block', marginBottom: '0.25rem' }}>
+              Kund
+            </label>
+            <select
+              value={selectedPricingCustomerId}
+              onChange={e => setSelectedPricingCustomerId(e.target.value)}
+              className="form-select"
+              style={{ maxWidth: '400px' }}
+            >
+              <option value="">Välj kund</option>
+              {(data.customers || []).map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name || c.id} {c.hasDmt ? '(DMT på)' : '(DMT av)'}
+                </option>
+              ))}
+            </select>
+          </div>
+          {selectedPricingCustomerId && (
+            <>
+              <h3 className="section-title" style={{ marginBottom: '0.5rem' }}>
+                Prisrader för kund
+              </h3>
+              {pricingLoading ? (
+                <p className="text-muted-2">Laddar...</p>
+              ) : (
+                <div className="table-container">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Giltig från</th>
+                        <th>Mil</th>
+                        <th>DMT %</th>
+                        <th>Mil inkl DMT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(pricing || [])
+                        .filter(row => row.customerId === selectedPricingCustomerId)
+                        .sort((a, b) => (b.validFrom || '').localeCompare(a.validFrom || ''))
+                        .map(row => {
+                          const customer = (data.customers || []).find(
+                            c => c.id === selectedPricingCustomerId
+                          );
+                          const hasDmt = customer?.hasDmt === true;
+                          const effective = effectiveMilPrice(row.milPrice, row.dmtPercent, hasDmt);
+                          return (
+                            <tr key={row.id}>
+                              <td>{row.validFrom || '–'}</td>
+                              <td>{row.milPrice ?? '–'}</td>
+                              <td>{row.dmtPercent ?? '–'}</td>
+                              <td>
+                                {effective}
+                                {!hasDmt && (
+                                  <span
+                                    className="text-muted-2"
+                                    style={{ fontSize: '0.75rem', display: 'block' }}
+                                  >
+                                    DMT avstängt på kund
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                  {(pricing || []).filter(row => row.customerId === selectedPricingCustomerId)
+                    .length === 0 && (
+                    <p className="text-muted-2 text-sm">Inga priser för denna kund.</p>
+                  )}
+                </div>
+              )}
+              <h3 className="section-title" style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>
+                Ny prisrad / förhandsgranskning
+              </h3>
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '0.75rem',
+                  alignItems: 'flex-end',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                <div>
+                  <label className="label-sm">Giltig från</label>
+                  <input
+                    type="date"
+                    value={pricingForm.validFrom}
+                    onChange={e => setPricingForm(f => ({ ...f, validFrom: e.target.value }))}
+                    className="form-input input-sm"
+                  />
+                </div>
+                <div>
+                  <label className="label-sm">Mil (kr)</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={pricingForm.milPrice}
+                    onChange={e => setPricingForm(f => ({ ...f, milPrice: e.target.value }))}
+                    className="form-input input-sm"
+                    placeholder="–"
+                    style={{ width: '80px' }}
+                  />
+                </div>
+                <div>
+                  <label className="label-sm">DMT %</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={pricingForm.dmtPercent}
+                    onChange={e => setPricingForm(f => ({ ...f, dmtPercent: e.target.value }))}
+                    className="form-input input-sm"
+                    placeholder="–"
+                    style={{ width: '70px' }}
+                  />
+                </div>
+              </div>
+              {(() => {
+                const customer = (data.customers || []).find(
+                  c => c.id === selectedPricingCustomerId
+                );
+                const hasDmt = customer?.hasDmt === true;
+                const eff = effectiveMilPrice(pricingForm.milPrice, pricingForm.dmtPercent, hasDmt);
+                return (
+                  <p style={{ fontSize: '0.875rem', margin: 0 }}>
+                    Effektivt milpris: <strong>{eff}</strong>
+                    {!hasDmt && <span className="text-muted-2"> (DMT avstängt på kund)</span>}
+                  </p>
+                );
+              })()}
+            </>
           )}
         </div>
       )}
