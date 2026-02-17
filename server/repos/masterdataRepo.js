@@ -12,6 +12,14 @@ function normalizeName(name) {
     .replace(/[^a-z0-9_åäö]/gi, '');
 }
 
+function customerKeyFromSeedRow(c) {
+  const nameKey = normalizeName(c?.name);
+  if (!nameKey) return '';
+  const addressKey = normalizeName(c?.address);
+  const cityKey = normalizeName(c?.city);
+  return `${nameKey}__${addressKey}__${cityKey}`;
+}
+
 async function ensureIndexes() {
   const db = await getDatabase();
   await db.collection(CUSTOMERS_COLLECTION).createIndex(
@@ -52,6 +60,7 @@ async function getAllMasterdata() {
       address: c.address || '',
       city: c.city || '',
       active: c.active !== false,
+      hasDmt: c.hasDmt === true,
       driverIds: [],
       vehicleIds: [],
     })),
@@ -76,7 +85,8 @@ async function seedCustomers(customersList) {
   const now = new Date();
   const ops = [];
   for (const c of customersList) {
-    const key = normalizeName(c.name);
+    const key = customerKeyFromSeedRow(c);
+    // Skip rows where normalized name is empty
     if (!key) continue;
     const _id = `cust_${key}`;
     ops.push({
@@ -87,7 +97,8 @@ async function seedCustomers(customersList) {
             name: c.name || '',
             address: c.address || '',
             city: c.city || '',
-            active: true,
+            active: c.active !== false,
+            hasDmt: c.hasDmt ?? false,
             key,
             updatedAt: now,
           },
@@ -103,6 +114,31 @@ async function seedCustomers(customersList) {
   if (ops.length === 0) return { upsertedCount: 0 };
   const result = await coll.bulkWrite(ops);
   return { upsertedCount: (result.upsertedCount || 0) + (result.modifiedCount || 0) };
+}
+
+function mapCustomerDoc(c) {
+  return {
+    id: c._id,
+    name: c.name || '',
+    address: c.address || '',
+    city: c.city || '',
+    active: c.active !== false,
+    hasDmt: c.hasDmt === true,
+    driverIds: [],
+    vehicleIds: [],
+  };
+}
+
+async function updateCustomerHasDmt(customerId, hasDmt) {
+  const db = await getDatabase();
+  const coll = db.collection(CUSTOMERS_COLLECTION);
+  const doc = await coll.findOneAndUpdate(
+    { _id: customerId },
+    { $set: { hasDmt: !!hasDmt, updatedAt: new Date() } },
+    { returnDocument: 'after' }
+  );
+  if (!doc) return null;
+  return mapCustomerDoc(doc);
 }
 
 async function seedVehicles(vehiclesList) {
@@ -162,4 +198,5 @@ module.exports = {
   seedCustomers,
   seedVehicles,
   seedDrivers,
+  updateCustomerHasDmt,
 };

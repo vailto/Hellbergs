@@ -8,11 +8,13 @@ import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../u
 import { useBackupExport } from '../hooks/useBackupExport';
 import { usePricing } from '../hooks/usePricing';
 import { useWarehouse } from '../hooks/useWarehouse';
+import { useCustomerDmtToggle } from '../hooks/useCustomerDmtToggle';
 
 function Settings({ data, updateData }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
   const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
   const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
+  const { toggleCustomerDmt, dmtError } = useCustomerDmtToggle({ data, updateData });
   // Tab State
   const [currentTab, setCurrentTab] = useState('fordon');
 
@@ -2240,6 +2242,9 @@ function Settings({ data, updateData }) {
                   </div>
                 ) : (
                   <div className="table-container">
+                    {dmtError && (
+                      <div style={{ color: '#dc2626', marginBottom: '0.5rem' }}>{dmtError}</div>
+                    )}
                     <table className="table">
                       <thead>
                         <tr>
@@ -2298,6 +2303,7 @@ function Settings({ data, updateData }) {
                               direction={customerSortDirection}
                             />
                           </th>
+                          <th style={{ width: '70px' }}>DMT</th>
                           <th style={{ width: '100px' }}>Åtgärder</th>
                         </tr>
                       </thead>
@@ -2327,6 +2333,17 @@ function Settings({ data, updateData }) {
                                 <td>{customer.contactPerson || '-'}</td>
                                 <td>{customer.mobile || '-'}</td>
                                 <td>{customer.city || '-'}</td>
+                                <td
+                                  onClick={e => e.stopPropagation()}
+                                  style={{ textAlign: 'center' }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={customer.hasDmt === true}
+                                    onChange={e => toggleCustomerDmt(customer.id, e.target.checked)}
+                                    title="DMT (drivmedelstillägg)"
+                                  />
+                                </td>
                                 <td onClick={e => e.stopPropagation()}>
                                   <button
                                     onClick={() => handleEditCustomer(customer)}
@@ -2340,7 +2357,7 @@ function Settings({ data, updateData }) {
                               {isExpanded && (
                                 <tr>
                                   <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     style={{
                                       backgroundColor: '#0f1419',
                                       padding: '1rem',
@@ -2508,6 +2525,7 @@ function Settings({ data, updateData }) {
                               direction={customerSortDirection}
                             />
                           </th>
+                          <th style={{ width: '70px' }}>DMT</th>
                           <th style={{ width: '100px' }}>Åtgärder</th>
                         </tr>
                       </thead>
@@ -2535,6 +2553,17 @@ function Settings({ data, updateData }) {
                                 <td>{customer.contactPerson || '-'}</td>
                                 <td>{customer.mobile || '-'}</td>
                                 <td>{customer.city || '-'}</td>
+                                <td
+                                  onClick={e => e.stopPropagation()}
+                                  style={{ textAlign: 'center' }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={customer.hasDmt === true}
+                                    onChange={e => toggleCustomerDmt(customer.id, e.target.checked)}
+                                    title="DMT (drivmedelstillägg)"
+                                  />
+                                </td>
                                 <td onClick={e => e.stopPropagation()}>
                                   <button
                                     onClick={() => handleEditCustomer(customer)}
@@ -2548,7 +2577,7 @@ function Settings({ data, updateData }) {
                               {isExpanded && (
                                 <tr>
                                   <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     className="text-base"
                                     style={{
                                       backgroundColor: 'var(--color-bg)',
