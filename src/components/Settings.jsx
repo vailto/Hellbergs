@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ConfirmModal from './ConfirmModal';
 import SortIcon from './SortIcon';
 import { generateId } from '../utils/formatters';
@@ -102,6 +102,11 @@ function Settings({ data, updateData, refreshMasterdata }) {
   const [expandedVehicleId, setExpandedVehicleId] = useState(null);
   const [customerSortField, setCustomerSortField] = useState('customerNumber');
   const [customerSortDirection, setCustomerSortDirection] = useState('asc');
+
+  // Masterdata search (per-tab)
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [vehicleSearchQuery, setVehicleSearchQuery] = useState('');
+  const [driverSearchQuery, setDriverSearchQuery] = useState('');
 
   // Visibility State for lists
   const [showAllActiveVehicles, setShowAllActiveVehicles] = useState(false);
@@ -662,23 +667,101 @@ function Settings({ data, updateData, refreshMasterdata }) {
   const activeCustomers = sortCustomers(data.customers.filter(c => c.active));
   const inactiveCustomers = sortCustomers(data.customers.filter(c => !c.active));
 
+  const norm = s => (s ?? '').toString().trim().toLowerCase();
+  const filteredActiveCustomers = useMemo(() => {
+    const q = customerSearchQuery.trim();
+    if (!q) return activeCustomers;
+    const qq = norm(q);
+    return activeCustomers.filter(
+      c =>
+        norm(c.name).includes(qq) ||
+        norm(c.externalId).includes(qq) ||
+        norm(c.city).includes(qq) ||
+        norm(c.key).includes(qq) ||
+        norm(c.address).includes(qq)
+    );
+  }, [activeCustomers, customerSearchQuery]);
+  const filteredInactiveCustomers = useMemo(() => {
+    const q = customerSearchQuery.trim();
+    if (!q) return inactiveCustomers;
+    const qq = norm(q);
+    return inactiveCustomers.filter(
+      c =>
+        norm(c.name).includes(qq) ||
+        norm(c.externalId).includes(qq) ||
+        norm(c.city).includes(qq) ||
+        norm(c.key).includes(qq) ||
+        norm(c.address).includes(qq)
+    );
+  }, [inactiveCustomers, customerSearchQuery]);
+  const filteredActiveVehicles = useMemo(() => {
+    const q = vehicleSearchQuery.trim();
+    if (!q) return activeVehicles;
+    const qq = norm(q);
+    return activeVehicles.filter(
+      v =>
+        norm(v.regNo).includes(qq) ||
+        norm(v.type).includes(qq) ||
+        norm(v.code).includes(qq) ||
+        norm(v.customerId).includes(qq)
+    );
+  }, [activeVehicles, vehicleSearchQuery]);
+  const filteredInactiveVehicles = useMemo(() => {
+    const q = vehicleSearchQuery.trim();
+    if (!q) return inactiveVehicles;
+    const qq = norm(q);
+    return inactiveVehicles.filter(
+      v =>
+        norm(v.regNo).includes(qq) ||
+        norm(v.type).includes(qq) ||
+        norm(v.code).includes(qq) ||
+        norm(v.customerId).includes(qq)
+    );
+  }, [inactiveVehicles, vehicleSearchQuery]);
+  const filteredActiveDrivers = useMemo(() => {
+    const q = driverSearchQuery.trim();
+    if (!q) return activeDrivers;
+    const qq = norm(q);
+    return activeDrivers.filter(
+      d =>
+        norm(d.name).includes(qq) ||
+        norm(d.email).includes(qq) ||
+        norm(d.code).includes(qq) ||
+        norm(d.key).includes(qq)
+    );
+  }, [activeDrivers, driverSearchQuery]);
+  const filteredInactiveDrivers = useMemo(() => {
+    const q = driverSearchQuery.trim();
+    if (!q) return inactiveDrivers;
+    const qq = norm(q);
+    return inactiveDrivers.filter(
+      d =>
+        norm(d.name).includes(qq) ||
+        norm(d.email).includes(qq) ||
+        norm(d.code).includes(qq) ||
+        norm(d.key).includes(qq)
+    );
+  }, [inactiveDrivers, driverSearchQuery]);
+
   // Sort vehicle types
   const sortedVehicleTypes =
     vehicleTypeSortDirection === 'asc'
       ? [...data.vehicleTypes].sort()
       : [...data.vehicleTypes].sort().reverse();
 
-  // Display limits
+  // Display limits (apply to filtered lists)
   const displayedActiveVehicles = showAllActiveVehicles
-    ? activeVehicles
-    : activeVehicles.slice(0, 5);
+    ? filteredActiveVehicles
+    : filteredActiveVehicles.slice(0, 5);
   const displayedInactiveVehicles = showAllInactiveVehicles
-    ? inactiveVehicles
-    : inactiveVehicles.slice(0, 5);
-  const displayedActiveDrivers = showAllActiveDrivers ? activeDrivers : activeDrivers.slice(0, 5);
+    ? filteredInactiveVehicles
+    : filteredInactiveVehicles.slice(0, 5);
+  const displayedActiveDrivers = showAllActiveDrivers
+    ? filteredActiveDrivers
+    : filteredActiveDrivers.slice(0, 5);
   const displayedInactiveDrivers = showAllInactiveDrivers
-    ? inactiveDrivers
-    : inactiveDrivers.slice(0, 5);
+    ? filteredInactiveDrivers
+    : filteredInactiveDrivers.slice(0, 5);
 
   return (
     <div>
@@ -908,6 +991,16 @@ function Settings({ data, updateData, refreshMasterdata }) {
             </div>
           ) : (
             <>
+              <div style={{ marginBottom: '1rem' }}>
+                <input
+                  type="text"
+                  value={vehicleSearchQuery}
+                  onChange={e => setVehicleSearchQuery(e.target.value)}
+                  placeholder="Sök fordon (reg.nr, typ, kod…)"
+                  className="form-input"
+                  style={{ maxWidth: '320px' }}
+                />
+              </div>
               {/* SAMMANFATTNING */}
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div className="stat-card" style={{ flex: 1 }}>
@@ -946,7 +1039,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                         marginBottom: '1rem',
                       }}
                     >
-                      <h2 style={{ margin: 0 }}>Aktiva fordon ({activeVehicles.length})</h2>
+                      <h2 style={{ margin: 0 }}>Aktiva fordon ({filteredActiveVehicles.length})</h2>
                       <button
                         onClick={() => setShowVehicleForm(true)}
                         className="btn btn-primary btn-small"
@@ -955,9 +1048,13 @@ function Settings({ data, updateData, refreshMasterdata }) {
                       </button>
                     </div>
 
-                    {activeVehicles.length === 0 ? (
+                    {data.vehicles.length === 0 ? (
                       <div className="empty-state">
-                        <p>Inga aktiva fordon</p>
+                        <p>No data yet. Run POST /api/admin/seed/masterdata</p>
+                      </div>
+                    ) : filteredActiveVehicles.length === 0 ? (
+                      <div className="empty-state">
+                        <p>No matches</p>
                       </div>
                     ) : (
                       <>
@@ -1060,7 +1157,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                             </tbody>
                           </table>
                         </div>
-                        {activeVehicles.length > 5 && (
+                        {filteredActiveVehicles.length > 5 && (
                           <button
                             onClick={() => setShowAllActiveVehicles(!showAllActiveVehicles)}
                             className="btn btn-secondary btn-small"
@@ -1068,7 +1165,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                           >
                             {showAllActiveVehicles
                               ? `Visa mindre`
-                              : `Visa alla (${activeVehicles.length})`}
+                              : `Visa alla (${filteredActiveVehicles.length})`}
                           </button>
                         )}
                       </>
@@ -1076,10 +1173,10 @@ function Settings({ data, updateData, refreshMasterdata }) {
                   </div>
 
                   {/* INAKTIVA FORDON */}
-                  {inactiveVehicles.length > 0 && (
+                  {filteredInactiveVehicles.length > 0 && (
                     <div className="form">
                       <h2 style={{ marginBottom: '1rem' }}>
-                        Inaktiva fordon ({inactiveVehicles.length})
+                        Inaktiva fordon ({filteredInactiveVehicles.length})
                       </h2>
                       <div className="table-container">
                         <table className="table">
@@ -1178,7 +1275,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                           </tbody>
                         </table>
                       </div>
-                      {inactiveVehicles.length > 5 && (
+                      {filteredInactiveVehicles.length > 5 && (
                         <button
                           onClick={() => setShowAllInactiveVehicles(!showAllInactiveVehicles)}
                           className="btn btn-secondary btn-small"
@@ -1186,7 +1283,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                         >
                           {showAllInactiveVehicles
                             ? `Visa mindre`
-                            : `Visa alla (${inactiveVehicles.length})`}
+                            : `Visa alla (${filteredInactiveVehicles.length})`}
                         </button>
                       )}
                     </div>
@@ -1460,6 +1557,16 @@ function Settings({ data, updateData, refreshMasterdata }) {
             </div>
           ) : (
             <>
+              <div style={{ marginBottom: '1rem' }}>
+                <input
+                  type="text"
+                  value={driverSearchQuery}
+                  onChange={e => setDriverSearchQuery(e.target.value)}
+                  placeholder="Sök förare (namn, e-post, kod…)"
+                  className="form-input"
+                  style={{ maxWidth: '320px' }}
+                />
+              </div>
               <div className="form" style={{ marginBottom: '1.5rem' }}>
                 <div
                   style={{
@@ -1469,7 +1576,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                     marginBottom: '1rem',
                   }}
                 >
-                  <h2 style={{ margin: 0 }}>Aktiva förare ({activeDrivers.length})</h2>
+                  <h2 style={{ margin: 0 }}>Aktiva förare ({filteredActiveDrivers.length})</h2>
                   <button
                     onClick={() => setShowDriverForm(true)}
                     className="btn btn-primary btn-small"
@@ -1478,9 +1585,13 @@ function Settings({ data, updateData, refreshMasterdata }) {
                   </button>
                 </div>
 
-                {activeDrivers.length === 0 ? (
+                {data.drivers.length === 0 ? (
                   <div className="empty-state">
-                    <p>Inga aktiva förare</p>
+                    <p>No data yet. Run POST /api/admin/seed/masterdata</p>
+                  </div>
+                ) : filteredActiveDrivers.length === 0 ? (
+                  <div className="empty-state">
+                    <p>No matches</p>
                   </div>
                 ) : (
                   <>
@@ -1696,7 +1807,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                         </tbody>
                       </table>
                     </div>
-                    {activeDrivers.length > 5 && (
+                    {filteredActiveDrivers.length > 5 && (
                       <button
                         onClick={() => setShowAllActiveDrivers(!showAllActiveDrivers)}
                         className="btn btn-secondary btn-small"
@@ -1704,7 +1815,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                       >
                         {showAllActiveDrivers
                           ? `Visa mindre`
-                          : `Visa alla (${activeDrivers.length})`}
+                          : `Visa alla (${filteredActiveDrivers.length})`}
                       </button>
                     )}
                   </>
@@ -1712,10 +1823,10 @@ function Settings({ data, updateData, refreshMasterdata }) {
               </div>
 
               {/* INAKTIVA FÖRARE */}
-              {inactiveDrivers.length > 0 && (
+              {filteredInactiveDrivers.length > 0 && (
                 <div className="form">
                   <h2 style={{ marginBottom: '1rem' }}>
-                    Inaktiva förare ({inactiveDrivers.length})
+                    Inaktiva förare ({filteredInactiveDrivers.length})
                   </h2>
                   <div className="table-container">
                     <table className="table">
@@ -2243,6 +2354,16 @@ function Settings({ data, updateData, refreshMasterdata }) {
           ) : (
             <>
               <div className="form" style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <input
+                    type="text"
+                    value={customerSearchQuery}
+                    onChange={e => setCustomerSearchQuery(e.target.value)}
+                    placeholder="Sök kunder (namn, ort, adress…)"
+                    className="form-input"
+                    style={{ maxWidth: '320px' }}
+                  />
+                </div>
                 <div
                   style={{
                     display: 'flex',
@@ -2251,7 +2372,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                     marginBottom: '1rem',
                   }}
                 >
-                  <h2 style={{ margin: 0 }}>Kunder ({data.customers.length})</h2>
+                  <h2 style={{ margin: 0 }}>Kunder ({filteredActiveCustomers.length})</h2>
                   <button
                     onClick={() => setShowCustomerForm(true)}
                     className="btn btn-primary btn-small"
@@ -2260,9 +2381,13 @@ function Settings({ data, updateData, refreshMasterdata }) {
                   </button>
                 </div>
 
-                {activeCustomers.length === 0 ? (
+                {data.customers.length === 0 ? (
                   <div className="empty-state">
-                    <p>Inga aktiva kunder</p>
+                    <p>No data yet. Run POST /api/admin/seed/masterdata</p>
+                  </div>
+                ) : filteredActiveCustomers.length === 0 ? (
+                  <div className="empty-state">
+                    <p>No matches</p>
                   </div>
                 ) : (
                   <div className="table-container">
@@ -2332,7 +2457,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {activeCustomers.map(customer => {
+                        {filteredActiveCustomers.map(customer => {
                           const isExpanded = expandedCustomerId === customer.id;
                           return (
                             <React.Fragment key={customer.id}>
@@ -2485,10 +2610,10 @@ function Settings({ data, updateData, refreshMasterdata }) {
               </div>
 
               {/* INAKTIVA KUNDER */}
-              {inactiveCustomers.length > 0 && (
+              {filteredInactiveCustomers.length > 0 && (
                 <div className="form">
                   <h2 style={{ marginBottom: '1rem' }}>
-                    Inaktiva kunder ({inactiveCustomers.length})
+                    Inaktiva kunder ({filteredInactiveCustomers.length})
                   </h2>
                   <div className="table-container">
                     <table className="table">
@@ -2554,7 +2679,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {inactiveCustomers.map(customer => {
+                        {filteredInactiveCustomers.map(customer => {
                           const isExpanded = expandedCustomerId === customer.id;
                           return (
                             <React.Fragment key={customer.id}>
