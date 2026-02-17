@@ -34,6 +34,10 @@ function BookingFormSection({
   setSelectedPickupLocationId,
   setSelectedDeliveryLocationId,
   setFormData,
+  warehouseCreate,
+  setWarehouseCreateField,
+  setWarehouseCreateEnabled,
+  bookingDateForWarehouse,
 }) {
   if (!showForm) {
     return null;
@@ -677,6 +681,65 @@ function BookingFormSection({
               rows="3"
             />
           </div>
+        </div>
+
+        {/* Skapa lagervara */}
+        <div className="form-section">
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={warehouseCreate?.enabled ?? false}
+                onChange={e =>
+                  setWarehouseCreateEnabled?.(e.target.checked, bookingDateForWarehouse)
+                }
+              />
+              Skapa lagervara
+            </label>
+          </div>
+          {warehouseCreate?.enabled && (
+            <div className="form-row" style={{ gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div className="form-group" style={{ minWidth: '200px' }}>
+                <label className="text-muted-2 label-sm">Beskrivning</label>
+                <input
+                  type="text"
+                  value={warehouseCreate.description ?? ''}
+                  onChange={e => setWarehouseCreateField?.('description', e.target.value)}
+                  className="form-input"
+                  placeholder="Beskrivning"
+                />
+              </div>
+              <div className="form-group" style={{ maxWidth: '100px' }}>
+                <label className="text-muted-2 label-sm">Antal</label>
+                <input
+                  type="text"
+                  value={warehouseCreate.quantity ?? ''}
+                  onChange={e => setWarehouseCreateField?.('quantity', e.target.value)}
+                  className="form-input"
+                  placeholder="Antal"
+                />
+              </div>
+              <div className="form-group" style={{ maxWidth: '160px' }}>
+                <label className="text-muted-2 label-sm">Ankomstdatum</label>
+                <input
+                  type="date"
+                  value={(warehouseCreate.arrivedAt ?? '') || bookingDateForWarehouse || ''}
+                  onChange={e => setWarehouseCreateField?.('arrivedAt', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group" style={{ maxWidth: '120px' }}>
+                <label className="text-muted-2 label-sm">Dagshyra (valfritt)</label>
+                <input
+                  type="text"
+                  value={warehouseCreate.dailyStoragePrice ?? ''}
+                  onChange={e => setWarehouseCreateField?.('dailyStoragePrice', e.target.value)}
+                  className="form-input"
+                  placeholder="SEK"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Återkommande bokning (endast vid ny bokning) */}

@@ -11,6 +11,8 @@ function BookingModals({
   showNewCustomerModal,
   tempCustomerData,
   costEntryBookingId,
+  showMottagetGodsModal,
+  mottagetGodsForm,
   // Data
   data,
   activeCustomers,
@@ -27,6 +29,9 @@ function BookingModals({
   handleSaveTempCustomer,
   handleCostSave,
   setCostEntryBookingId,
+  setMottagetGodsField,
+  submitMottagetGods,
+  closeMottagetGodsModal,
 }) {
   return (
     <>
@@ -344,6 +349,99 @@ function BookingModals({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Mottaget gods modal */}
+      {showMottagetGodsModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--color-bg-elevated)',
+              padding: '2rem',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '500px',
+              border: '1px solid var(--color-border)',
+            }}
+          >
+            <h2 style={{ marginBottom: '1rem' }}>Mottaget gods</h2>
+            <div className="form-group">
+              <label className="text-muted-2 label-sm">Kund</label>
+              <select
+                value={mottagetGodsForm.customerId}
+                onChange={e => setMottagetGodsField('customerId', e.target.value)}
+                className="form-select"
+              >
+                <option value="">Välj kund</option>
+                {activeCustomers.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="text-muted-2 label-sm">Beskrivning</label>
+              <input
+                type="text"
+                value={mottagetGodsForm.description}
+                onChange={e => setMottagetGodsField('description', e.target.value)}
+                className="form-input"
+                placeholder="Beskrivning"
+              />
+            </div>
+            <div className="form-group">
+              <label className="text-muted-2 label-sm">Antal</label>
+              <input
+                type="text"
+                value={mottagetGodsForm.quantity}
+                onChange={e => setMottagetGodsField('quantity', e.target.value)}
+                className="form-input"
+                placeholder="Antal"
+              />
+            </div>
+            <div className="form-group">
+              <label className="text-muted-2 label-sm">Ankomstdatum</label>
+              <input
+                type="date"
+                value={mottagetGodsForm.arrivedAt}
+                onChange={e => setMottagetGodsField('arrivedAt', e.target.value)}
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="text-muted-2 label-sm">Dagshyra (valfritt)</label>
+              <input
+                type="text"
+                value={mottagetGodsForm.dailyStoragePrice}
+                onChange={e => setMottagetGodsField('dailyStoragePrice', e.target.value)}
+                className="form-input"
+                placeholder="SEK"
+              />
+            </div>
+            <div className="form-actions">
+              <button type="button" onClick={closeMottagetGodsModal} className="btn btn-secondary">
+                Avbryt
+              </button>
+              <button type="button" onClick={submitMottagetGods} className="btn btn-primary">
+                Spara
+              </button>
+            </div>
           </div>
         </div>
       )}
