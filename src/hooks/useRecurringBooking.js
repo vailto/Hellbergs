@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { generateId, generateBookingNumber } from '../utils/formatters';
 import { createRecurringRule } from '../services/recurringRulesService';
+import { createWarehouseItemWithInMovement } from '../services/warehouseService';
 
 const MESSAGE_DURATION_MS = 5000;
 
@@ -84,8 +85,26 @@ export function useRecurringBooking({
         bookingNo,
       };
       try {
-        await saveBookingToApi(newBooking);
+        const saved = await saveBookingToApi(newBooking);
         updateData({ lastBookingNumber });
+        if (bookingData.warehouseCreate?.enabled) {
+          try {
+            const wc = bookingData.warehouseCreate;
+            const qty = Number(wc.quantity);
+            const dsp = wc.dailyStoragePrice;
+            const dspNum = dsp !== '' && dsp != null ? Number(dsp) : undefined;
+            await createWarehouseItemWithInMovement({
+              customerId: newBooking.customerId || '',
+              description: (wc.description || '').trim() || (newBooking.note || '').trim() || '',
+              quantity: Number.isFinite(qty) && qty > 0 ? qty : 1,
+              arrivedAt: (wc.arrivedAt || '').trim() || newBooking.pickupDate || '',
+              dailyStoragePrice: Number.isFinite(dspNum) ? dspNum : undefined,
+              bookingId: saved?.id ?? newBooking.id,
+            });
+          } catch (whErr) {
+            console.error('Bokning sparad men lagervara kunde inte skapas', whErr);
+          }
+        }
         resetForm();
         setShowForm(false);
       } catch {

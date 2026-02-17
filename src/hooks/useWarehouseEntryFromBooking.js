@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createWarehouseItemWithInMovement } from '../services/warehouseService';
 
 const defaultWarehouseCreate = () => ({
   enabled: false,
@@ -58,18 +59,24 @@ export function useWarehouseEntryFromBooking() {
     setMottagetGodsForm(prev => ({ ...prev, [name]: value }));
   }, []);
 
-  const submitMottagetGods = useCallback(() => {
+  const submitMottagetGods = useCallback(async () => {
+    const qty = Number(mottagetGodsForm.quantity);
+    const priceRaw = mottagetGodsForm.dailyStoragePrice;
+    const price = priceRaw !== '' && priceRaw != null ? Number(priceRaw) : undefined;
     const payload = {
       customerId: (mottagetGodsForm.customerId || '').trim(),
       description: (mottagetGodsForm.description || '').trim(),
-      quantity: (mottagetGodsForm.quantity || '').trim(),
+      quantity: Number.isFinite(qty) && qty > 0 ? qty : 1,
       arrivedAt: (mottagetGodsForm.arrivedAt || '').trim(),
-      dailyStoragePrice: (mottagetGodsForm.dailyStoragePrice || '').trim(),
+      dailyStoragePrice: Number.isFinite(price) ? price : undefined,
     };
-    // TODO: call API to create warehouse item
-    console.log('Mottaget gods payload (TODO):', payload);
-    setMottagetGodsForm(defaultMottagetGodsForm());
-    setShowMottagetGodsModal(false);
+    try {
+      await createWarehouseItemWithInMovement(payload);
+      setMottagetGodsForm(defaultMottagetGodsForm());
+      setShowMottagetGodsModal(false);
+    } catch (error) {
+      console.error('Mottaget gods: kunde inte skapa lagervara', error);
+    }
   }, [mottagetGodsForm]);
 
   const closeMottagetGodsModal = useCallback(() => {
