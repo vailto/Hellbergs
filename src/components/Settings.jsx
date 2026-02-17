@@ -6,9 +6,13 @@ import { exportToJSON, importFromJSON, saveData, migrateVehicleDriverData } from
 import getMockData from '../data/mockData';
 import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../utils/vehicleUtils';
 import { useBackupExport } from '../hooks/useBackupExport';
+import { usePricing } from '../hooks/usePricing';
+import { useWarehouse } from '../hooks/useWarehouse';
 
 function Settings({ data, updateData }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
+  const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
+  const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
   // Tab State
   const [currentTab, setCurrentTab] = useState('fordon');
 
@@ -729,6 +733,28 @@ function Settings({ data, updateData }) {
           }}
         >
           Backup
+        </button>
+        <button
+          onClick={() => setCurrentTab('priser')}
+          className={`btn btn-small ${currentTab === 'priser' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: currentTab === 'priser' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px',
+          }}
+        >
+          Priser
+        </button>
+        <button
+          onClick={() => setCurrentTab('lager')}
+          className={`btn btn-small ${currentTab === 'lager' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: currentTab === 'lager' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px',
+          }}
+        >
+          Lager
         </button>
         <button
           onClick={() => setCurrentTab('testdata')}
@@ -2977,6 +3003,38 @@ function Settings({ data, updateData }) {
             <strong style={{ color: '#856404' }}>Varning:</strong>
             <span style={{ color: '#856404' }}> Import ersätter all befintlig data.</span>
           </div>
+        </div>
+      )}
+
+      {/* PRISER TAB */}
+      {currentTab === 'priser' && (
+        <div className="form">
+          <h2 style={{ marginBottom: '1rem' }}>Priser</h2>
+          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            {pricingLoading ? 'Laddar...' : `Antal: ${pricing?.length ?? 0}`}
+          </p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
+          {pricingError && (
+            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+              {pricingError}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* LAGER TAB */}
+      {currentTab === 'lager' && (
+        <div className="form">
+          <h2 style={{ marginBottom: '1rem' }}>Lager</h2>
+          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            {warehouseLoading ? 'Laddar...' : `Antal: ${items?.length ?? 0}`}
+          </p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
+          {warehouseError && (
+            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+              {warehouseError}
+            </p>
+          )}
         </div>
       )}
 

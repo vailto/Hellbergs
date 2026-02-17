@@ -1,63 +1,109 @@
 const { getDatabase } = require('../db/mongo');
 
-const COLLECTIONS = {
-  bookings: 'bookings',
-  customers: 'customers',
-  vehicles: 'vehicles',
-  drivers: 'drivers',
-};
+function mapCustomer(doc) {
+  return {
+    id: doc._id,
+    name: doc.name ?? '',
+    address: doc.address ?? '',
+    city: doc.city ?? '',
+    active: doc.active ?? true,
+    driverIds: [],
+    vehicleIds: [],
+  };
+}
+
+function mapVehicle(doc) {
+  return {
+    id: doc._id,
+    code: doc.code ?? '',
+    regNo: doc.regNo ?? '',
+    active: doc.active ?? true,
+  };
+}
+
+function mapDriver(doc) {
+  return {
+    id: doc._id,
+    code: doc.code ?? '',
+    name: doc.name ?? '',
+    active: doc.active ?? true,
+  };
+}
+
+function mapPricing(doc) {
+  return {
+    id: doc._id,
+    customerId: doc.customerId ?? '',
+    validFrom: doc.validFrom ?? '',
+    dmtPercent: doc.dmtPercent ?? 0,
+    milPrice: doc.milPrice ?? 0,
+    stopPrice: doc.stopPrice ?? 0,
+    waitPrice: doc.waitPrice ?? 0,
+    hourPrice: doc.hourPrice ?? 0,
+    fixedPrice: doc.fixedPrice ?? 0,
+    dailyStoragePrice: doc.dailyStoragePrice ?? 0,
+  };
+}
+
+function mapWarehouseItem(doc) {
+  return {
+    id: doc._id,
+    customerId: doc.customerId ?? '',
+    description: doc.description ?? '',
+    quantity: doc.quantity ?? 0,
+    dailyStoragePrice: doc.dailyStoragePrice ?? 0,
+    arrivedAt: doc.arrivedAt ?? null,
+    departedAt: doc.departedAt ?? null,
+  };
+}
+
+function mapWarehouseMovement(doc) {
+  return {
+    id: doc._id,
+    itemId: doc.itemId ?? '',
+    customerId: doc.customerId ?? '',
+    date: doc.date ?? '',
+    quantity: doc.quantity ?? 0,
+    type: doc.type ?? '',
+  };
+}
 
 async function exportAll() {
   const db = await getDatabase();
 
-  const [bookingsRaw, customersRaw, vehiclesRaw, driversRaw] = await Promise.all([
-    db.collection(COLLECTIONS.bookings).find({}).toArray(),
-    db.collection(COLLECTIONS.customers).find({}).toArray(),
-    db.collection(COLLECTIONS.vehicles).find({}).toArray(),
-    db.collection(COLLECTIONS.drivers).find({}).toArray(),
+  const [
+    bookingsDocs,
+    customersDocs,
+    vehiclesDocs,
+    driversDocs,
+    pricingDocs,
+    warehouseItemsDocs,
+    warehouseMovementsDocs,
+  ] = await Promise.all([
+    db.collection('bookings').find({}).toArray(),
+    db.collection('customers').find({}).toArray(),
+    db.collection('vehicles').find({}).toArray(),
+    db.collection('drivers').find({}).toArray(),
+    db.collection('customerPricing').find({}).toArray(),
+    db.collection('warehouseItems').find({}).toArray(),
+    db.collection('warehouseMovements').find({}).toArray(),
   ]);
 
-  const bookings = (bookingsRaw || []).map(doc => ({
-    ...doc.payload,
+  const bookings = bookingsDocs.map(doc => ({
+    ...(doc.payload || {}),
     id: doc._id,
-  }));
-
-  const customers = (customersRaw || []).map(c => ({
-    id: c._id,
-    name: c.name || '',
-    address: c.address || '',
-    city: c.city || '',
-    active: c.active !== false,
-    driverIds: [],
-    vehicleIds: [],
-  }));
-
-  const vehicles = (vehiclesRaw || []).map(v => ({
-    id: v._id,
-    code: v.code || '',
-    regNo: v.regNo || '',
-    active: v.active !== false,
-  }));
-
-  const drivers = (driversRaw || []).map(d => ({
-    id: d._id,
-    code: d.code || '',
-    name: d.name || '',
-    active: d.active !== false,
   }));
 
   return {
     bookings,
-    customers,
-    vehicles,
-    drivers,
-    warehouseItems: [],
-    warehouseMovements: [],
+    customers: customersDocs.map(mapCustomer),
+    vehicles: vehiclesDocs.map(mapVehicle),
+    drivers: driversDocs.map(mapDriver),
+    customerPricing: pricingDocs.map(mapPricing),
+    warehouseItems: warehouseItemsDocs.map(mapWarehouseItem),
+    warehouseMovements: warehouseMovementsDocs.map(mapWarehouseMovement),
     rateCards: [],
-    customerPricing: [],
   };
 }
 
-module.exports = {
-  exportAll,
-};
+module.exports = { exportAll };
