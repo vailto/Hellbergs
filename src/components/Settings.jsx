@@ -6,13 +6,22 @@ import { exportToJSON, importFromJSON, saveData, migrateVehicleDriverData } from
 import getMockData from '../data/mockData';
 import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../utils/vehicleUtils';
 import { useBackupExport } from '../hooks/useBackupExport';
-import { usePricing } from '../hooks/usePricing';
+import { useCustomerPricing } from '../hooks/useCustomerPricing';
 import { useWarehouse } from '../hooks/useWarehouse';
 import { useCustomerDmtToggle } from '../hooks/useCustomerDmtToggle';
 
 function Settings({ data, updateData }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
-  const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
+  const {
+    pricing,
+    loading: pricingLoading,
+    error: pricingError,
+    saving: pricingSaving,
+    saveError: pricingSaveError,
+    getPricingForCustomer,
+    savePricingRow,
+    deletePricingRow,
+  } = useCustomerPricing();
   const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
   const { toggleCustomerDmt, dmtError } = useCustomerDmtToggle({ data, updateData });
   // Tab State
@@ -104,6 +113,20 @@ function Settings({ data, updateData }) {
   const [vehicleTypeSortDirection, setVehicleTypeSortDirection] = useState('asc');
   const [testDataLoaded, setTestDataLoaded] = useState(false);
   const [showLoadTestDataConfirm, setShowLoadTestDataConfirm] = useState(false);
+
+  // Pricing tab (Priser)
+  const [selectedPricingCustomerId, setSelectedPricingCustomerId] = useState('');
+  const [pricingForm, setPricingForm] = useState({
+    validFrom: '',
+    dmtPercent: '',
+    milPrice: '',
+    stopPrice: '',
+    waitPrice: '',
+    hourPrice: '',
+    fixedPrice: '',
+    dailyStoragePrice: '',
+  });
+  const [deletePricingConfirm, setDeletePricingConfirm] = useState(null);
 
   // Vehicle Types Handlers
   const handleAddType = e => {
@@ -3036,13 +3059,235 @@ function Settings({ data, updateData }) {
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Priser</h2>
           <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-            {pricingLoading ? 'Laddar...' : `Antal: ${pricing?.length ?? 0}`}
+            {pricingLoading ? 'Laddar...' : `Antal rader: ${pricing?.length ?? 0}`}
           </p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1rem' }}>
+            DMT används bara om kunden har DMT aktiverat (ställ in under Kunder).
+          </p>
           {pricingError && (
-            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+            <p style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
               {pricingError}
             </p>
+          )}
+          {pricingSaveError && (
+            <p style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+              {pricingSaveError}
+            </p>
+          )}
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="label-sm" style={{ display: 'block', marginBottom: '0.25rem' }}>
+              Kund
+            </label>
+            <select
+              value={selectedPricingCustomerId}
+              onChange={e => setSelectedPricingCustomerId(e.target.value)}
+              className="form-select"
+              style={{ maxWidth: '400px' }}
+            >
+              <option value="">Välj kund</option>
+              {(data.customers || []).map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name || c.id} {c.hasDmt ? '(DMT på)' : '(DMT av)'}
+                </option>
+              ))}
+            </select>
+          </div>
+          {selectedPricingCustomerId && (
+            <>
+              <div className="table-container" style={{ marginBottom: '1rem' }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>validFrom</th>
+                      <th>dmt%</th>
+                      <th>mil</th>
+                      <th>stopp</th>
+                      <th>väntetid</th>
+                      <th>tim</th>
+                      <th>fast</th>
+                      <th>lager/dag</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getPricingForCustomer(selectedPricingCustomerId).map(row => (
+                      <tr key={`${row.customerId}-${row.validFrom}`}>
+                        <td>{row.validFrom}</td>
+                        <td>{row.dmtPercent}</td>
+                        <td>{row.milPrice}</td>
+                        <td>{row.stopPrice}</td>
+                        <td>{row.waitPrice}</td>
+                        <td>{row.hourPrice}</td>
+                        <td>{row.fixedPrice}</td>
+                        <td>{row.dailyStoragePrice}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-small text-2xs"
+                            onClick={() => setDeletePricingConfirm(row.validFrom)}
+                          >
+                            Ta bort
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {getPricingForCustomer(selectedPricingCustomerId).length === 0 && (
+                  <p className="text-muted-2 text-sm">Inga priser för denna kund.</p>
+                )}
+              </div>
+              <div
+                style={{
+                  border: '1px solid #374151',
+                  borderRadius: '6px',
+                  padding: '1rem',
+                  marginBottom: '1rem',
+                }}
+              >
+                <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
+                  Lägg till / uppdatera rad (validFrom = datum)
+                </h3>
+                <div
+                  style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}
+                >
+                  <div>
+                    <label className="label-sm">validFrom (YYYY-MM-DD)</label>
+                    <input
+                      type="date"
+                      value={pricingForm.validFrom}
+                      onChange={e => setPricingForm(f => ({ ...f, validFrom: e.target.value }))}
+                      className="form-input input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-sm">dmtPercent</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={pricingForm.dmtPercent}
+                      onChange={e => setPricingForm(f => ({ ...f, dmtPercent: e.target.value }))}
+                      className="form-input input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-sm">milPrice</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={pricingForm.milPrice}
+                      onChange={e => setPricingForm(f => ({ ...f, milPrice: e.target.value }))}
+                      className="form-input input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-sm">stopPrice</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={pricingForm.stopPrice}
+                      onChange={e => setPricingForm(f => ({ ...f, stopPrice: e.target.value }))}
+                      className="form-input input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-sm">waitPrice</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={pricingForm.waitPrice}
+                      onChange={e => setPricingForm(f => ({ ...f, waitPrice: e.target.value }))}
+                      className="form-input input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-sm">hourPrice</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={pricingForm.hourPrice}
+                      onChange={e => setPricingForm(f => ({ ...f, hourPrice: e.target.value }))}
+                      className="form-input input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-sm">fixedPrice</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={pricingForm.fixedPrice}
+                      onChange={e => setPricingForm(f => ({ ...f, fixedPrice: e.target.value }))}
+                      className="form-input input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-sm">dailyStoragePrice</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={pricingForm.dailyStoragePrice}
+                      onChange={e =>
+                        setPricingForm(f => ({ ...f, dailyStoragePrice: e.target.value }))
+                      }
+                      className="form-input input-sm"
+                    />
+                  </div>
+                </div>
+                <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-small"
+                    disabled={!pricingForm.validFrom.trim() || pricingSaving}
+                    onClick={async () => {
+                      await savePricingRow(
+                        selectedPricingCustomerId,
+                        pricingForm.validFrom.trim(),
+                        {
+                          dmtPercent: pricingForm.dmtPercent,
+                          milPrice: pricingForm.milPrice,
+                          stopPrice: pricingForm.stopPrice,
+                          waitPrice: pricingForm.waitPrice,
+                          hourPrice: pricingForm.hourPrice,
+                          fixedPrice: pricingForm.fixedPrice,
+                          dailyStoragePrice: pricingForm.dailyStoragePrice,
+                        }
+                      );
+                    }}
+                  >
+                    {pricingSaving ? 'Sparar...' : 'Spara'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-small"
+                    onClick={() =>
+                      setPricingForm({
+                        validFrom: '',
+                        dmtPercent: '',
+                        milPrice: '',
+                        stopPrice: '',
+                        waitPrice: '',
+                        hourPrice: '',
+                        fixedPrice: '',
+                        dailyStoragePrice: '',
+                      })
+                    }
+                  >
+                    Rensa
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+          {deletePricingConfirm && (
+            <ConfirmModal
+              title="Ta bort priserad"
+              message={`Ta bort raden med validFrom ${deletePricingConfirm}?`}
+              onConfirm={async () => {
+                await deletePricingRow(selectedPricingCustomerId, deletePricingConfirm);
+                setDeletePricingConfirm(null);
+              }}
+              onCancel={() => setDeletePricingConfirm(null)}
+            />
           )}
         </div>
       )}
