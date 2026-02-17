@@ -8,6 +8,7 @@ const bookingsRouter = require('./routes/bookings');
 const recurringRulesRouter = require('./routes/recurringRules');
 const masterdataRouter = require('./routes/masterdata');
 const adminRouter = require('./routes/admin');
+const customersRouter = require('./routes/customers');
 const pricingRouter = require('./routes/pricing');
 const warehouseRouter = require('./routes/warehouse');
 
@@ -24,6 +25,7 @@ app.use('/api/bookings', bookingsRouter);
 app.use('/api/recurring-rules', recurringRulesRouter);
 app.use('/api/masterdata', masterdataRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/customers', customersRouter);
 app.use('/api/pricing', pricingRouter);
 app.use('/api/warehouse', warehouseRouter);
 

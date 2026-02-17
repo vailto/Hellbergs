@@ -8,11 +8,13 @@ import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../u
 import { useBackupExport } from '../hooks/useBackupExport';
 import { usePricing } from '../hooks/usePricing';
 import { useWarehouse } from '../hooks/useWarehouse';
+import { useCustomerDmtToggle } from '../hooks/useCustomerDmtToggle';
 
 function Settings({ data, updateData }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
   const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
   const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
+  const { toggleCustomerDmt, dmtError } = useCustomerDmtToggle({ data, updateData });
   // Tab State
   const [currentTab, setCurrentTab] = useState('fordon');
 
@@ -2233,6 +2235,11 @@ function Settings({ data, updateData }) {
                     + Nytt
                   </button>
                 </div>
+                {dmtError && (
+                  <p style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                    {dmtError}
+                  </p>
+                )}
 
                 {activeCustomers.length === 0 ? (
                   <div className="empty-state">
@@ -2298,6 +2305,7 @@ function Settings({ data, updateData }) {
                               direction={customerSortDirection}
                             />
                           </th>
+                          <th style={{ width: '70px' }}>DMT</th>
                           <th style={{ width: '100px' }}>Åtgärder</th>
                         </tr>
                       </thead>
@@ -2328,6 +2336,14 @@ function Settings({ data, updateData }) {
                                 <td>{customer.mobile || '-'}</td>
                                 <td>{customer.city || '-'}</td>
                                 <td onClick={e => e.stopPropagation()}>
+                                  <input
+                                    type="checkbox"
+                                    checked={customer.hasDmt === true}
+                                    onChange={e => toggleCustomerDmt(customer.id, e.target.checked)}
+                                    title="DMT (drivmedelstillägg)"
+                                  />
+                                </td>
+                                <td onClick={e => e.stopPropagation()}>
                                   <button
                                     onClick={() => handleEditCustomer(customer)}
                                     className="btn btn-small btn-primary text-sm"
@@ -2340,7 +2356,7 @@ function Settings({ data, updateData }) {
                               {isExpanded && (
                                 <tr>
                                   <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     style={{
                                       backgroundColor: '#0f1419',
                                       padding: '1rem',
@@ -2508,6 +2524,7 @@ function Settings({ data, updateData }) {
                               direction={customerSortDirection}
                             />
                           </th>
+                          <th style={{ width: '70px' }}>DMT</th>
                           <th style={{ width: '100px' }}>Åtgärder</th>
                         </tr>
                       </thead>
@@ -2536,6 +2553,14 @@ function Settings({ data, updateData }) {
                                 <td>{customer.mobile || '-'}</td>
                                 <td>{customer.city || '-'}</td>
                                 <td onClick={e => e.stopPropagation()}>
+                                  <input
+                                    type="checkbox"
+                                    checked={customer.hasDmt === true}
+                                    onChange={e => toggleCustomerDmt(customer.id, e.target.checked)}
+                                    title="DMT (drivmedelstillägg)"
+                                  />
+                                </td>
+                                <td onClick={e => e.stopPropagation()}>
                                   <button
                                     onClick={() => handleEditCustomer(customer)}
                                     className="btn btn-small btn-primary text-sm"
@@ -2548,7 +2573,7 @@ function Settings({ data, updateData }) {
                               {isExpanded && (
                                 <tr>
                                   <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     className="text-base"
                                     style={{
                                       backgroundColor: 'var(--color-bg)',

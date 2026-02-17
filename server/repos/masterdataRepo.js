@@ -107,6 +107,31 @@ async function seedCustomers(customersList) {
   return { upsertedCount: (result.upsertedCount || 0) + (result.modifiedCount || 0) };
 }
 
+function mapCustomerDoc(c) {
+  return {
+    id: c._id,
+    name: c.name || '',
+    address: c.address || '',
+    city: c.city || '',
+    active: c.active !== false,
+    hasDmt: c.hasDmt === true,
+    driverIds: [],
+    vehicleIds: [],
+  };
+}
+
+async function updateCustomerHasDmt(customerId, hasDmt) {
+  const db = await getDatabase();
+  const coll = db.collection(CUSTOMERS_COLLECTION);
+  const doc = await coll.findOneAndUpdate(
+    { _id: customerId },
+    { $set: { hasDmt: !!hasDmt, updatedAt: new Date() } },
+    { returnDocument: 'after' }
+  );
+  if (!doc) return null;
+  return mapCustomerDoc(doc);
+}
+
 async function seedVehicles(vehiclesList) {
   const db = await getDatabase();
   const coll = db.collection(VEHICLES_COLLECTION);
@@ -164,4 +189,5 @@ module.exports = {
   seedCustomers,
   seedVehicles,
   seedDrivers,
+  updateCustomerHasDmt,
 };
