@@ -8,6 +8,7 @@ import {
 import { validateBooking } from '../../utils/validation';
 import BookingModals from './BookingModals';
 import useRecurringBooking from '../../hooks/useRecurringBooking';
+import useWarehouseEntryFromBooking from '../../hooks/useWarehouseEntryFromBooking';
 import BookingFormSection from './BookingFormSection';
 import BookingTableSection from './BookingTableSection';
 import useBookingState from '../../hooks/useBookingState';
@@ -91,6 +92,20 @@ function BookingPage({
     setShowForm,
   });
 
+  const {
+    warehouseCreate,
+    setWarehouseCreateField,
+    setWarehouseCreateEnabled,
+    getWarehouseCreatePayload,
+    resetWarehouseCreate,
+    showMottagetGodsModal,
+    setShowMottagetGodsModal,
+    mottagetGodsForm,
+    setMottagetGodsField,
+    submitMottagetGods,
+    closeMottagetGodsModal,
+  } = useWarehouseEntryFromBooking();
+
   const handleChange = e => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -160,6 +175,7 @@ function BookingPage({
     setShowForm(true);
     setEditingId(null);
     resetForm();
+    resetWarehouseCreate();
   };
 
   const handleEdit = booking => {
@@ -226,6 +242,7 @@ function BookingPage({
       costDetails.waitHours ||
       costDetails.driveHours ||
       (formData.costUseFixed && costDetails.fixed != null);
+    const warehouseCreatePayload = getWarehouseCreatePayload(formData.pickupDate);
     const bookingData =
       editingId && existing
         ? {
@@ -237,6 +254,7 @@ function BookingPage({
             km: kmVal,
             amountSek: amountVal,
             costDetails: hasCostDetails ? costDetails : (existing.costDetails ?? undefined),
+            warehouseCreate: warehouseCreatePayload,
           }
         : {
             ...formData,
@@ -246,12 +264,14 @@ function BookingPage({
             km: kmVal,
             amountSek: amountVal,
             costDetails: hasCostDetails ? costDetails : undefined,
+            warehouseCreate: warehouseCreatePayload,
           };
 
     if (editingId) {
       try {
         await saveBookingToApi(bookingData);
         resetForm();
+        resetWarehouseCreate();
         setShowForm(false);
         if (returnToSection && setCurrentSection) {
           setCurrentSection(returnToSection);
@@ -307,6 +327,7 @@ function BookingPage({
 
   const handleCancelForm = () => {
     resetForm();
+    resetWarehouseCreate();
     setShowForm(false);
     if (returnToSection && setCurrentSection) {
       setCurrentSection(returnToSection);
@@ -496,9 +517,18 @@ function BookingPage({
       <h1>Bokningar</h1>
 
       {!showForm && (
-        <button onClick={handleNewBooking} className="btn btn-primary mb-2">
-          + Ny bokning
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <button onClick={handleNewBooking} className="btn btn-primary">
+            + Ny bokning
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowMottagetGodsModal(true)}
+            className="btn btn-primary"
+          >
+            Mottaget gods
+          </button>
+        </div>
       )}
 
       {/* Recurring confirmation message */}
@@ -541,6 +571,10 @@ function BookingPage({
         setSelectedPickupLocationId={setSelectedPickupLocationId}
         setSelectedDeliveryLocationId={setSelectedDeliveryLocationId}
         setFormData={setFormData}
+        warehouseCreate={warehouseCreate}
+        setWarehouseCreateField={setWarehouseCreateField}
+        setWarehouseCreateEnabled={setWarehouseCreateEnabled}
+        bookingDateForWarehouse={formData.pickupDate}
       />
 
       {/* Bookings List */}
@@ -595,6 +629,11 @@ function BookingPage({
         handleSaveTempCustomer={handleSaveTempCustomer}
         handleCostSave={handleCostSave}
         setCostEntryBookingId={setCostEntryBookingId}
+        showMottagetGodsModal={showMottagetGodsModal}
+        mottagetGodsForm={mottagetGodsForm}
+        setMottagetGodsField={setMottagetGodsField}
+        submitMottagetGods={submitMottagetGods}
+        closeMottagetGodsModal={closeMottagetGodsModal}
       />
     </div>
   );
