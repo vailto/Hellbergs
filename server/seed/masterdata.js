@@ -22,6 +22,9 @@ const vehicles = [
 ];
 
 const drivers = [
+  { email: 'anna.andersson@example.com', code: 'ANAN', name: 'Anna Andersson' },
+  { email: 'erik.svensson@example.com', code: 'ERSV', name: 'Erik Svensson' },
+  { email: 'lina.nilsson@example.com', code: 'LINI', name: 'Lina Nilsson' },
   { code: 'ANBL', name: 'Andreas Blom' },
   { code: 'ANHN', name: 'Anders Harris' },
   { code: 'BOCR', name: 'Bosse Cronwald' },
@@ -55,9 +58,11 @@ const drivers = [
   { code: 'ULHE', name: 'Ulf Hellberg' },
 ];
 
-// Placeholder until full list is added. Each item: { name, address, city } (empty string for missing).
+// Idempotent by externalId. Each item: { externalId, name, address?, city? }.
 const customers = [
-  { name: 'Example Customer AB', address: 'Example Street 1', city: 'Stockholm' },
+  { externalId: 'cust_gbg_frakt', name: 'Göteborg Frakt AB', address: 'Hamnleden 1', city: 'Göteborg' },
+  { externalId: 'cust_torslanda_bygg', name: 'Torslanda Bygg & Transport', address: 'Industrigatan 5', city: 'Torslanda' },
+  { externalId: 'cust_hisingen_logistik', name: 'Hisingen Logistik', address: 'Logistikvägen 12', city: 'Göteborg' },
 ];
 
 module.exports = {
