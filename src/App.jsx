@@ -15,16 +15,16 @@ function App() {
   const [currentSection, setCurrentSection] = useState('dashboard');
   const [editingBookingId, setEditingBookingId] = useState(null);
   const [returnToSection, setReturnToSection] = useState(null);
-  const masterdataMergedRef = useRef(false);
+  const didApplyMasterdataRef = useRef(false);
 
   // Sync bookings with API
   const { bookings, loading, saveBooking, removeBooking, updateBookings } = useBookingSync();
   const { customers, vehicles, drivers, loading: masterdataLoading } = useMasterdata();
 
-  // Once masterdata has loaded, merge into data so dropdowns use DB as source of truth
+  // Once masterdata has loaded, merge into data exactly once (only customers/vehicles/drivers)
   useEffect(() => {
-    if (masterdataLoading || masterdataMergedRef.current) return;
-    masterdataMergedRef.current = true;
+    if (masterdataLoading || didApplyMasterdataRef.current) return;
+    didApplyMasterdataRef.current = true;
     setData(prev => ({
       ...prev,
       customers,

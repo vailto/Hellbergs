@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { connect } = require('./db/mongo');
+const masterdataRepo = require('./repos/masterdataRepo');
 const bookingsRouter = require('./routes/bookings');
 const recurringRulesRouter = require('./routes/recurringRules');
 const masterdataRouter = require('./routes/masterdata');
@@ -35,7 +36,8 @@ async function start() {
   try {
     // Connect to MongoDB
     await connect();
-    
+    await masterdataRepo.ensureIndexes();
+
     // Start Express server
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);

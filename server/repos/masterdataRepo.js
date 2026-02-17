@@ -4,10 +4,12 @@ const CUSTOMERS_COLLECTION = 'customers';
 const VEHICLES_COLLECTION = 'vehicles';
 const DRIVERS_COLLECTION = 'drivers';
 
-function toId(doc) {
-  if (!doc) return doc;
-  const { _id, ...rest } = doc;
-  return { id: _id, ...rest };
+function normalizeName(name) {
+  return (name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_åäö]/gi, '');
 }
 
 async function ensureIndexes() {
@@ -28,52 +30,66 @@ async function ensureIndexes() {
 
 async function getAllMasterdata() {
   const db = await getDatabase();
-  const [customers, vehicles, drivers] = await Promise.all([
+  const [customersRaw, vehiclesRaw, driversRaw] = await Promise.all([
     db.collection(CUSTOMERS_COLLECTION).find({}).toArray(),
     db.collection(VEHICLES_COLLECTION).find({}).toArray(),
     db.collection(DRIVERS_COLLECTION).find({}).toArray(),
   ]);
   return {
-    customers: customers.map(toId).map(c => ({ ...c, active: c.active !== false })),
-    vehicles: vehicles.map(toId).map(v => ({
-      ...v,
-      driverIds: v.driverIds || [],
+    customers: (customersRaw || []).map(c => ({
+      id: c._id,
+      name: c.name || '',
+      address: c.address || '',
+      city: c.city || '',
+      active: c.active !== false,
+      driverIds: [],
+      vehicleIds: [],
+    })),
+    vehicles: (vehiclesRaw || []).map(v => ({
+      id: v._id,
+      code: v.code || '',
+      regNo: v.regNo || '',
       active: v.active !== false,
     })),
-    drivers: drivers.map(toId).map(d => ({
-      ...d,
-      vehicleIds: d.vehicleIds || [],
+    drivers: (driversRaw || []).map(d => ({
+      id: d._id,
+      code: d.code || '',
+      name: d.name || '',
       active: d.active !== false,
     })),
   };
 }
 
-function customerKey(name) {
-  const s = (name || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_åäö]/gi, '');
-  return s || undefined;
-}
-
 async function seedCustomers(customersList) {
   const db = await getDatabase();
   const coll = db.collection(CUSTOMERS_COLLECTION);
-  const ops = customersList.map((c, i) => {
-    const key = customerKey(c.name) || `cust_${i}`;
-    const doc = {
-      _id: key,
-      key,
-      name: c.name || '',
-      address: c.address || '',
-      city: c.city || '',
-      active: true,
-    };
-    return {
+  const now = new Date();
+  const ops = [];
+  for (const c of customersList) {
+    const key = normalizeName(c.name);
+    if (!key) continue;
+    const _id = `cust_${key}`;
+    ops.push({
       updateOne: {
-        filter: { _id: key },
-        update: { $set: doc },
+        filter: { key },
+        update: {
+          $set: {
+            name: c.name || '',
+            address: c.address || '',
+            city: c.city || '',
+            active: true,
+            key,
+            updatedAt: now,
+          },
+          $setOnInsert: {
+            _id,
+            createdAt: now,
+          },
+        },
         upsert: true,
       },
-    };
-  });
+    });
+  }
   if (ops.length === 0) return { upsertedCount: 0 };
   const result = await coll.bulkWrite(ops);
   return { upsertedCount: (result.upsertedCount || 0) + (result.modifiedCount || 0) };
