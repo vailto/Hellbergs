@@ -726,17 +726,6 @@ function Settings({ data, updateData }) {
           Platser
         </button>
         <button
-          onClick={() => setCurrentTab('backup')}
-          className={`btn btn-small ${currentTab === 'backup' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{
-            borderRadius: '6px 6px 0 0',
-            borderBottom: currentTab === 'backup' ? '2px solid #2563ab' : 'none',
-            marginBottom: '-2px',
-          }}
-        >
-          Backup
-        </button>
-        <button
           onClick={() => setCurrentTab('priser')}
           className={`btn btn-small ${currentTab === 'priser' ? 'btn-primary' : 'btn-secondary'}`}
           style={{
@@ -757,6 +746,17 @@ function Settings({ data, updateData }) {
           }}
         >
           Lager
+        </button>
+        <button
+          onClick={() => setCurrentTab('backup')}
+          className={`btn btn-small ${currentTab === 'backup' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: currentTab === 'backup' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px',
+          }}
+        >
+          Backup
         </button>
         <button
           onClick={() => setCurrentTab('testdata')}
@@ -2964,6 +2964,38 @@ function Settings({ data, updateData }) {
         </div>
       )}
 
+      {/* PRISER TAB */}
+      {currentTab === 'priser' && (
+        <div className="form">
+          <h2 style={{ marginBottom: '1rem' }}>Priser</h2>
+          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            {pricingLoading ? 'Laddar...' : `Antal: ${pricing?.length ?? 0}`}
+          </p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
+          {pricingError && (
+            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+              {pricingError}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* LAGER TAB */}
+      {currentTab === 'lager' && (
+        <div className="form">
+          <h2 style={{ marginBottom: '1rem' }}>Lager</h2>
+          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            {warehouseLoading ? 'Laddar...' : `Antal: ${items?.length ?? 0}`}
+          </p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
+          {warehouseError && (
+            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+              {warehouseError}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* BACKUP TAB */}
       {currentTab === 'backup' && (
         <div className="form">
@@ -3032,38 +3064,6 @@ function Settings({ data, updateData }) {
             <strong style={{ color: '#856404' }}>Varning:</strong>
             <span style={{ color: '#856404' }}> Import ersätter all befintlig data.</span>
           </div>
-        </div>
-      )}
-
-      {/* PRISER TAB */}
-      {currentTab === 'priser' && (
-        <div className="form">
-          <h2 style={{ marginBottom: '1rem' }}>Priser</h2>
-          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-            {pricingLoading ? 'Laddar...' : `Antal: ${pricing?.length ?? 0}`}
-          </p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
-          {pricingError && (
-            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-              {pricingError}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* LAGER TAB */}
-      {currentTab === 'lager' && (
-        <div className="form">
-          <h2 style={{ marginBottom: '1rem' }}>Lager</h2>
-          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-            {warehouseLoading ? 'Laddar...' : `Antal: ${items?.length ?? 0}`}
-          </p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
-          {warehouseError && (
-            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-              {warehouseError}
-            </p>
-          )}
         </div>
       )}
 

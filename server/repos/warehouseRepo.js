@@ -5,7 +5,6 @@ const MOVEMENTS_COLLECTION = 'warehouseMovements';
 
 async function ensureIndexes() {
   const db = await getDatabase();
-  await db.collection(ITEMS_COLLECTION).createIndex({ customerId: 1 });
   await db.collection(MOVEMENTS_COLLECTION).createIndex({ itemId: 1, customerId: 1, date: 1 });
 }
 

@@ -89,19 +89,19 @@ async function exportAll() {
     db.collection('warehouseMovements').find({}).toArray(),
   ]);
 
-  const bookings = bookingsDocs.map(doc => ({
+  const bookings = (bookingsDocs || []).map(doc => ({
     ...(doc.payload || {}),
     id: doc._id,
   }));
 
   return {
     bookings,
-    customers: customersDocs.map(mapCustomer),
-    vehicles: vehiclesDocs.map(mapVehicle),
-    drivers: driversDocs.map(mapDriver),
-    customerPricing: pricingDocs.map(mapPricing),
-    warehouseItems: warehouseItemsDocs.map(mapWarehouseItem),
-    warehouseMovements: warehouseMovementsDocs.map(mapWarehouseMovement),
+    customers: (customersDocs || []).map(mapCustomer),
+    vehicles: (vehiclesDocs || []).map(mapVehicle),
+    drivers: (driversDocs || []).map(mapDriver),
+    customerPricing: (pricingDocs || []).map(mapPricing),
+    warehouseItems: (warehouseItemsDocs || []).map(mapWarehouseItem),
+    warehouseMovements: (warehouseMovementsDocs || []).map(mapWarehouseMovement),
     rateCards: [],
   };
 }
