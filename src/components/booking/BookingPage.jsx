@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   generateId,
   generateBookingNumber,
@@ -8,6 +8,7 @@ import {
 import { validateBooking } from '../../utils/validation';
 import BookingModals from './BookingModals';
 import useRecurringBooking from '../../hooks/useRecurringBooking';
+import { buildPrefilledDeliveryFormData } from '../../hooks/useWarehouseDeliveryBooking';
 import BookingFormSection from './BookingFormSection';
 import BookingTableSection from './BookingTableSection';
 import useBookingState from '../../hooks/useBookingState';
@@ -22,6 +23,8 @@ function BookingPage({
   setReturnToSection,
   saveBooking: saveBookingToApi,
   removeBooking: removeBookingFromApi,
+  pendingWarehouseDelivery,
+  setPendingWarehouseDelivery: _setPendingWarehouseDelivery,
 }) {
   // Use custom hook for all state management
   const {
@@ -90,6 +93,39 @@ function BookingPage({
     resetForm,
     setShowForm,
   });
+
+  const appliedPendingWarehouseRef = useRef(false);
+  useEffect(() => {
+    if (!pendingWarehouseDelivery) {
+      appliedPendingWarehouseRef.current = false;
+      return;
+    }
+    if (
+      !pendingWarehouseDelivery.item ||
+      !setFormData ||
+      !setShowForm ||
+      !setEditingId ||
+      !updateData
+    )
+      return;
+    if (appliedPendingWarehouseRef.current) return;
+    appliedPendingWarehouseRef.current = true;
+    const { item, quantity } = pendingWarehouseDelivery;
+    const prefilled = buildPrefilledDeliveryFormData(item, quantity ?? 1, data.lastBookingNumber);
+    setFormData(prefilled);
+    setShowForm(true);
+    setEditingId(null);
+    if (prefilled._lastBookingNumber) {
+      updateData({ lastBookingNumber: prefilled._lastBookingNumber });
+    }
+  }, [
+    pendingWarehouseDelivery,
+    setFormData,
+    setShowForm,
+    setEditingId,
+    updateData,
+    data.lastBookingNumber,
+  ]);
 
   const handleChange = e => {
     const { name, value, type, checked } = e.target;

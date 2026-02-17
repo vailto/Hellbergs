@@ -77,15 +77,21 @@ export function useRecurringBooking({
         alert('Kunde inte skapa återkommande bokningar. Försök igen.');
       }
     } else {
-      const { bookingNo, lastBookingNumber } = generateBookingNumber(data.lastBookingNumber);
+      const usePrefilledId = bookingData.id && String(bookingData.id).startsWith('bk_');
+      const generated = usePrefilledId ? null : generateBookingNumber(data.lastBookingNumber);
+      const { _lastBookingNumber, ...rest } = bookingData;
       const newBooking = {
-        ...bookingData,
-        id: generateId('bk'),
-        bookingNo,
+        ...rest,
+        id: usePrefilledId ? bookingData.id : generateId('bk'),
+        bookingNo: usePrefilledId ? bookingData.bookingNo : generated.bookingNo,
       };
       try {
         await saveBookingToApi(newBooking);
-        updateData({ lastBookingNumber });
+        const nextLast =
+          _lastBookingNumber ||
+          (generated && generated.lastBookingNumber) ||
+          data.lastBookingNumber;
+        if (nextLast) updateData({ lastBookingNumber: nextLast });
         resetForm();
         setShowForm(false);
       } catch {

@@ -70,8 +70,9 @@ async function getWarehouseMovements() {
 async function createItem(data) {
   const db = await getDatabase();
   const coll = db.collection(ITEMS_COLLECTION);
+  const movColl = db.collection(MOVEMENTS_COLLECTION);
   const now = new Date();
-  const initialQty = Number(data.initialQuantity) || 0;
+  const initialQty = Number(data.initialQuantity) ?? 0;
   const arrivedAt =
     data.arrivedAt != null && data.arrivedAt !== ''
       ? toDateStr(data.arrivedAt)
@@ -89,6 +90,17 @@ async function createItem(data) {
     updatedAt: now,
   };
   const result = await coll.insertOne(doc);
+  if (initialQty > 0) {
+    await movColl.insertOne({
+      itemId: result.insertedId,
+      customerId: doc.customerId,
+      date: arrivedAt || todayStr(),
+      quantity: initialQty,
+      type: 'IN',
+      note: data.note ?? '',
+      createdAt: now,
+    });
+  }
   const inserted = await coll.findOne({ _id: result.insertedId });
   return mapItem(inserted);
 }
@@ -129,15 +141,16 @@ async function addMovement(data) {
   } else nextQuantity = qty;
 
   const now = new Date();
-  await movColl.insertOne({
-    itemId,
+  const movDoc = {
+    itemId: item._id,
     customerId: item.customerId ?? '',
     date,
     quantity: qty,
     type,
     note: data.note ?? '',
     createdAt: now,
-  });
+  };
+  const movResult = await movColl.insertOne(movDoc);
 
   const arrivedAt =
     nextQuantity > 0 && !item.arrivedAt ? date : (item.arrivedAt ? toDateStr(item.arrivedAt) : null);
@@ -155,7 +168,12 @@ async function addMovement(data) {
     }
   );
   const updated = await itemsColl.findOne({ _id: item._id });
-  return { success: true, item: mapItem(updated) };
+  const insertedMov = await movColl.findOne({ _id: movResult.insertedId });
+  return {
+    success: true,
+    item: mapItem(updated),
+    movement: mapMovement(insertedMov),
+  };
 }
 
 async function updateItem(itemId, patch) {

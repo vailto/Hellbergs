@@ -25,6 +25,7 @@ router.post('/items', requireAdminToken, async (req, res) => {
       description: body.description,
       initialQuantity: body.initialQuantity,
       dailyStoragePrice: body.dailyStoragePrice,
+      arrivedAt: body.arrivedAt,
     });
     res.status(201).json(item);
   } catch (error) {
@@ -85,7 +86,7 @@ router.post('/items/:itemId/movements', requireAdminToken, async (req, res) => {
     if (!result.success) {
       return res.status(400).json({ error: result.error });
     }
-    res.status(201).json(result.item);
+    res.status(201).json({ item: result.item, movement: result.movement });
   } catch (error) {
     console.error('Error recording movement:', error);
     res.status(500).json({ error: 'Failed to record movement' });

@@ -19,23 +19,27 @@ export async function createWarehouseItem({
   description,
   initialQuantity,
   dailyStoragePrice,
+  arrivedAt,
   token,
 }) {
   const t = getAdminToken(token);
+  const body = {
+    customerId,
+    description: description ?? '',
+    initialQuantity:
+      initialQuantity == null || initialQuantity === '' ? 1 : Number(initialQuantity) || 0,
+    ...(dailyStoragePrice !== undefined && dailyStoragePrice !== ''
+      ? { dailyStoragePrice: Number(dailyStoragePrice) || 0 }
+      : {}),
+    ...(arrivedAt != null && arrivedAt !== '' ? { arrivedAt } : {}),
+  };
   const response = await fetch(`${API_BASE}/items`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${t}`,
     },
-    body: JSON.stringify({
-      customerId,
-      description: description ?? '',
-      initialQuantity: Number(initialQuantity) || 0,
-      ...(dailyStoragePrice !== undefined && dailyStoragePrice !== ''
-        ? { dailyStoragePrice: Number(dailyStoragePrice) || 0 }
-        : {}),
-    }),
+    body: JSON.stringify(body),
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));

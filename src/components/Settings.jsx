@@ -10,7 +10,7 @@ import { useCustomerPricing } from '../hooks/useCustomerPricing';
 import { useWarehouseManager } from '../hooks/useWarehouseManager';
 import { useCustomerDmtToggle } from '../hooks/useCustomerDmtToggle';
 
-function Settings({ data, updateData }) {
+function Settings({ data, updateData, setCurrentSection, setPendingWarehouseDelivery }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
   const {
     pricing,
@@ -142,8 +142,9 @@ function Settings({ data, updateData }) {
   const [selectedWarehouseCustomerId, setSelectedWarehouseCustomerId] = useState('');
   const [newWarehouseItemForm, setNewWarehouseItemForm] = useState({
     description: '',
-    initialQuantity: '',
+    initialQuantity: '1',
     dailyStoragePrice: '',
+    arrivedAt: new Date().toISOString().slice(0, 10),
   });
   const [warehouseMovementForm, setWarehouseMovementForm] = useState({
     itemId: null,
@@ -3356,7 +3357,7 @@ function Settings({ data, updateData }) {
             }}
           >
             <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
-              Ny lagervara
+              Ny inleverans
             </h3>
             <div
               style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}
@@ -3381,6 +3382,17 @@ function Settings({ data, updateData }) {
                   value={newWarehouseItemForm.initialQuantity}
                   onChange={e =>
                     setNewWarehouseItemForm(f => ({ ...f, initialQuantity: e.target.value }))
+                  }
+                  className="form-input input-sm"
+                />
+              </div>
+              <div>
+                <label className="label-sm">Ankomstdatum</label>
+                <input
+                  type="date"
+                  value={newWarehouseItemForm.arrivedAt}
+                  onChange={e =>
+                    setNewWarehouseItemForm(f => ({ ...f, arrivedAt: e.target.value }))
                   }
                   className="form-input input-sm"
                 />
@@ -3412,6 +3424,8 @@ function Settings({ data, updateData }) {
                     customerId: selectedWarehouseCustomerId,
                     description: newWarehouseItemForm.description.trim(),
                     initialQuantity: newWarehouseItemForm.initialQuantity,
+                    arrivedAt:
+                      newWarehouseItemForm.arrivedAt || new Date().toISOString().slice(0, 10),
                     dailyStoragePrice:
                       newWarehouseItemForm.dailyStoragePrice === ''
                         ? undefined
@@ -3419,7 +3433,8 @@ function Settings({ data, updateData }) {
                   });
                   setNewWarehouseItemForm({
                     description: '',
-                    initialQuantity: '',
+                    initialQuantity: '1',
+                    arrivedAt: new Date().toISOString().slice(0, 10),
                     dailyStoragePrice: '',
                   });
                 }}
@@ -3635,6 +3650,53 @@ function Settings({ data, updateData }) {
                           </div>
                         ) : (
                           <>
+                            {setCurrentSection && setPendingWarehouseDelivery && (
+                              <button
+                                type="button"
+                                className="btn btn-small btn-primary text-2xs"
+                                style={{ marginRight: '0.25rem' }}
+                                onClick={() => {
+                                  const q = window.prompt('Antal att leverera?', '1');
+                                  const quantity = Math.max(1, parseInt(q, 10) || 1);
+                                  setPendingWarehouseDelivery({ item, quantity });
+                                  setCurrentSection('booking');
+                                }}
+                              >
+                                Skapa leveransbokning
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="btn btn-small btn-secondary text-2xs"
+                              style={{ marginRight: '0.25rem' }}
+                              onClick={() =>
+                                setWarehouseMovementForm({
+                                  itemId: item.id,
+                                  date: new Date().toISOString().slice(0, 10),
+                                  type: 'OUT',
+                                  quantity: '1',
+                                  note: '',
+                                })
+                              }
+                            >
+                              Registrera uttag
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-small btn-secondary text-2xs"
+                              style={{ marginRight: '0.25rem' }}
+                              onClick={() =>
+                                setWarehouseMovementForm({
+                                  itemId: item.id,
+                                  date: new Date().toISOString().slice(0, 10),
+                                  type: 'IN',
+                                  quantity: '1',
+                                  note: '',
+                                })
+                              }
+                            >
+                              Registrera in
+                            </button>
                             <button
                               type="button"
                               className="btn btn-small btn-secondary text-2xs"

@@ -19,7 +19,7 @@ async function createWarehouseItem(data) {
   return warehouseRepo.createItem({
     customerId: data.customerId,
     description: data.description ?? '',
-    initialQuantity: data.initialQuantity ?? 0,
+    initialQuantity: data.initialQuantity ?? 1,
     dailyStoragePrice,
     arrivedAt: data.arrivedAt,
   });

@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { loadData, saveData } from './utils/storage';
 import { useBookingSync } from './hooks/useBookingSync';
 import { useMasterdata } from './hooks/useMasterdata';
+import { addWarehouseMovement } from './services/warehouseService';
 import Booking from './components/Booking';
 import Schema from './components/Schema';
 import Customers from './components/Customers';
@@ -15,6 +16,7 @@ function App() {
   const [currentSection, setCurrentSection] = useState('dashboard');
   const [editingBookingId, setEditingBookingId] = useState(null);
   const [returnToSection, setReturnToSection] = useState(null);
+  const [pendingWarehouseDelivery, setPendingWarehouseDelivery] = useState(null);
   const didApplyMasterdataRef = useRef(false);
 
   // Sync bookings with API
@@ -81,6 +83,35 @@ function App() {
     }
   };
 
+  const saveBookingWithWarehouseOut = useCallback(
+    async booking => {
+      const result = await saveBooking(booking);
+      if (
+        booking.warehouseItemId &&
+        pendingWarehouseDelivery &&
+        String(pendingWarehouseDelivery.item.id) === String(booking.warehouseItemId)
+      ) {
+        try {
+          await addWarehouseMovement({
+            itemId: booking.warehouseItemId,
+            movement: {
+              date:
+                booking.deliveryDate || booking.pickupDate || new Date().toISOString().slice(0, 10),
+              quantity: pendingWarehouseDelivery.quantity ?? 1,
+              type: 'OUT',
+              note: 'Leveransbokning',
+            },
+          });
+        } catch (err) {
+          alert('Bokning sparad men uttag kunde inte registreras: ' + (err?.message || err));
+        }
+        setPendingWarehouseDelivery(null);
+      }
+      return result;
+    },
+    [saveBooking, pendingWarehouseDelivery]
+  );
+
   const sections = [
     { id: 'dashboard', label: 'Dashboard', icon: '' },
     { id: 'booking', label: 'Bokningar', icon: '' },
@@ -91,7 +122,13 @@ function App() {
   const renderSection = () => {
     // Merge bookings from API with other data
     const mergedData = { ...data, bookings };
-    const props = { data: mergedData, updateData, setCurrentSection, saveBooking, removeBooking };
+    const props = {
+      data: mergedData,
+      updateData,
+      setCurrentSection,
+      saveBooking: saveBookingWithWarehouseOut,
+      removeBooking,
+    };
 
     switch (currentSection) {
       case 'dashboard':
@@ -104,6 +141,8 @@ function App() {
             setEditingBookingId={setEditingBookingId}
             returnToSection={returnToSection}
             setReturnToSection={setReturnToSection}
+            pendingWarehouseDelivery={pendingWarehouseDelivery}
+            setPendingWarehouseDelivery={setPendingWarehouseDelivery}
           />
         );
       case 'schema':
@@ -121,7 +160,13 @@ function App() {
       case 'equipage':
         return <Equipage {...props} />;
       case 'settings':
-        return <Settings {...props} />;
+        return (
+          <Settings
+            {...props}
+            setCurrentSection={setCurrentSection}
+            setPendingWarehouseDelivery={setPendingWarehouseDelivery}
+          />
+        );
       default:
         return <Statistics {...props} />;
     }
