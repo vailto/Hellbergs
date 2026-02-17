@@ -5,8 +5,10 @@ import { generateId } from '../utils/formatters';
 import { exportToJSON, importFromJSON, saveData, migrateVehicleDriverData } from '../utils/storage';
 import getMockData from '../data/mockData';
 import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../utils/vehicleUtils';
+import { useBackupExport } from '../hooks/useBackupExport';
 
 function Settings({ data, updateData }) {
+  const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
   // Tab State
   const [currentTab, setCurrentTab] = useState('fordon');
 
@@ -2923,9 +2925,27 @@ function Settings({ data, updateData }) {
               marginBottom: '1rem',
             }}
           >
+            <div>
+              <p style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                Innehåller bokningar, kunder, bilar och förare.
+              </p>
+              <button
+                onClick={exportBackup}
+                disabled={backupLoading}
+                className="btn btn-success"
+                style={{ width: '100%' }}
+              >
+                {backupLoading ? 'Laddar...' : 'Ladda ner backup (JSON)'}
+              </button>
+              {backupError && (
+                <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                  {backupError}
+                </p>
+              )}
+            </div>
             <button
               onClick={handleExportBackup}
-              className="btn btn-success"
+              className="btn btn-secondary"
               style={{ width: '100%' }}
             >
               Exportera backup (JSON)
