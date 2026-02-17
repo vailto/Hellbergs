@@ -14,7 +14,7 @@ import { useAdminSeedMasterdata } from '../hooks/useAdminSeedMasterdata';
 function Settings({ data, updateData, refreshMasterdata }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
   const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
-  const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
+  const { items, movements, loading: warehouseLoading, error: warehouseError } = useWarehouse();
   const { toggleCustomerDmt, dmtError } = useCustomerDmtToggle({ data, updateData });
   const {
     token: seedToken,
@@ -122,6 +122,9 @@ function Settings({ data, updateData, refreshMasterdata }) {
   const [vehicleTypeSortDirection, setVehicleTypeSortDirection] = useState('asc');
   const [testDataLoaded, setTestDataLoaded] = useState(false);
   const [showLoadTestDataConfirm, setShowLoadTestDataConfirm] = useState(false);
+  const [pricingSearchQuery, setPricingSearchQuery] = useState('');
+  const [warehouseItemsSearchQuery, setWarehouseItemsSearchQuery] = useState('');
+  const [warehouseMovementsSearchQuery, setWarehouseMovementsSearchQuery] = useState('');
 
   // Vehicle Types Handlers
   const handleAddType = e => {
@@ -762,6 +765,67 @@ function Settings({ data, updateData, refreshMasterdata }) {
   const displayedInactiveDrivers = showAllInactiveDrivers
     ? filteredInactiveDrivers
     : filteredInactiveDrivers.slice(0, 5);
+
+  const fmt = v => (v == null || v === '' ? '-' : String(v));
+  const fmtDate = d => {
+    if (d == null || d === '') return '-';
+    if (typeof d === 'string') return d.slice(0, 10);
+    return d instanceof Date ? d.toISOString().slice(0, 10) : String(d);
+  };
+  const pricingFilteredSorted = useMemo(() => {
+    const list = Array.isArray(pricing) ? pricing : [];
+    const q = (pricingSearchQuery || '').trim().toLowerCase();
+    const filtered = q
+      ? list.filter(row => (row.customerId ?? '').toString().toLowerCase().includes(q))
+      : list;
+    return [...filtered]
+      .sort((a, b) => {
+        const c = (a.customerId ?? '').localeCompare(b.customerId ?? '');
+        if (c !== 0) return c;
+        return (b.validFrom ?? '') < (a.validFrom ?? '')
+          ? -1
+          : (b.validFrom ?? '') > (a.validFrom ?? '')
+            ? 1
+            : 0;
+      })
+      .slice(0, 50);
+  }, [pricing, pricingSearchQuery]);
+  const warehouseItemsFilteredSorted = useMemo(() => {
+    const list = Array.isArray(items) ? items : [];
+    const q = (warehouseItemsSearchQuery || '').trim().toLowerCase();
+    const filtered = q
+      ? list.filter(
+          row =>
+            (row.description ?? '').toString().toLowerCase().includes(q) ||
+            (row.customerId ?? '').toString().toLowerCase().includes(q)
+        )
+      : list;
+    return [...filtered]
+      .sort((a, b) => {
+        const da = a.arrivedAt ?? '';
+        const db = b.arrivedAt ?? '';
+        if (da !== db) return da > db ? -1 : 1;
+        return (b.description ?? '').localeCompare(a.description ?? '');
+      })
+      .slice(0, 50);
+  }, [items, warehouseItemsSearchQuery]);
+  const warehouseMovementsFilteredSorted = useMemo(() => {
+    const list = Array.isArray(movements) ? movements : [];
+    const q = (warehouseMovementsSearchQuery || '').trim().toLowerCase();
+    const filtered = q
+      ? list.filter(
+          row =>
+            (row.itemId ?? '').toString().toLowerCase().includes(q) ||
+            (row.customerId ?? '').toString().toLowerCase().includes(q) ||
+            (row.type ?? '').toString().toLowerCase().includes(q)
+        )
+      : list;
+    return [...filtered]
+      .sort((a, b) =>
+        (b.date ?? '') < (a.date ?? '') ? -1 : (b.date ?? '') > (a.date ?? '') ? 1 : 0
+      )
+      .slice(0, 50);
+  }, [movements, warehouseMovementsSearchQuery]);
 
   return (
     <div>
@@ -3117,14 +3181,61 @@ function Settings({ data, updateData, refreshMasterdata }) {
       {currentTab === 'priser' && (
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Priser</h2>
-          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-            {pricingLoading ? 'Laddar...' : `Antal: ${pricing?.length ?? 0}`}
-          </p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
-          {pricingError && (
-            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-              {pricingError}
-            </p>
+          {pricingLoading ? (
+            <p style={{ color: '#7f8c8d', fontSize: '0.875rem' }}>Laddar...</p>
+          ) : (
+            <>
+              {pricingError && (
+                <p style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                  {pricingError}
+                </p>
+              )}
+              <div style={{ marginBottom: '0.75rem' }}>
+                <input
+                  type="text"
+                  value={pricingSearchQuery}
+                  onChange={e => setPricingSearchQuery(e.target.value)}
+                  placeholder="Sök på kund-ID"
+                  className="form-input"
+                  style={{ maxWidth: '280px' }}
+                />
+              </div>
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>CustomerId</th>
+                      <th>ValidFrom</th>
+                      <th>DMT%</th>
+                      <th>Mil</th>
+                      <th>Stop</th>
+                      <th>Wait</th>
+                      <th>Hour</th>
+                      <th>Fixed</th>
+                      <th>DailyStorage</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pricingFilteredSorted.map(row => (
+                      <tr key={row.id ?? row.customerId + row.validFrom}>
+                        <td>{fmt(row.customerId)}</td>
+                        <td>{fmtDate(row.validFrom)}</td>
+                        <td>{fmt(row.dmtPercent)}</td>
+                        <td>{fmt(row.milPrice)}</td>
+                        <td>{fmt(row.stopPrice)}</td>
+                        <td>{fmt(row.waitPrice)}</td>
+                        <td>{fmt(row.hourPrice)}</td>
+                        <td>{fmt(row.fixedPrice)}</td>
+                        <td>{fmt(row.dailyStoragePrice)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p style={{ color: '#6b7280', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                Antal: {pricing?.length ?? 0}. Visar upp till 50 rader. Read-only (MVP).
+              </p>
+            </>
           )}
         </div>
       )}
@@ -3133,14 +3244,95 @@ function Settings({ data, updateData, refreshMasterdata }) {
       {currentTab === 'lager' && (
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Lager</h2>
-          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-            {warehouseLoading ? 'Laddar...' : `Antal: ${items?.length ?? 0}`}
-          </p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
-          {warehouseError && (
-            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-              {warehouseError}
-            </p>
+          {warehouseLoading ? (
+            <p style={{ color: '#7f8c8d', fontSize: '0.875rem' }}>Laddar...</p>
+          ) : (
+            <>
+              {warehouseError && (
+                <p style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                  {warehouseError}
+                </p>
+              )}
+              <h3 style={{ marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1rem' }}>
+                Lagerposter (upp till 50)
+              </h3>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <input
+                  type="text"
+                  value={warehouseItemsSearchQuery}
+                  onChange={e => setWarehouseItemsSearchQuery(e.target.value)}
+                  placeholder="Sök beskrivning / kund-ID"
+                  className="form-input"
+                  style={{ maxWidth: '280px' }}
+                />
+              </div>
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Description</th>
+                      <th>CustomerId</th>
+                      <th>Quantity</th>
+                      <th>DailyStorage</th>
+                      <th>ArrivedAt</th>
+                      <th>DepartedAt</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {warehouseItemsFilteredSorted.map(row => (
+                      <tr key={row.id}>
+                        <td>{fmt(row.description)}</td>
+                        <td>{fmt(row.customerId)}</td>
+                        <td>{fmt(row.quantity)}</td>
+                        <td>{fmt(row.dailyStoragePrice)}</td>
+                        <td>{fmtDate(row.arrivedAt)}</td>
+                        <td>{fmtDate(row.departedAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <h3 style={{ marginTop: '1.5rem', marginBottom: '0.5rem', fontSize: '1rem' }}>
+                Rörelser (upp till 50)
+              </h3>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <input
+                  type="text"
+                  value={warehouseMovementsSearchQuery}
+                  onChange={e => setWarehouseMovementsSearchQuery(e.target.value)}
+                  placeholder="Sök itemId / kund-ID / typ"
+                  className="form-input"
+                  style={{ maxWidth: '280px' }}
+                />
+              </div>
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Quantity</th>
+                      <th>ItemId</th>
+                      <th>CustomerId</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {warehouseMovementsFilteredSorted.map(row => (
+                      <tr key={row.id}>
+                        <td>{fmtDate(row.date)}</td>
+                        <td>{fmt(row.type)}</td>
+                        <td>{fmt(row.quantity)}</td>
+                        <td>{fmt(row.itemId)}</td>
+                        <td>{fmt(row.customerId)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p style={{ color: '#6b7280', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                Read-only (MVP).
+              </p>
+            </>
           )}
         </div>
       )}
