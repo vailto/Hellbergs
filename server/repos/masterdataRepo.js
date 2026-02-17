@@ -28,6 +28,16 @@ async function ensureIndexes() {
   );
 }
 
+async function getAllDriversRaw() {
+  const db = await getDatabase();
+  const docs = await db
+    .collection(DRIVERS_COLLECTION)
+    .find({})
+    .sort({ code: 1 })
+    .toArray();
+  return docs || [];
+}
+
 async function getAllMasterdata() {
   const db = await getDatabase();
   const [customersRaw, vehiclesRaw, driversRaw] = await Promise.all([
@@ -148,6 +158,7 @@ async function seedDrivers(driversList) {
 module.exports = {
   ensureIndexes,
   getAllMasterdata,
+  getAllDriversRaw,
   seedCustomers,
   seedVehicles,
   seedDrivers,
