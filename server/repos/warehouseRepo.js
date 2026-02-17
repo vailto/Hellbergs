@@ -1,4 +1,5 @@
 const { getDatabase } = require('../db/mongo');
+const { ObjectId } = require('mongodb');
 
 const ITEMS_COLLECTION = 'warehouseItems';
 const MOVEMENTS_COLLECTION = 'warehouseMovements';
@@ -36,8 +37,24 @@ async function getWarehouseMovements() {
   }));
 }
 
+function toItemId(id) {
+  if (typeof id === 'string' && id.length === 24 && /^[a-f0-9]+$/i.test(id)) {
+    return ObjectId.createFromHexString(id);
+  }
+  return id;
+}
+
+/** Get raw warehouse item doc by id (for service use). */
+async function getItemWithId(itemId) {
+  const db = await getDatabase();
+  const _id = toItemId(itemId);
+  const doc = await db.collection(ITEMS_COLLECTION).findOne({ _id });
+  return doc;
+}
+
 module.exports = {
   ensureIndexes,
   getWarehouseItems,
   getWarehouseMovements,
+  getItemWithId,
 };

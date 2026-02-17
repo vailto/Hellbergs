@@ -679,6 +679,20 @@ function BookingFormSection({
           </div>
         </div>
 
+        {/* Fakturaposter (read-only, e.g. warehouse storage) */}
+        {Array.isArray(formData.invoiceLines) && formData.invoiceLines.length > 0 && (
+          <div className="form-section">
+            <div className="form-section-title">Fakturaposter</div>
+            <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+              {formData.invoiceLines.map((line, idx) => (
+                <li key={idx}>
+                  {line.description || '–'} – {line.amount ?? 0} kr
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Återkommande bokning (endast vid ny bokning) */}
         {!editingId && (
           <div className="form-section">

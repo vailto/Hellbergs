@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   generateId,
   generateBookingNumber,
@@ -22,6 +22,8 @@ function BookingPage({
   setReturnToSection,
   saveBooking: saveBookingToApi,
   removeBooking: removeBookingFromApi,
+  pendingWarehouseDelivery,
+  setPendingWarehouseDelivery,
 }) {
   // Use custom hook for all state management
   const {
@@ -90,6 +92,41 @@ function BookingPage({
     resetForm,
     setShowForm,
   });
+
+  const appliedPendingRef = useRef(false);
+  useEffect(() => {
+    if (!pendingWarehouseDelivery?.item || !setFormData || !setShowForm || !setEditingId) return;
+    if (appliedPendingRef.current) return;
+    appliedPendingRef.current = true;
+    const { item, invoiceLine } = pendingWarehouseDelivery;
+    const today = new Date().toISOString().split('T')[0];
+    const time = getCurrentTime24();
+    setFormData(prev => ({
+      ...prev,
+      customerId: item.customerId ?? '',
+      pickupDate: today,
+      pickupTime: time,
+      deliveryDate: today,
+      deliveryTime: time,
+      note: item.description ? `Lager: ${item.description}` : prev.note,
+      warehouseItemId: item.id,
+      invoiceCategory: 'DELIVERY',
+      invoiceLines: invoiceLine ? [invoiceLine] : [],
+    }));
+    setShowForm(true);
+    setEditingId(null);
+    setPendingWarehouseDelivery?.(null);
+  }, [
+    pendingWarehouseDelivery,
+    setFormData,
+    setShowForm,
+    setEditingId,
+    setPendingWarehouseDelivery,
+  ]);
+
+  useEffect(() => {
+    if (!pendingWarehouseDelivery) appliedPendingRef.current = false;
+  }, [pendingWarehouseDelivery]);
 
   const handleChange = e => {
     const { name, value, type, checked } = e.target;

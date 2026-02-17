@@ -68,6 +68,7 @@ function useBookingState(data, _editingBookingId) {
     recurringEnabled: false,
     repeatWeeks: 1,
     weeksAhead: 12,
+    invoiceLines: [],
   });
 
   // ============================================================================
@@ -196,6 +197,7 @@ function useBookingState(data, _editingBookingId) {
       recurringEnabled: false,
       repeatWeeks: 1,
       weeksAhead: 12,
+      invoiceLines: [],
     });
     setEditingId(null);
     setErrors({});

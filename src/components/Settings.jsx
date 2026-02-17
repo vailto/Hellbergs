@@ -8,8 +8,9 @@ import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../u
 import { useBackupExport } from '../hooks/useBackupExport';
 import { usePricing } from '../hooks/usePricing';
 import { useWarehouse } from '../hooks/useWarehouse';
+import { fetchStorageInvoiceLine } from '../services/warehouseService';
 
-function Settings({ data, updateData }) {
+function Settings({ data, updateData, setCurrentSection, setPendingWarehouseDelivery }) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
   const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
   const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
@@ -3026,14 +3027,70 @@ function Settings({ data, updateData }) {
       {currentTab === 'lager' && (
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Lager</h2>
-          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-            {warehouseLoading ? 'Laddar...' : `Antal: ${items?.length ?? 0}`}
-          </p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
           {warehouseError && (
-            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+            <p style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
               {warehouseError}
             </p>
+          )}
+          {warehouseLoading ? (
+            <p className="text-muted-2">Laddar...</p>
+          ) : (items || []).length === 0 ? (
+            <p className="text-muted-2">Inga lagervaror.</p>
+          ) : (
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Beskrivning</th>
+                    <th>Antal</th>
+                    <th>Anländ</th>
+                    <th>Åtgärd</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(items || []).map(item => (
+                    <tr key={item.id}>
+                      <td>{item.description || '–'}</td>
+                      <td>{item.quantity}</td>
+                      <td>{item.arrivedAt || '–'}</td>
+                      <td>
+                        {setCurrentSection && setPendingWarehouseDelivery && (
+                          <button
+                            type="button"
+                            className="btn btn-small btn-primary text-2xs"
+                            onClick={async () => {
+                              const q = window.prompt('Antal att leverera?', '1') ?? '1';
+                              const quantity = Math.max(1, parseInt(q, 10) || 1);
+                              try {
+                                const toDate = new Date().toISOString().slice(0, 10);
+                                const invoiceLine = await fetchStorageInvoiceLine({
+                                  itemId: item.id,
+                                  toDate,
+                                });
+                                setPendingWarehouseDelivery({
+                                  item,
+                                  quantity,
+                                  invoiceLine,
+                                });
+                                setCurrentSection('booking');
+                              } catch (err) {
+                                alert(
+                                  err instanceof Error
+                                    ? err.message
+                                    : 'Kunde inte hämta lagerekostnad.'
+                                );
+                              }
+                            }}
+                          >
+                            Skapa leveransbokning
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
