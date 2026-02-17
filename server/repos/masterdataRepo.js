@@ -13,6 +13,8 @@ function normalizeName(name) {
 }
 
 function customerKeyFromSeedRow(c) {
+  const externalId = (c?.externalId ?? '').toString().trim();
+  if (externalId) return externalId;
   const nameKey = normalizeName(c?.name);
   if (!nameKey) return '';
   const addressKey = normalizeName(c?.address);
@@ -27,12 +29,12 @@ async function ensureIndexes() {
     { unique: true, sparse: true }
   );
   await db.collection(VEHICLES_COLLECTION).createIndex(
-    { code: 1 },
+    { regNo: 1 },
     { unique: true }
   );
   await db.collection(DRIVERS_COLLECTION).createIndex(
-    { code: 1 },
-    { unique: true }
+    { key: 1 },
+    { unique: true, sparse: true }
   );
 }
 
@@ -144,48 +146,72 @@ async function updateCustomerHasDmt(customerId, hasDmt) {
 async function seedVehicles(vehiclesList) {
   const db = await getDatabase();
   const coll = db.collection(VEHICLES_COLLECTION);
+  const now = new Date();
   const ops = vehiclesList.map(v => {
-    const code = String(v.code ?? '').trim();
-    const doc = {
-      _id: code,
-      code,
-      regNo: v.regNo || '',
-      driverIds: [],
-      active: true,
-    };
+    const regNo = String(v.regNo ?? '').trim();
+    if (!regNo) return null;
+    const code = String(v.code ?? regNo).trim();
     return {
       updateOne: {
-        filter: { _id: code },
-        update: { $set: doc },
+        filter: { regNo },
+        update: {
+          $set: {
+            code,
+            regNo,
+            driverIds: [],
+            active: true,
+            updatedAt: now,
+          },
+          $setOnInsert: {
+            _id: regNo,
+            createdAt: now,
+          },
+        },
         upsert: true,
       },
     };
-  });
+  }).filter(Boolean);
   if (ops.length === 0) return { upsertedCount: 0 };
   const result = await coll.bulkWrite(ops);
   return { upsertedCount: (result.upsertedCount || 0) + (result.modifiedCount || 0) };
 }
 
+function driverKeyFromSeedRow(d) {
+  const email = (d?.email ?? '').toString().trim();
+  if (email) return email;
+  const code = String(d?.code ?? '').trim();
+  return code || '';
+}
+
 async function seedDrivers(driversList) {
   const db = await getDatabase();
   const coll = db.collection(DRIVERS_COLLECTION);
+  const now = new Date();
   const ops = driversList.map(d => {
-    const code = String(d.code ?? '').trim();
-    const doc = {
-      _id: code,
-      code,
-      name: d.name || '',
-      vehicleIds: [],
-      active: true,
-    };
+    const key = driverKeyFromSeedRow(d);
+    if (!key) return null;
+    const code = String(d.code ?? key).trim();
     return {
       updateOne: {
-        filter: { _id: code },
-        update: { $set: doc },
+        filter: { key },
+        update: {
+          $set: {
+            code,
+            name: d.name || '',
+            vehicleIds: [],
+            active: true,
+            updatedAt: now,
+          },
+          $setOnInsert: {
+            _id: key,
+            key,
+            createdAt: now,
+          },
+        },
         upsert: true,
       },
     };
-  });
+  }).filter(Boolean);
   if (ops.length === 0) return { upsertedCount: 0 };
   const result = await coll.bulkWrite(ops);
   return { upsertedCount: (result.upsertedCount || 0) + (result.modifiedCount || 0) };
