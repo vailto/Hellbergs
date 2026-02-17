@@ -40,6 +40,19 @@ async function getCustomerPricing() {
   return (docs || []).map(mapRow);
 }
 
+/** Latest pricing row for customer (validFrom desc); returns dailyStoragePrice or 0 if none. */
+async function getLatestPricingForCustomer(customerId) {
+  if (!customerId) return 0;
+  const db = await getDatabase();
+  const doc = await db
+    .collection(COLLECTION)
+    .find({ customerId })
+    .sort({ validFrom: -1 })
+    .limit(1)
+    .next();
+  return doc ? (doc.dailyStoragePrice ?? 0) : 0;
+}
+
 async function upsertCustomerPricing(data) {
   const validFrom = toValidFromDateStr(data.validFrom);
   if (!data.customerId || !validFrom) return null;
@@ -81,6 +94,7 @@ async function deleteCustomerPricing({ customerId, validFrom }) {
 module.exports = {
   ensureIndexes,
   getCustomerPricing,
+  getLatestPricingForCustomer,
   upsertCustomerPricing,
   deleteCustomerPricing,
 };

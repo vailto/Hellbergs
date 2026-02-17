@@ -7,7 +7,7 @@ import getMockData from '../data/mockData';
 import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../utils/vehicleUtils';
 import { useBackupExport } from '../hooks/useBackupExport';
 import { useCustomerPricing } from '../hooks/useCustomerPricing';
-import { useWarehouse } from '../hooks/useWarehouse';
+import { useWarehouseManager } from '../hooks/useWarehouseManager';
 import { useCustomerDmtToggle } from '../hooks/useCustomerDmtToggle';
 
 function Settings({ data, updateData }) {
@@ -22,7 +22,17 @@ function Settings({ data, updateData }) {
     savePricingRow,
     deletePricingRow,
   } = useCustomerPricing();
-  const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
+  const {
+    items: warehouseItems,
+    loading: warehouseLoading,
+    error: warehouseError,
+    saving: warehouseSaving,
+    createItem: createWarehouseItem,
+    updateItem: updateWarehouseItem,
+    deleteItem: deleteWarehouseItem,
+    addMovement: addWarehouseMovement,
+    getEstimate: getWarehouseEstimate,
+  } = useWarehouseManager();
   const { toggleCustomerDmt, dmtError } = useCustomerDmtToggle({ data, updateData });
   // Tab State
   const [currentTab, setCurrentTab] = useState('fordon');
@@ -90,12 +100,12 @@ function Settings({ data, updateData }) {
   const [editingCustomerId, setEditingCustomerId] = useState(null);
   const [deleteCustomerId, setDeleteCustomerId] = useState(null);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
-  const [showCustomerPriceForm, setShowCustomerPriceForm] = useState(false);
+  const [_showCustomerPriceForm, setShowCustomerPriceForm] = useState(false);
   const [selectedCustomerVehicleType, setSelectedCustomerVehicleType] = useState('');
   const [expandedCustomerId, setExpandedCustomerId] = useState(null);
   const [expandedLocationId, setExpandedLocationId] = useState(null);
   const [expandedDriverId, setExpandedDriverId] = useState(null);
-  const [expandedVehicleId, setExpandedVehicleId] = useState(null);
+  const [_expandedVehicleId, _setExpandedVehicleId] = useState(null);
   const [customerSortField, setCustomerSortField] = useState('customerNumber');
   const [customerSortDirection, setCustomerSortDirection] = useState('asc');
 
@@ -127,6 +137,24 @@ function Settings({ data, updateData }) {
     dailyStoragePrice: '',
   });
   const [deletePricingConfirm, setDeletePricingConfirm] = useState(null);
+
+  // Warehouse tab (Lager)
+  const [selectedWarehouseCustomerId, setSelectedWarehouseCustomerId] = useState('');
+  const [newWarehouseItemForm, setNewWarehouseItemForm] = useState({
+    description: '',
+    initialQuantity: '',
+    dailyStoragePrice: '',
+  });
+  const [warehouseMovementForm, setWarehouseMovementForm] = useState({
+    itemId: null,
+    date: new Date().toISOString().slice(0, 10),
+    type: 'IN',
+    quantity: '',
+    note: '',
+  });
+  const [warehouseEditForm, setWarehouseEditForm] = useState(null);
+  const [warehouseDeleteConfirmId, setWarehouseDeleteConfirmId] = useState(null);
+  const [warehouseEstimates, setWarehouseEstimates] = useState({});
 
   // Vehicle Types Handlers
   const handleAddType = e => {
@@ -500,7 +528,7 @@ function Settings({ data, updateData }) {
     }
   };
 
-  const toggleCustomerExpand = customerId => {
+  const _toggleCustomerExpand = customerId => {
     setExpandedCustomerId(expandedCustomerId === customerId ? null : customerId);
   };
 
@@ -3296,14 +3324,379 @@ function Settings({ data, updateData }) {
       {currentTab === 'lager' && (
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Lager</h2>
-          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-            {warehouseLoading ? 'Laddar...' : `Antal: ${items?.length ?? 0}`}
-          </p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
           {warehouseError && (
-            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+            <p style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
               {warehouseError}
             </p>
+          )}
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="label-sm" style={{ display: 'block', marginBottom: '0.25rem' }}>
+              Kund
+            </label>
+            <select
+              value={selectedWarehouseCustomerId}
+              onChange={e => setSelectedWarehouseCustomerId(e.target.value)}
+              className="form-select"
+              style={{ maxWidth: '400px' }}
+            >
+              <option value="">Alla / Välj kund</option>
+              {(data.customers || []).map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name || c.id}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div
+            style={{
+              border: '1px solid #374151',
+              borderRadius: '6px',
+              padding: '1rem',
+              marginBottom: '1rem',
+            }}
+          >
+            <h3 className="section-title" style={{ marginBottom: '0.75rem' }}>
+              Ny lagervara
+            </h3>
+            <div
+              style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}
+            >
+              <div>
+                <label className="label-sm">Beskrivning</label>
+                <input
+                  type="text"
+                  value={newWarehouseItemForm.description}
+                  onChange={e =>
+                    setNewWarehouseItemForm(f => ({ ...f, description: e.target.value }))
+                  }
+                  className="form-input input-sm"
+                  placeholder="t.ex. 5 garageportar"
+                />
+              </div>
+              <div>
+                <label className="label-sm">Antal</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newWarehouseItemForm.initialQuantity}
+                  onChange={e =>
+                    setNewWarehouseItemForm(f => ({ ...f, initialQuantity: e.target.value }))
+                  }
+                  className="form-input input-sm"
+                />
+              </div>
+              <div>
+                <label className="label-sm">Lagerpris/dag (valfritt)</label>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={newWarehouseItemForm.dailyStoragePrice}
+                  onChange={e =>
+                    setNewWarehouseItemForm(f => ({ ...f, dailyStoragePrice: e.target.value }))
+                  }
+                  className="form-input input-sm"
+                  placeholder="default från kundpriser"
+                />
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary btn-small"
+                disabled={
+                  !selectedWarehouseCustomerId ||
+                  !newWarehouseItemForm.description.trim() ||
+                  warehouseSaving
+                }
+                onClick={async () => {
+                  await createWarehouseItem({
+                    customerId: selectedWarehouseCustomerId,
+                    description: newWarehouseItemForm.description.trim(),
+                    initialQuantity: newWarehouseItemForm.initialQuantity,
+                    dailyStoragePrice:
+                      newWarehouseItemForm.dailyStoragePrice === ''
+                        ? undefined
+                        : newWarehouseItemForm.dailyStoragePrice,
+                  });
+                  setNewWarehouseItemForm({
+                    description: '',
+                    initialQuantity: '',
+                    dailyStoragePrice: '',
+                  });
+                }}
+              >
+                {warehouseSaving ? 'Sparar...' : 'Spara'}
+              </button>
+            </div>
+          </div>
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Beskrivning</th>
+                  <th>Antal</th>
+                  <th>Pris/dag</th>
+                  <th>Anländ</th>
+                  <th>Avresen</th>
+                  <th>Uppskattning</th>
+                  <th>Åtgärder</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(warehouseItems || [])
+                  .filter(
+                    it =>
+                      !selectedWarehouseCustomerId || it.customerId === selectedWarehouseCustomerId
+                  )
+                  .map(item => (
+                    <tr key={item.id}>
+                      <td>
+                        {warehouseEditForm?.itemId === item.id ? (
+                          <input
+                            type="text"
+                            className="form-input input-sm"
+                            value={warehouseEditForm.description}
+                            onChange={e =>
+                              setWarehouseEditForm(f => ({ ...f, description: e.target.value }))
+                            }
+                          />
+                        ) : (
+                          <span
+                            onClick={() =>
+                              setWarehouseEditForm({
+                                itemId: item.id,
+                                description: item.description ?? '',
+                                dailyStoragePrice: item.dailyStoragePrice ?? 0,
+                              })
+                            }
+                            style={{ cursor: 'pointer' }}
+                          >
+                            {item.description || '–'}
+                          </span>
+                        )}
+                      </td>
+                      <td>{item.quantity}</td>
+                      <td>
+                        {warehouseEditForm?.itemId === item.id ? (
+                          <input
+                            type="number"
+                            step="any"
+                            className="form-input input-sm"
+                            style={{ width: '80px' }}
+                            value={warehouseEditForm.dailyStoragePrice}
+                            onChange={e =>
+                              setWarehouseEditForm(f => ({
+                                ...f,
+                                dailyStoragePrice: e.target.value,
+                              }))
+                            }
+                          />
+                        ) : (
+                          <span
+                            onClick={() =>
+                              setWarehouseEditForm({
+                                itemId: item.id,
+                                description: item.description ?? '',
+                                dailyStoragePrice: item.dailyStoragePrice ?? 0,
+                              })
+                            }
+                            style={{ cursor: 'pointer' }}
+                          >
+                            {item.dailyStoragePrice ?? 0}
+                          </span>
+                        )}
+                        {warehouseEditForm?.itemId === item.id && (
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-small text-2xs"
+                            style={{ marginLeft: '0.25rem' }}
+                            disabled={warehouseSaving}
+                            onClick={async () => {
+                              await updateWarehouseItem(item.id, {
+                                description: warehouseEditForm.description,
+                                dailyStoragePrice: Number(warehouseEditForm.dailyStoragePrice) || 0,
+                              });
+                              setWarehouseEditForm(null);
+                            }}
+                          >
+                            Spara
+                          </button>
+                        )}
+                      </td>
+                      <td>{item.arrivedAt || '–'}</td>
+                      <td>{item.departedAt || '–'}</td>
+                      <td>
+                        {warehouseEstimates[item.id] ? (
+                          <span className="text-sm">
+                            {warehouseEstimates[item.id].storageDays} d,{' '}
+                            {warehouseEstimates[item.id].storageCostEstimate} kr
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-small btn-secondary text-2xs"
+                            onClick={async () => {
+                              try {
+                                const est = await getWarehouseEstimate(item.id);
+                                setWarehouseEstimates(prev => ({ ...prev, [item.id]: est }));
+                              } catch {
+                                /* ignore estimate fetch error */
+                              }
+                            }}
+                          >
+                            Est.
+                          </button>
+                        )}
+                      </td>
+                      <td>
+                        {warehouseMovementForm.itemId === item.id ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                            <input
+                              type="date"
+                              value={warehouseMovementForm.date}
+                              onChange={e =>
+                                setWarehouseMovementForm(f => ({ ...f, date: e.target.value }))
+                              }
+                              className="form-input input-sm"
+                              style={{ width: '120px' }}
+                            />
+                            <select
+                              value={warehouseMovementForm.type}
+                              onChange={e =>
+                                setWarehouseMovementForm(f => ({ ...f, type: e.target.value }))
+                              }
+                              className="form-select input-sm"
+                              style={{ width: '80px' }}
+                            >
+                              <option value="IN">IN</option>
+                              <option value="OUT">OUT</option>
+                              <option value="ADJUST">ADJUST</option>
+                            </select>
+                            <input
+                              type="number"
+                              min="1"
+                              placeholder="qty"
+                              value={warehouseMovementForm.quantity}
+                              onChange={e =>
+                                setWarehouseMovementForm(f => ({ ...f, quantity: e.target.value }))
+                              }
+                              className="form-input input-sm"
+                              style={{ width: '60px' }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="note"
+                              value={warehouseMovementForm.note}
+                              onChange={e =>
+                                setWarehouseMovementForm(f => ({ ...f, note: e.target.value }))
+                              }
+                              className="form-input input-sm"
+                              style={{ width: '80px' }}
+                            />
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-small text-2xs"
+                              disabled={
+                                warehouseSaving ||
+                                !warehouseMovementForm.date ||
+                                !(Number(warehouseMovementForm.quantity) > 0)
+                              }
+                              onClick={async () => {
+                                await addWarehouseMovement(item.id, {
+                                  date: warehouseMovementForm.date,
+                                  type: warehouseMovementForm.type,
+                                  quantity: Number(warehouseMovementForm.quantity),
+                                  note: warehouseMovementForm.note,
+                                });
+                                setWarehouseMovementForm({
+                                  itemId: null,
+                                  date: new Date().toISOString().slice(0, 10),
+                                  type: 'IN',
+                                  quantity: '',
+                                  note: '',
+                                });
+                                setWarehouseEstimates(prev => {
+                                  const next = { ...prev };
+                                  delete next[item.id];
+                                  return next;
+                                });
+                              }}
+                            >
+                              Spara
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-small text-2xs"
+                              onClick={() =>
+                                setWarehouseMovementForm(f => ({ ...f, itemId: null }))
+                              }
+                            >
+                              Avbryt
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="btn btn-small btn-secondary text-2xs"
+                              style={{ marginRight: '0.25rem' }}
+                              onClick={() =>
+                                setWarehouseMovementForm({
+                                  itemId: item.id,
+                                  date: new Date().toISOString().slice(0, 10),
+                                  type: 'IN',
+                                  quantity: '',
+                                  note: '',
+                                })
+                              }
+                            >
+                              IN/OUT
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-small btn-secondary text-2xs"
+                              style={{ marginRight: '0.25rem' }}
+                              onClick={() =>
+                                setWarehouseEditForm({
+                                  itemId: item.id,
+                                  description: item.description ?? '',
+                                  dailyStoragePrice: item.dailyStoragePrice ?? 0,
+                                })
+                              }
+                            >
+                              Redigera
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-danger btn-small text-2xs"
+                              onClick={() => setWarehouseDeleteConfirmId(item.id)}
+                            >
+                              Ta bort
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            {(warehouseItems || []).filter(
+              it => !selectedWarehouseCustomerId || it.customerId === selectedWarehouseCustomerId
+            ).length === 0 && (
+              <p className="text-muted-2 text-sm">
+                {warehouseLoading ? 'Laddar...' : 'Inga lagervaror.'}
+              </p>
+            )}
+          </div>
+          {warehouseDeleteConfirmId && (
+            <ConfirmModal
+              title="Ta bort lagervara"
+              message="Ta bort denna lagervara? Tillåtets endast om inga rörelser finns."
+              onConfirm={async () => {
+                await deleteWarehouseItem(warehouseDeleteConfirmId);
+                setWarehouseDeleteConfirmId(null);
+              }}
+              onCancel={() => setWarehouseDeleteConfirmId(null)}
+            />
           )}
         </div>
       )}
