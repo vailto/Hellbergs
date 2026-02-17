@@ -1,8 +1,12 @@
 const express = require('express');
 const path = require('path');
 const { connect } = require('./db/mongo');
+const pricingRepo = require('./repos/pricingRepo');
+const warehouseRepo = require('./repos/warehouseRepo');
 const bookingsRouter = require('./routes/bookings');
 const recurringRulesRouter = require('./routes/recurringRules');
+const pricingRouter = require('./routes/pricing');
+const warehouseRouter = require('./routes/warehouse');
 
 require('dotenv').config();
 
@@ -15,6 +19,8 @@ app.use(express.json({ limit: '10mb' }));
 // API Routes
 app.use('/api/bookings', bookingsRouter);
 app.use('/api/recurring-rules', recurringRulesRouter);
+app.use('/api/pricing', pricingRouter);
+app.use('/api/warehouse', warehouseRouter);
 
 // Serve static files from dist in production
 const distPath = path.join(__dirname, '../dist');
@@ -31,7 +37,9 @@ async function start() {
   try {
     // Connect to MongoDB
     await connect();
-    
+    await pricingRepo.ensureIndexes();
+    await warehouseRepo.ensureIndexes();
+
     // Start Express server
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);

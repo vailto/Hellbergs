@@ -5,8 +5,12 @@ import { generateId } from '../utils/formatters';
 import { exportToJSON, importFromJSON, saveData, migrateVehicleDriverData } from '../utils/storage';
 import getMockData from '../data/mockData';
 import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../utils/vehicleUtils';
+import { usePricing } from '../hooks/usePricing';
+import { useWarehouse } from '../hooks/useWarehouse';
 
 function Settings({ data, updateData }) {
+  const { pricing, loading: pricingLoading } = usePricing();
+  const { items: warehouseItems, loading: warehouseLoading } = useWarehouse();
   // Tab State
   const [currentTab, setCurrentTab] = useState('fordon');
 
@@ -716,6 +720,28 @@ function Settings({ data, updateData }) {
           }}
         >
           Platser
+        </button>
+        <button
+          onClick={() => setCurrentTab('priser')}
+          className={`btn btn-small ${currentTab === 'priser' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: currentTab === 'priser' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px',
+          }}
+        >
+          Priser
+        </button>
+        <button
+          onClick={() => setCurrentTab('lager')}
+          className={`btn btn-small ${currentTab === 'lager' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderRadius: '6px 6px 0 0',
+            borderBottom: currentTab === 'lager' ? '2px solid #2563ab' : 'none',
+            marginBottom: '-2px',
+          }}
+        >
+          Lager
         </button>
         <button
           onClick={() => setCurrentTab('backup')}
@@ -2908,6 +2934,23 @@ function Settings({ data, updateData }) {
       )}
 
       {/* BACKUP TAB */}
+      {currentTab === 'priser' && (
+        <div className="form">
+          <h2 style={{ marginBottom: '1rem' }}>Priser</h2>
+          <p style={{ color: '#7f8c8d', marginBottom: '1rem', fontSize: '0.875rem' }}>
+            {pricingLoading ? 'Laddar...' : `${pricing.length} prisuppsättning(ar).`} Kommer snart.
+          </p>
+        </div>
+      )}
+      {currentTab === 'lager' && (
+        <div className="form">
+          <h2 style={{ marginBottom: '1rem' }}>Lager</h2>
+          <p style={{ color: '#7f8c8d', marginBottom: '1rem', fontSize: '0.875rem' }}>
+            {warehouseLoading ? 'Laddar...' : `${warehouseItems.length} lagerpost(er).`} Kommer
+            snart.
+          </p>
+        </div>
+      )}
       {currentTab === 'backup' && (
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Backup</h2>
