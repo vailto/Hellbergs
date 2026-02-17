@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const pricing = await pricingService.listPricing();
-    res.json(pricing);
+    const list = await pricingService.listPricing();
+    res.json(list);
   } catch (error) {
     console.error('Error fetching pricing:', error);
     res.status(500).json({ error: 'Failed to fetch pricing' });

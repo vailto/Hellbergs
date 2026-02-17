@@ -1,10 +1,13 @@
 const express = require('express');
 const path = require('path');
 const { connect } = require('./db/mongo');
+const masterdataRepo = require('./repos/masterdataRepo');
 const pricingRepo = require('./repos/pricingRepo');
 const warehouseRepo = require('./repos/warehouseRepo');
 const bookingsRouter = require('./routes/bookings');
 const recurringRulesRouter = require('./routes/recurringRules');
+const masterdataRouter = require('./routes/masterdata');
+const adminRouter = require('./routes/admin');
 const pricingRouter = require('./routes/pricing');
 const warehouseRouter = require('./routes/warehouse');
 
@@ -19,6 +22,8 @@ app.use(express.json({ limit: '10mb' }));
 // API Routes
 app.use('/api/bookings', bookingsRouter);
 app.use('/api/recurring-rules', recurringRulesRouter);
+app.use('/api/masterdata', masterdataRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api/pricing', pricingRouter);
 app.use('/api/warehouse', warehouseRouter);
 
@@ -37,6 +42,7 @@ async function start() {
   try {
     // Connect to MongoDB
     await connect();
+    await masterdataRepo.ensureIndexes();
     await pricingRepo.ensureIndexes();
     await warehouseRepo.ensureIndexes();
 

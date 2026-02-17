@@ -5,12 +5,16 @@ import { generateId } from '../utils/formatters';
 import { exportToJSON, importFromJSON, saveData, migrateVehicleDriverData } from '../utils/storage';
 import getMockData from '../data/mockData';
 import { syncVehicleDriverRelation, syncVehicleDriverIdsFromDrivers } from '../utils/vehicleUtils';
+import { useBackupExport } from '../hooks/useBackupExport';
 import { usePricing } from '../hooks/usePricing';
 import { useWarehouse } from '../hooks/useWarehouse';
+import { useCustomerDmtToggle } from '../hooks/useCustomerDmtToggle';
 
 function Settings({ data, updateData }) {
-  const { pricing, loading: pricingLoading } = usePricing();
-  const { items: warehouseItems, loading: warehouseLoading } = useWarehouse();
+  const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
+  const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
+  const { items, loading: warehouseLoading, error: warehouseError } = useWarehouse();
+  const { toggleCustomerDmt, dmtError } = useCustomerDmtToggle({ data, updateData });
   // Tab State
   const [currentTab, setCurrentTab] = useState('fordon');
 
@@ -2238,6 +2242,9 @@ function Settings({ data, updateData }) {
                   </div>
                 ) : (
                   <div className="table-container">
+                    {dmtError && (
+                      <div style={{ color: '#dc2626', marginBottom: '0.5rem' }}>{dmtError}</div>
+                    )}
                     <table className="table">
                       <thead>
                         <tr>
@@ -2296,6 +2303,7 @@ function Settings({ data, updateData }) {
                               direction={customerSortDirection}
                             />
                           </th>
+                          <th style={{ width: '70px' }}>DMT</th>
                           <th style={{ width: '100px' }}>Åtgärder</th>
                         </tr>
                       </thead>
@@ -2325,6 +2333,17 @@ function Settings({ data, updateData }) {
                                 <td>{customer.contactPerson || '-'}</td>
                                 <td>{customer.mobile || '-'}</td>
                                 <td>{customer.city || '-'}</td>
+                                <td
+                                  onClick={e => e.stopPropagation()}
+                                  style={{ textAlign: 'center' }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={customer.hasDmt === true}
+                                    onChange={e => toggleCustomerDmt(customer.id, e.target.checked)}
+                                    title="DMT (drivmedelstillägg)"
+                                  />
+                                </td>
                                 <td onClick={e => e.stopPropagation()}>
                                   <button
                                     onClick={() => handleEditCustomer(customer)}
@@ -2338,7 +2357,7 @@ function Settings({ data, updateData }) {
                               {isExpanded && (
                                 <tr>
                                   <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     style={{
                                       backgroundColor: '#0f1419',
                                       padding: '1rem',
@@ -2506,6 +2525,7 @@ function Settings({ data, updateData }) {
                               direction={customerSortDirection}
                             />
                           </th>
+                          <th style={{ width: '70px' }}>DMT</th>
                           <th style={{ width: '100px' }}>Åtgärder</th>
                         </tr>
                       </thead>
@@ -2533,6 +2553,17 @@ function Settings({ data, updateData }) {
                                 <td>{customer.contactPerson || '-'}</td>
                                 <td>{customer.mobile || '-'}</td>
                                 <td>{customer.city || '-'}</td>
+                                <td
+                                  onClick={e => e.stopPropagation()}
+                                  style={{ textAlign: 'center' }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={customer.hasDmt === true}
+                                    onChange={e => toggleCustomerDmt(customer.id, e.target.checked)}
+                                    title="DMT (drivmedelstillägg)"
+                                  />
+                                </td>
                                 <td onClick={e => e.stopPropagation()}>
                                   <button
                                     onClick={() => handleEditCustomer(customer)}
@@ -2546,7 +2577,7 @@ function Settings({ data, updateData }) {
                               {isExpanded && (
                                 <tr>
                                   <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     className="text-base"
                                     style={{
                                       backgroundColor: 'var(--color-bg)',
@@ -2933,24 +2964,39 @@ function Settings({ data, updateData }) {
         </div>
       )}
 
-      {/* BACKUP TAB */}
+      {/* PRISER TAB */}
       {currentTab === 'priser' && (
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Priser</h2>
-          <p style={{ color: '#7f8c8d', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {pricingLoading ? 'Laddar...' : `${pricing.length} prisuppsättning(ar).`} Kommer snart.
+          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            {pricingLoading ? 'Laddar...' : `Antal: ${pricing?.length ?? 0}`}
           </p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
+          {pricingError && (
+            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+              {pricingError}
+            </p>
+          )}
         </div>
       )}
+
+      {/* LAGER TAB */}
       {currentTab === 'lager' && (
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Lager</h2>
-          <p style={{ color: '#7f8c8d', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {warehouseLoading ? 'Laddar...' : `${warehouseItems.length} lagerpost(er).`} Kommer
-            snart.
+          <p style={{ color: '#7f8c8d', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            {warehouseLoading ? 'Laddar...' : `Antal: ${items?.length ?? 0}`}
           </p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Kommer snart.</p>
+          {warehouseError && (
+            <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+              {warehouseError}
+            </p>
+          )}
         </div>
       )}
+
+      {/* BACKUP TAB */}
       {currentTab === 'backup' && (
         <div className="form">
           <h2 style={{ marginBottom: '1rem' }}>Backup</h2>
@@ -2966,9 +3012,27 @@ function Settings({ data, updateData }) {
               marginBottom: '1rem',
             }}
           >
+            <div>
+              <p style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                Innehåller bokningar, kunder, bilar och förare.
+              </p>
+              <button
+                onClick={exportBackup}
+                disabled={backupLoading}
+                className="btn btn-success"
+                style={{ width: '100%' }}
+              >
+                {backupLoading ? 'Laddar...' : 'Ladda ner backup (JSON)'}
+              </button>
+              {backupError && (
+                <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                  {backupError}
+                </p>
+              )}
+            </div>
             <button
               onClick={handleExportBackup}
-              className="btn btn-success"
+              className="btn btn-secondary"
               style={{ width: '100%' }}
             >
               Exportera backup (JSON)

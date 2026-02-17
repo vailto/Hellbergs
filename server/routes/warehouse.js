@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const result = await warehouseService.listWarehouse();
-    res.json(result);
+    const data = await warehouseService.listWarehouse();
+    res.json(data);
   } catch (error) {
     console.error('Error fetching warehouse:', error);
     res.status(500).json({ error: 'Failed to fetch warehouse' });

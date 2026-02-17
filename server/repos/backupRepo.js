@@ -1,16 +1,84 @@
 const { getDatabase } = require('../db/mongo');
 
+function mapCustomer(doc) {
+  return {
+    id: doc._id,
+    name: doc.name ?? '',
+    address: doc.address ?? '',
+    city: doc.city ?? '',
+    active: doc.active ?? true,
+    driverIds: [],
+    vehicleIds: [],
+  };
+}
+
+function mapVehicle(doc) {
+  return {
+    id: doc._id,
+    code: doc.code ?? '',
+    regNo: doc.regNo ?? '',
+    active: doc.active ?? true,
+  };
+}
+
+function mapDriver(doc) {
+  return {
+    id: doc._id,
+    code: doc.code ?? '',
+    name: doc.name ?? '',
+    active: doc.active ?? true,
+  };
+}
+
+function mapPricing(doc) {
+  return {
+    id: doc._id,
+    customerId: doc.customerId ?? '',
+    validFrom: doc.validFrom ?? '',
+    dmtPercent: doc.dmtPercent ?? 0,
+    milPrice: doc.milPrice ?? 0,
+    stopPrice: doc.stopPrice ?? 0,
+    waitPrice: doc.waitPrice ?? 0,
+    hourPrice: doc.hourPrice ?? 0,
+    fixedPrice: doc.fixedPrice ?? 0,
+    dailyStoragePrice: doc.dailyStoragePrice ?? 0,
+  };
+}
+
+function mapWarehouseItem(doc) {
+  return {
+    id: doc._id,
+    customerId: doc.customerId ?? '',
+    description: doc.description ?? '',
+    quantity: doc.quantity ?? 0,
+    dailyStoragePrice: doc.dailyStoragePrice ?? 0,
+    arrivedAt: doc.arrivedAt ?? null,
+    departedAt: doc.departedAt ?? null,
+  };
+}
+
+function mapWarehouseMovement(doc) {
+  return {
+    id: doc._id,
+    itemId: doc.itemId ?? '',
+    customerId: doc.customerId ?? '',
+    date: doc.date ?? '',
+    quantity: doc.quantity ?? 0,
+    type: doc.type ?? '',
+  };
+}
+
 async function exportAll() {
   const db = await getDatabase();
 
   const [
-    bookingsRaw,
-    customersRaw,
-    vehiclesRaw,
-    driversRaw,
-    customerPricingRaw,
-    warehouseItemsRaw,
-    warehouseMovementsRaw,
+    bookingsDocs,
+    customersDocs,
+    vehiclesDocs,
+    driversDocs,
+    pricingDocs,
+    warehouseItemsDocs,
+    warehouseMovementsDocs,
   ] = await Promise.all([
     db.collection('bookings').find({}).toArray(),
     db.collection('customers').find({}).toArray(),
@@ -21,79 +89,21 @@ async function exportAll() {
     db.collection('warehouseMovements').find({}).toArray(),
   ]);
 
-  const bookings = (bookingsRaw || []).map(doc => ({
-    ...doc.payload,
+  const bookings = (bookingsDocs || []).map(doc => ({
+    ...(doc.payload || {}),
     id: doc._id,
-  }));
-
-  const customers = (customersRaw || []).map(c => ({
-    id: c._id,
-    name: c.name || '',
-    address: c.address || '',
-    city: c.city || '',
-    active: c.active !== false,
-    driverIds: [],
-    vehicleIds: [],
-  }));
-
-  const vehicles = (vehiclesRaw || []).map(v => ({
-    id: v._id,
-    code: v.code || '',
-    regNo: v.regNo || '',
-    active: v.active !== false,
-  }));
-
-  const drivers = (driversRaw || []).map(d => ({
-    id: d._id,
-    code: d.code || '',
-    name: d.name || '',
-    active: d.active !== false,
-  }));
-
-  const customerPricing = (customerPricingRaw || []).map(d => ({
-    id: d._id,
-    customerId: d.customerId || '',
-    validFrom: d.validFrom || null,
-    dmtPercent: d.dmtPercent ?? null,
-    milPrice: d.milPrice ?? null,
-    stopPrice: d.stopPrice ?? null,
-    waitPrice: d.waitPrice ?? null,
-    hourPrice: d.hourPrice ?? null,
-    fixedPrice: d.fixedPrice ?? null,
-    dailyStoragePrice: d.dailyStoragePrice ?? null,
-  }));
-
-  const warehouseItems = (warehouseItemsRaw || []).map(d => ({
-    id: d._id,
-    customerId: d.customerId || '',
-    description: d.description || '',
-    quantity: d.quantity ?? null,
-    dailyStoragePrice: d.dailyStoragePrice ?? null,
-    arrivedAt: d.arrivedAt || null,
-    departedAt: d.departedAt || null,
-  }));
-
-  const warehouseMovements = (warehouseMovementsRaw || []).map(d => ({
-    id: d._id,
-    itemId: d.itemId || '',
-    customerId: d.customerId || '',
-    date: d.date || null,
-    quantity: d.quantity ?? null,
-    type: d.type || '',
   }));
 
   return {
     bookings,
-    customers,
-    vehicles,
-    drivers,
-    customerPricing,
-    warehouseItems,
-    warehouseMovements,
+    customers: (customersDocs || []).map(mapCustomer),
+    vehicles: (vehiclesDocs || []).map(mapVehicle),
+    drivers: (driversDocs || []).map(mapDriver),
+    customerPricing: (pricingDocs || []).map(mapPricing),
+    warehouseItems: (warehouseItemsDocs || []).map(mapWarehouseItem),
+    warehouseMovements: (warehouseMovementsDocs || []).map(mapWarehouseMovement),
     rateCards: [],
   };
 }
 
-module.exports = {
-  exportAll,
-};
+module.exports = { exportAll };

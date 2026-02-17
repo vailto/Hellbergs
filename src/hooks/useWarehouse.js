@@ -9,6 +9,8 @@ export function useWarehouse() {
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(null);
     fetchWarehouse()
       .then(data => {
         if (!cancelled) {
@@ -18,9 +20,7 @@ export function useWarehouse() {
       })
       .catch(err => {
         if (!cancelled) {
-          setError(err);
-          setItems([]);
-          setMovements([]);
+          setError(err instanceof Error ? err.message : 'Kunde inte ladda lager.');
         }
       })
       .finally(() => {

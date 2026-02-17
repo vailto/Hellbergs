@@ -8,14 +8,17 @@ export function usePricing() {
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(null);
     fetchPricing()
       .then(data => {
-        if (!cancelled) setPricing(Array.isArray(data) ? data : []);
+        if (!cancelled) {
+          setPricing(Array.isArray(data) ? data : []);
+        }
       })
       .catch(err => {
         if (!cancelled) {
-          setError(err);
-          setPricing([]);
+          setError(err instanceof Error ? err.message : 'Kunde inte ladda priser.');
         }
       })
       .finally(() => {

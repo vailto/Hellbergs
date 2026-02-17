@@ -13,17 +13,17 @@ async function ensureIndexes() {
 async function getCustomerPricing() {
   const db = await getDatabase();
   const docs = await db.collection(COLLECTION).find({}).toArray();
-  return (docs || []).map(d => ({
-    id: d._id,
-    customerId: d.customerId || '',
-    validFrom: d.validFrom || null,
-    dmtPercent: d.dmtPercent ?? null,
-    milPrice: d.milPrice ?? null,
-    stopPrice: d.stopPrice ?? null,
-    waitPrice: d.waitPrice ?? null,
-    hourPrice: d.hourPrice ?? null,
-    fixedPrice: d.fixedPrice ?? null,
-    dailyStoragePrice: d.dailyStoragePrice ?? null,
+  return (docs || []).map(doc => ({
+    id: doc._id,
+    customerId: doc.customerId ?? '',
+    validFrom: doc.validFrom ?? '',
+    dmtPercent: doc.dmtPercent ?? 0,
+    milPrice: doc.milPrice ?? 0,
+    stopPrice: doc.stopPrice ?? 0,
+    waitPrice: doc.waitPrice ?? 0,
+    hourPrice: doc.hourPrice ?? 0,
+    fixedPrice: doc.fixedPrice ?? 0,
+    dailyStoragePrice: doc.dailyStoragePrice ?? 0,
   }));
 }
 
