@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { loadData, saveData } from './utils/storage';
 import { useBookingSync } from './hooks/useBookingSync';
+import { useMasterdata } from './hooks/useMasterdata';
 import Booking from './components/Booking';
 import Schema from './components/Schema';
 import Customers from './components/Customers';
@@ -14,9 +15,23 @@ function App() {
   const [currentSection, setCurrentSection] = useState('dashboard');
   const [editingBookingId, setEditingBookingId] = useState(null);
   const [returnToSection, setReturnToSection] = useState(null);
+  const masterdataMergedRef = useRef(false);
 
   // Sync bookings with API
   const { bookings, loading, saveBooking, removeBooking, updateBookings } = useBookingSync();
+  const { customers, vehicles, drivers, loading: masterdataLoading } = useMasterdata();
+
+  // Once masterdata has loaded, merge into data so dropdowns use DB as source of truth
+  useEffect(() => {
+    if (masterdataLoading || masterdataMergedRef.current) return;
+    masterdataMergedRef.current = true;
+    setData(prev => ({
+      ...prev,
+      customers,
+      vehicles,
+      drivers,
+    }));
+  }, [masterdataLoading, customers, vehicles, drivers]);
 
   // Save non-booking data to localStorage
   useEffect(() => {
