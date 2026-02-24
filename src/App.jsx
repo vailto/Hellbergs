@@ -15,6 +15,7 @@ function App() {
   const [currentSection, setCurrentSection] = useState('dashboard');
   const [editingBookingId, setEditingBookingId] = useState(null);
   const [returnToSection, setReturnToSection] = useState(null);
+  const [newBookingFromWarehouse, setNewBookingFromWarehouse] = useState(null);
   const didApplyMasterdataRef = useRef(false);
 
   // Sync bookings with API
@@ -122,6 +123,8 @@ function App() {
             setEditingBookingId={setEditingBookingId}
             returnToSection={returnToSection}
             setReturnToSection={setReturnToSection}
+            newBookingFromWarehouse={newBookingFromWarehouse}
+            setNewBookingFromWarehouse={setNewBookingFromWarehouse}
           />
         );
       case 'schema':
@@ -139,7 +142,14 @@ function App() {
       case 'equipage':
         return <Equipage {...props} />;
       case 'settings':
-        return <Settings {...props} />;
+        return (
+          <Settings
+            {...props}
+            setCurrentSection={setCurrentSection}
+            setNewBookingFromWarehouse={setNewBookingFromWarehouse}
+            setEditingBookingId={setEditingBookingId}
+          />
+        );
       default:
         return <Statistics {...props} />;
     }

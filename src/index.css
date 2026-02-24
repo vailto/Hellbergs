@@ -498,6 +498,10 @@ h2 {
   background-color: var(--color-primary-glow);
 }
 
+.table-row-clickable:hover {
+  background-color: var(--color-primary-glow);
+}
+
 .table-actions {
   display: flex;
   gap: 0.5rem;

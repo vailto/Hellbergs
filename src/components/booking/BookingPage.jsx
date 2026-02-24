@@ -21,6 +21,8 @@ function BookingPage({
   setEditingBookingId,
   returnToSection,
   setReturnToSection,
+  newBookingFromWarehouse,
+  setNewBookingFromWarehouse,
   saveBooking: saveBookingToApi,
   removeBooking: removeBookingFromApi,
 }) {
@@ -201,6 +203,21 @@ function BookingPage({
     if (b) handleEdit(b);
     setEditingBookingId(null);
   }, [editingBookingId]);
+
+  // Öppna ny bokning med förifylld kund + beskrivning när vi kommer från Lager
+  useEffect(() => {
+    if (!newBookingFromWarehouse || !setNewBookingFromWarehouse) return;
+    resetForm();
+    setFormData(prev => ({
+      ...prev,
+      customerId: newBookingFromWarehouse.customerId || '',
+      marking: newBookingFromWarehouse.description || prev.marking,
+    }));
+    setEditingId(null);
+    setShowForm(true);
+    setNewBookingFromWarehouse(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run when warehouse context is set
+  }, [newBookingFromWarehouse]);
 
   const handleDelete = async bookingId => {
     if (window.confirm('Är du säker på att du vill ta bort denna bokning?')) {

@@ -11,7 +11,14 @@ import { useWarehouse } from '../hooks/useWarehouse';
 import { useCustomerDmtToggle } from '../hooks/useCustomerDmtToggle';
 import { useAdminSeedMasterdata } from '../hooks/useAdminSeedMasterdata';
 
-function Settings({ data, updateData, refreshMasterdata }) {
+function Settings({
+  data,
+  updateData,
+  refreshMasterdata,
+  setCurrentSection,
+  setNewBookingFromWarehouse,
+  setEditingBookingId,
+}) {
   const { exportBackup, loading: backupLoading, error: backupError } = useBackupExport();
   const { pricing, loading: pricingLoading, error: pricingError } = usePricing();
   const { items, movements, loading: warehouseLoading, error: warehouseError } = useWarehouse();
@@ -3256,6 +3263,9 @@ function Settings({ data, updateData, refreshMasterdata }) {
               <h3 style={{ marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1rem' }}>
                 Lagerposter (upp till 50)
               </h3>
+              <p style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                Klicka på en rad för att skapa leveransbokning till kunden.
+              </p>
               <div style={{ marginBottom: '0.75rem' }}>
                 <input
                   type="text"
@@ -3280,7 +3290,44 @@ function Settings({ data, updateData, refreshMasterdata }) {
                   </thead>
                   <tbody>
                     {warehouseItemsFilteredSorted.map(row => (
-                      <tr key={row.id}>
+                      <tr
+                        key={row.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          if (
+                            setCurrentSection &&
+                            setNewBookingFromWarehouse &&
+                            setEditingBookingId
+                          ) {
+                            setNewBookingFromWarehouse({
+                              customerId: row.customerId || '',
+                              description: row.description || '',
+                            });
+                            setEditingBookingId(null);
+                            setCurrentSection('booking');
+                          }
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            if (
+                              setCurrentSection &&
+                              setNewBookingFromWarehouse &&
+                              setEditingBookingId
+                            ) {
+                              setNewBookingFromWarehouse({
+                                customerId: row.customerId || '',
+                                description: row.description || '',
+                              });
+                              setEditingBookingId(null);
+                              setCurrentSection('booking');
+                            }
+                          }
+                        }}
+                        style={{ cursor: 'pointer' }}
+                        className="table-row-clickable"
+                      >
                         <td>{fmt(row.description)}</td>
                         <td>{fmt(row.customerId)}</td>
                         <td>{fmt(row.quantity)}</td>
@@ -3330,7 +3377,7 @@ function Settings({ data, updateData, refreshMasterdata }) {
                 </table>
               </div>
               <p style={{ color: '#6b7280', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                Read-only (MVP).
+                Lagerposter är klickbara för leveransbokning. Rörelser är read-only (MVP).
               </p>
             </>
           )}
