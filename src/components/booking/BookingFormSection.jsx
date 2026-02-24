@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { BOOKING_STATUSES } from '../../utils/constants';
 import TimeInput24 from '../TimeInput24';
+import { calcWarehouseStorageCost } from '../../utils/warehouseUtils';
 
 function BookingFormSection({
   // State
@@ -38,7 +40,25 @@ function BookingFormSection({
   setWarehouseCreateField,
   setWarehouseCreateEnabled,
   bookingDateForWarehouse,
+  warehouseItemsList = [],
+  formWarehouseItems = [],
+  onAddWarehouseItem,
+  onRemoveWarehouseItem,
+  deliveryOrPickupDateForStorage = null,
 }) {
+  const [warehouseSelectItemId, setWarehouseSelectItemId] = useState('');
+  const [warehouseSelectQuantity, setWarehouseSelectQuantity] = useState(1);
+
+  const itemsForCustomer =
+    formData.customerId && warehouseItemsList.length
+      ? warehouseItemsList.filter(i => i.customerId === formData.customerId)
+      : warehouseItemsList;
+  const computedStorageCost = calcWarehouseStorageCost(
+    formWarehouseItems,
+    deliveryOrPickupDateForStorage,
+    warehouseItemsList
+  );
+
   if (!showForm) {
     return null;
   }
@@ -576,97 +596,6 @@ function BookingFormSection({
           </div>
         </div>
 
-        {/* Prissättning */}
-        <div className="form-section" style={{ marginTop: '0.75rem' }}>
-          <div className="form-section-title">Prissättning</div>
-          <div
-            className="form-row"
-            style={{
-              gap: '0.5rem',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
-            }}
-          >
-            <div className="form-group">
-              <label className="text-muted-2 label-sm">Km</label>
-              <input
-                type="text"
-                name="km"
-                value={formData.km}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="0"
-              />
-            </div>
-            <div className="form-group">
-              <label className="text-muted-2 label-sm">Stopp</label>
-              <input
-                type="text"
-                name="costStops"
-                value={formData.costStops}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="0"
-              />
-            </div>
-            <div className="form-group">
-              <label className="text-muted-2 label-sm">Väntetid (h)</label>
-              <input
-                type="text"
-                name="costWaitHours"
-                value={formData.costWaitHours}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="0"
-              />
-            </div>
-            <div className="form-group">
-              <label className="text-muted-2 label-sm">Timpris (h)</label>
-              <input
-                type="text"
-                name="costDriveHours"
-                value={formData.costDriveHours}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="0"
-              />
-            </div>
-            <div className="form-group">
-              <label className="text-muted-2 label-sm">Fast pris</label>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="costUseFixed"
-                  checked={formData.costUseFixed}
-                  onChange={handleChange}
-                />
-                Ja
-              </label>
-              {formData.costUseFixed && (
-                <input
-                  type="text"
-                  name="costFixedAmount"
-                  value={formData.costFixedAmount}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="SEK"
-                  style={{ marginTop: '0.25rem' }}
-                />
-              )}
-            </div>
-            <div className="form-group">
-              <label className="text-muted-2 label-sm">Belopp (SEK)</label>
-              <input
-                type="text"
-                name="amountSek"
-                value={formData.amountSek}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="0"
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Anteckningar */}
         <div className="form-section">
           <div className="form-section-title">Anteckningar</div>
@@ -683,63 +612,253 @@ function BookingFormSection({
           </div>
         </div>
 
-        {/* Skapa lagervara */}
-        <div className="form-section">
-          <div className="form-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={warehouseCreate?.enabled ?? false}
-                onChange={e =>
-                  setWarehouseCreateEnabled?.(e.target.checked, bookingDateForWarehouse)
-                }
-              />
-              Skapa lagervara
-            </label>
+        {/* Lagervara (vänster) + Prissättning (höger) */}
+        <div
+          className="form-row"
+          style={{
+            marginTop: '0.75rem',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1.5rem',
+            alignItems: 'start',
+          }}
+        >
+          {/* Lagervara-box */}
+          <div className="form-section" style={{ marginTop: 0 }}>
+            <div className="form-section-title">Lagervara</div>
+
+            {/* Skapa lagervara */}
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={warehouseCreate?.enabled ?? false}
+                  onChange={e =>
+                    setWarehouseCreateEnabled?.(e.target.checked, bookingDateForWarehouse)
+                  }
+                />
+                Skapa lagervara
+              </label>
+            </div>
+            {warehouseCreate?.enabled && (
+              <div className="form-row" style={{ gap: '0.75rem', flexWrap: 'wrap' }}>
+                <div className="form-group" style={{ minWidth: '160px' }}>
+                  <label className="text-muted-2 label-sm">Beskrivning</label>
+                  <input
+                    type="text"
+                    value={warehouseCreate.description ?? ''}
+                    onChange={e => setWarehouseCreateField?.('description', e.target.value)}
+                    className="form-input"
+                    placeholder="Beskrivning"
+                  />
+                </div>
+                <div className="form-group" style={{ maxWidth: '80px' }}>
+                  <label className="text-muted-2 label-sm">Antal</label>
+                  <input
+                    type="text"
+                    value={warehouseCreate.quantity ?? ''}
+                    onChange={e => setWarehouseCreateField?.('quantity', e.target.value)}
+                    className="form-input"
+                    placeholder="1"
+                  />
+                </div>
+                <div className="form-group" style={{ maxWidth: '140px' }}>
+                  <label className="text-muted-2 label-sm">Ankomstdatum</label>
+                  <input
+                    type="date"
+                    value={(warehouseCreate.arrivedAt ?? '') || bookingDateForWarehouse || ''}
+                    onChange={e => setWarehouseCreateField?.('arrivedAt', e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group" style={{ maxWidth: '100px' }}>
+                  <label className="text-muted-2 label-sm">Dagshyra (valfritt)</label>
+                  <input
+                    type="text"
+                    value={warehouseCreate.dailyStoragePrice ?? ''}
+                    onChange={e => setWarehouseCreateField?.('dailyStoragePrice', e.target.value)}
+                    className="form-input"
+                    placeholder="SEK"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Välj befintlig lagervara */}
+            <div className="form-group" style={{ marginTop: '0.75rem' }}>
+              <label className="text-muted-2 label-sm">Lägg till från lagret</label>
+              <div
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'flex-end' }}
+              >
+                <select
+                  value={warehouseSelectItemId}
+                  onChange={e => setWarehouseSelectItemId(e.target.value)}
+                  className="form-select"
+                  style={{ minWidth: '180px' }}
+                >
+                  <option value="">Välj produkt</option>
+                  {itemsForCustomer.map(item => (
+                    <option key={item.id} value={item.id}>
+                      {item.description || item.id} ({item.quantity})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min={1}
+                  value={warehouseSelectQuantity}
+                  onChange={e =>
+                    setWarehouseSelectQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))
+                  }
+                  className="form-input"
+                  style={{ width: '70px' }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    if (warehouseSelectItemId && onAddWarehouseItem) {
+                      onAddWarehouseItem(warehouseSelectItemId, warehouseSelectQuantity);
+                      setWarehouseSelectItemId('');
+                      setWarehouseSelectQuantity(1);
+                    }
+                  }}
+                  disabled={!warehouseSelectItemId}
+                >
+                  Lägg till
+                </button>
+              </div>
+            </div>
+
+            {formWarehouseItems.length > 0 && (
+              <div className="form-group" style={{ marginTop: '0.5rem' }}>
+                <label className="text-muted-2 label-sm">Tillagda lagervaror</label>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.875rem' }}>
+                  {formWarehouseItems.map((line, idx) => {
+                    const item = warehouseItemsList.find(i => i.id === line.warehouseItemId);
+                    const label = item
+                      ? `${item.description || item.id} × ${line.quantity}`
+                      : `${line.warehouseItemId} × ${line.quantity}`;
+                    return (
+                      <li
+                        key={`${line.warehouseItemId}-${idx}`}
+                        style={{ marginBottom: '0.25rem' }}
+                      >
+                        {label}
+                        {onRemoveWarehouseItem && (
+                          <button
+                            type="button"
+                            className="btn btn-small btn-secondary"
+                            style={{ marginLeft: '0.5rem', padding: '0.1rem 0.35rem' }}
+                            onClick={() => onRemoveWarehouseItem(idx)}
+                          >
+                            Ta bort
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {computedStorageCost != null && computedStorageCost > 0 && (
+              <div className="form-group" style={{ marginTop: '0.5rem', fontWeight: 500 }}>
+                Lagerkostnad: {computedStorageCost.toLocaleString('sv-SE')} SEK
+              </div>
+            )}
           </div>
-          {warehouseCreate?.enabled && (
-            <div className="form-row" style={{ gap: '0.75rem', flexWrap: 'wrap' }}>
-              <div className="form-group" style={{ minWidth: '200px' }}>
-                <label className="text-muted-2 label-sm">Beskrivning</label>
+
+          {/* Prissättning */}
+          <div className="form-section" style={{ marginTop: 0 }}>
+            <div className="form-section-title">Prissättning</div>
+            <div
+              className="form-row"
+              style={{
+                gap: '0.5rem',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+              }}
+            >
+              <div className="form-group">
+                <label className="text-muted-2 label-sm">Km</label>
                 <input
                   type="text"
-                  value={warehouseCreate.description ?? ''}
-                  onChange={e => setWarehouseCreateField?.('description', e.target.value)}
+                  name="km"
+                  value={formData.km}
+                  onChange={handleChange}
                   className="form-input"
-                  placeholder="Beskrivning"
+                  placeholder="0"
                 />
               </div>
-              <div className="form-group" style={{ maxWidth: '100px' }}>
-                <label className="text-muted-2 label-sm">Antal</label>
+              <div className="form-group">
+                <label className="text-muted-2 label-sm">Stopp</label>
                 <input
                   type="text"
-                  value={warehouseCreate.quantity ?? ''}
-                  onChange={e => setWarehouseCreateField?.('quantity', e.target.value)}
+                  name="costStops"
+                  value={formData.costStops}
+                  onChange={handleChange}
                   className="form-input"
-                  placeholder="Antal"
+                  placeholder="0"
                 />
               </div>
-              <div className="form-group" style={{ maxWidth: '160px' }}>
-                <label className="text-muted-2 label-sm">Ankomstdatum</label>
-                <input
-                  type="date"
-                  value={(warehouseCreate.arrivedAt ?? '') || bookingDateForWarehouse || ''}
-                  onChange={e => setWarehouseCreateField?.('arrivedAt', e.target.value)}
-                  className="form-input"
-                />
-              </div>
-              <div className="form-group" style={{ maxWidth: '120px' }}>
-                <label className="text-muted-2 label-sm">Dagshyra (valfritt)</label>
+              <div className="form-group">
+                <label className="text-muted-2 label-sm">Väntetid (h)</label>
                 <input
                   type="text"
-                  value={warehouseCreate.dailyStoragePrice ?? ''}
-                  onChange={e => setWarehouseCreateField?.('dailyStoragePrice', e.target.value)}
+                  name="costWaitHours"
+                  value={formData.costWaitHours}
+                  onChange={handleChange}
                   className="form-input"
-                  placeholder="SEK"
+                  placeholder="0"
+                />
+              </div>
+              <div className="form-group">
+                <label className="text-muted-2 label-sm">Timpris (h)</label>
+                <input
+                  type="text"
+                  name="costDriveHours"
+                  value={formData.costDriveHours}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="0"
+                />
+              </div>
+              <div className="form-group">
+                <label className="text-muted-2 label-sm">Fast pris</label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="costUseFixed"
+                    checked={formData.costUseFixed}
+                    onChange={handleChange}
+                  />
+                  Ja
+                </label>
+                {formData.costUseFixed && (
+                  <input
+                    type="text"
+                    name="costFixedAmount"
+                    value={formData.costFixedAmount}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="SEK"
+                    style={{ marginTop: '0.25rem' }}
+                  />
+                )}
+              </div>
+              <div className="form-group">
+                <label className="text-muted-2 label-sm">Belopp (SEK)</label>
+                <input
+                  type="text"
+                  name="amountSek"
+                  value={formData.amountSek}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="0"
                 />
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Återkommande bokning (endast vid ny bokning) */}

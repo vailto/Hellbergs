@@ -68,6 +68,8 @@ function useBookingState(data, _editingBookingId) {
     recurringEnabled: false,
     repeatWeeks: 1,
     weeksAhead: 12,
+    warehouseItems: [],
+    warehouseStorageCost: null,
   });
 
   // ============================================================================
@@ -196,6 +198,8 @@ function useBookingState(data, _editingBookingId) {
       recurringEnabled: false,
       repeatWeeks: 1,
       weeksAhead: 12,
+      warehouseItems: [],
+      warehouseStorageCost: null,
     });
     setEditingId(null);
     setErrors({});

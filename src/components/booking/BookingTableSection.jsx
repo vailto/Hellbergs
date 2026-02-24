@@ -107,6 +107,9 @@ function BookingTableSection({
                     {sortField === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
                   </span>
                 </th>
+                <th title="Lagervara med i bokningen" style={{ whiteSpace: 'nowrap' }}>
+                  Lagervara
+                </th>
                 <th title="Åtgärder" style={{ width: '1%', whiteSpace: 'nowrap' }}>
                   Åtg.
                 </th>
@@ -167,6 +170,15 @@ function BookingTableSection({
                         >
                           {first?.status || 'Planerad'}
                         </span>
+                      </td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        {bookings.some(
+                          b =>
+                            (b.warehouseItems && b.warehouseItems.length > 0) ||
+                            (b.warehouseStorageCost != null && b.warehouseStorageCost > 0)
+                        )
+                          ? 'Ja'
+                          : '–'}
                       </td>
                       <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                         <button
@@ -381,6 +393,12 @@ function BookingTableSection({
                             : booking.status}
                         </span>
                       </td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        {(booking.warehouseItems && booking.warehouseItems.length > 0) ||
+                        (booking.warehouseStorageCost != null && booking.warehouseStorageCost > 0)
+                          ? 'Ja'
+                          : '–'}
+                      </td>
                       <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                         <div className="table-actions" style={{ flexWrap: 'nowrap' }}>
                           <button
@@ -422,7 +440,7 @@ function BookingTableSection({
                     {isExpanded && (
                       <tr>
                         <td
-                          colSpan="9"
+                          colSpan="10"
                           style={{ backgroundColor: 'var(--color-bg)', padding: '1rem' }}
                         >
                           <div className="text-base mb-1" style={{ fontWeight: 600 }}>

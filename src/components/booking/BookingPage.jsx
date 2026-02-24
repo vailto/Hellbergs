@@ -9,6 +9,8 @@ import { validateBooking } from '../../utils/validation';
 import BookingModals from './BookingModals';
 import useRecurringBooking from '../../hooks/useRecurringBooking';
 import useWarehouseEntryFromBooking from '../../hooks/useWarehouseEntryFromBooking';
+import { useWarehouse } from '../../hooks/useWarehouse';
+import { calcWarehouseStorageCost } from '../../utils/warehouseUtils';
 import BookingFormSection from './BookingFormSection';
 import BookingTableSection from './BookingTableSection';
 import useBookingState from '../../hooks/useBookingState';
@@ -94,6 +96,7 @@ function BookingPage({
     setShowForm,
   });
 
+  const { items: warehouseItemsList } = useWarehouse();
   const {
     warehouseCreate,
     setWarehouseCreateField,
@@ -191,6 +194,8 @@ function BookingPage({
       costDriveHours: cd.driveHours != null ? String(cd.driveHours) : '',
       costUseFixed: cd.fixed != null && cd.fixed !== 0,
       costFixedAmount: cd.fixed != null ? String(cd.fixed) : '',
+      warehouseItems: Array.isArray(booking.warehouseItems) ? booking.warehouseItems : [],
+      warehouseStorageCost: booking.warehouseStorageCost ?? null,
     });
     setEditingId(booking.id);
     setShowForm(true);
@@ -260,6 +265,12 @@ function BookingPage({
       costDetails.driveHours ||
       (formData.costUseFixed && costDetails.fixed != null);
     const warehouseCreatePayload = getWarehouseCreatePayload(formData.pickupDate);
+    const deliveryOrPickup = (formData.deliveryDate || formData.pickupDate || '').trim() || null;
+    const warehouseStorageCost = calcWarehouseStorageCost(
+      formData.warehouseItems || [],
+      deliveryOrPickup,
+      warehouseItemsList || []
+    );
     const bookingData =
       editingId && existing
         ? {
@@ -272,6 +283,8 @@ function BookingPage({
             amountSek: amountVal,
             costDetails: hasCostDetails ? costDetails : (existing.costDetails ?? undefined),
             warehouseCreate: warehouseCreatePayload,
+            warehouseItems: formData.warehouseItems || [],
+            warehouseStorageCost: warehouseStorageCost ?? existing.warehouseStorageCost ?? null,
           }
         : {
             ...formData,
@@ -282,6 +295,8 @@ function BookingPage({
             amountSek: amountVal,
             costDetails: hasCostDetails ? costDetails : undefined,
             warehouseCreate: warehouseCreatePayload,
+            warehouseItems: formData.warehouseItems || [],
+            warehouseStorageCost: warehouseStorageCost ?? null,
           };
 
     if (editingId) {
@@ -592,6 +607,23 @@ function BookingPage({
         setWarehouseCreateField={setWarehouseCreateField}
         setWarehouseCreateEnabled={setWarehouseCreateEnabled}
         bookingDateForWarehouse={formData.pickupDate}
+        warehouseItemsList={warehouseItemsList || []}
+        formWarehouseItems={formData.warehouseItems || []}
+        onAddWarehouseItem={(warehouseItemId, quantity) =>
+          setFormData(prev => ({
+            ...prev,
+            warehouseItems: [...(prev.warehouseItems || []), { warehouseItemId, quantity }],
+          }))
+        }
+        onRemoveWarehouseItem={index =>
+          setFormData(prev => ({
+            ...prev,
+            warehouseItems: (prev.warehouseItems || []).filter((_, i) => i !== index),
+          }))
+        }
+        deliveryOrPickupDateForStorage={
+          (formData.deliveryDate || formData.pickupDate || '').trim() || null
+        }
       />
 
       {/* Bookings List */}
